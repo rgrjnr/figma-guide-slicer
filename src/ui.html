@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      color: var(--figma-color-text, #333);
+      background: var(--figma-color-bg, #fff);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      height: 100vh;
+    }
+
+    /* Status area */
+    .status {
+      background: var(--figma-color-bg-secondary, #f5f5f5);
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .status .frame-name {
+      font-weight: 600;
+      font-size: 13px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .status .frame-info {
+      font-size: 11px;
+      color: var(--figma-color-text-secondary, #888);
+    }
+
+    .status.empty {
+      color: var(--figma-color-text-tertiary, #aaa);
+      font-style: italic;
+    }
+
+    /* Buttons */
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-row .btn {
+      flex: 1;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 36px;
+      padding: 0 16px;
+      border: none;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      width: 100%;
+    }
+
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--figma-color-bg-brand, #0d99ff);
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--figma-color-bg-brand-hover, #0b85de);
+    }
+
+    .btn-secondary {
+      background: var(--figma-color-bg-tertiary, #e8e8e8);
+      color: var(--figma-color-text, #333);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--figma-color-bg-hover, #ddd);
+    }
+
+    .btn-export {
+      background: #16a34a;
+      color: #fff;
+    }
+
+    .btn-export:hover:not(:disabled) {
+      background: #15803d;
+    }
+
+    /* Progress / feedback area */
+    .progress {
+      font-size: 11px;
+      text-align: center;
+      min-height: 16px;
+      line-height: 16px;
+    }
+
+    .progress.error {
+      color: #dc2626;
+    }
+
+    .progress.success {
+      color: #16a34a;
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: var(--figma-color-border, #e5e5e5);
+      margin: 4px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="status empty" id="status">
+    Select a frame to begin
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="btn-generate" disabled>
+      Generate Slices
+    </button>
+    <button class="btn btn-export" id="btn-export" disabled>
+      Export HTML
+    </button>
+    <div class="divider"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="btn-clear-guides" disabled>
+        Clear Guides
+      </button>
+      <button class="btn btn-secondary" id="btn-clear-slices" disabled>
+        Clear Slices
+      </button>
+    </div>
+  </div>
+
+  <div class="progress" id="progress"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <script>
+    // --- DOM References ---
+    const statusEl = document.getElementById("status");
+    const progressEl = document.getElementById("progress");
+    const btnGenerate = document.getElementById("btn-generate");
+    const btnExport = document.getElementById("btn-export");
+    const btnClearGuides = document.getElementById("btn-clear-guides");
+    const btnClearSlices = document.getElementById("btn-clear-slices");
+    const allButtons = [btnGenerate, btnExport, btnClearGuides, btnClearSlices];
+
+    let isValidSelection = false;
+
+    // --- Button Click Handlers (UI -> Plugin) ---
+
+    btnGenerate.onclick = () => {
+      setAllButtonsDisabled(true);
+      setProgress("Generating slices...", "");
+      parent.postMessage({ pluginMessage: { type: "generate-slices" } }, "*");
+    };
+
+    btnExport.onclick = () => {
+      setAllButtonsDisabled(true);
+      setProgress("Starting export...", "");
+      parent.postMessage({ pluginMessage: { type: "export-html" } }, "*");
+    };
+
+    btnClearGuides.onclick = () => {
+      parent.postMessage({ pluginMessage: { type: "clear-guides" } }, "*");
+    };
+
+    btnClearSlices.onclick = () => {
+      parent.postMessage({ pluginMessage: { type: "clear-slices" } }, "*");
+    };
+
+    // --- Message Handler (Plugin -> UI) ---
+
+    window.onmessage = async (event) => {
+      const msg = event.data.pluginMessage;
+      if (!msg) return;
+
+      switch (msg.type) {
+        case "selection-changed":
+          handleSelectionChanged(msg);
+          break;
+
+        case "slices-generated":
+          setProgress("Generated " + msg.count + " slice(s).", "success");
+          enableButtonsIfValid();
+          break;
+
+        case "export-progress":
+          setProgress("Exporting " + msg.current + "/" + msg.total + " slices...", "");
+          break;
+
+        case "package-zip":
+          await packageAndDownloadZip(msg.html, msg.images, msg.frameName);
+          break;
+
+        case "slices-cleared":
+          setProgress("Slices cleared.", "");
+          enableButtonsIfValid();
+          break;
+
+        case "guides-cleared":
+          setProgress("Guides cleared.", "");
+          enableButtonsIfValid();
+          break;
+
+        case "error":
+          setProgress(msg.message, "error");
+          enableButtonsIfValid();
+          break;
+      }
+    };
+
+    // --- Selection State ---
+
+    function handleSelectionChanged(msg) {
+      isValidSelection = msg.valid;
+      if (msg.valid) {
+        statusEl.className = "status";
+        statusEl.innerHTML =
+          '<span class="frame-name">' + escapeHtml(msg.frameName) + "</span>" +
+          '<span class="frame-info">' + msg.frameWidth + " &times; " + msg.frameHeight +
+          " &middot; " + msg.guideCount + " horizontal guide(s)</span>";
+      } else {
+        statusEl.className = "status empty";
+        statusEl.textContent = "Select a frame to begin";
+      }
+      enableButtonsIfValid();
+      setProgress("", "");
+    }
+
+    // --- ZIP Packaging ---
+
+    async function packageAndDownloadZip(htmlContent, images, frameName) {
+      try {
+        setProgress("Packaging ZIP...", "");
+
+        const zip = new JSZip();
+        zip.file("index.html", htmlContent);
+
+        const imgFolder = zip.folder("images");
+        for (const img of images) {
+          imgFolder.file(img.fileName, new Uint8Array(img.bytes));
+        }
+
+        const blob = await zip.generateAsync({ type: "blob" });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = (frameName || "email-export") + ".zip";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+        setProgress("Export complete! ZIP downloaded.", "success");
+      } catch (err) {
+        setProgress("Error creating ZIP: " + err.message, "error");
+      }
+      enableButtonsIfValid();
+    }
+
+    // --- Helpers ---
+
+    function setAllButtonsDisabled(disabled) {
+      allButtons.forEach(b => (b.disabled = disabled));
+    }
+
+    function enableButtonsIfValid() {
+      allButtons.forEach(b => (b.disabled = !isValidSelection));
+    }
+
+    function setProgress(text, className) {
+      progressEl.textContent = text;
+      progressEl.className = "progress" + (className ? " " + className : "");
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

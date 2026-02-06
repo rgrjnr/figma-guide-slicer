@@ -1,0 +1,12 @@
+{
+  "name": "Guide-Based Email Slicer",
+  "id": "guide-based-email-slicer-dev",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "src/ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["https://cdnjs.cloudflare.com"]
+  }
+}
