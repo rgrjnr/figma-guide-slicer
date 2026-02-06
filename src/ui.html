@@ -131,6 +131,26 @@
       background: var(--figma-color-border, #e5e5e5);
       margin: 4px 0;
     }
+
+    /* Options */
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .option-row input[type="checkbox"] {
+      margin: 0;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -145,6 +165,12 @@
     <button class="btn btn-export" id="btn-export" disabled>
       Export HTML
     </button>
+    <div class="options">
+      <label class="option-row">
+        <input type="checkbox" id="chk-footer" checked />
+        Add footer liquid tag
+      </label>
+    </div>
     <div class="divider"></div>
     <div class="btn-row">
       <button class="btn btn-secondary" id="btn-clear-guides" disabled>
@@ -183,7 +209,10 @@
     btnExport.onclick = () => {
       setAllButtonsDisabled(true);
       setProgress("Starting export...", "");
-      parent.postMessage({ pluginMessage: { type: "export-html" } }, "*");
+      parent.postMessage({ pluginMessage: {
+        type: "export-html",
+        addFooter: document.getElementById("chk-footer").checked,
+      } }, "*");
     };
 
     btnClearGuides.onclick = () => {
@@ -215,7 +244,7 @@
           break;
 
         case "package-zip":
-          await packageAndDownloadZip(msg.html, msg.images, msg.frameName);
+          await handlePackageZip(msg);
           break;
 
         case "slices-cleared":
@@ -253,18 +282,201 @@
       setProgress("", "");
     }
 
-    // --- ZIP Packaging ---
+    // --- Image Edge Color Extraction ---
 
-    async function packageAndDownloadZip(htmlContent, images, frameName) {
+    function loadImage(bytes) {
+      return new Promise((resolve, reject) => {
+        const blob = new Blob([new Uint8Array(bytes)], { type: "image/jpeg" });
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Failed to decode image")); };
+        img.src = url;
+      });
+    }
+
+    function averageColor(imageData) {
+      const d = imageData.data;
+      let r = 0, g = 0, b = 0;
+      const pixels = d.length / 4;
+      for (let i = 0; i < d.length; i += 4) {
+        r += d[i]; g += d[i + 1]; b += d[i + 2];
+      }
+      return {
+        r: Math.round(r / pixels),
+        g: Math.round(g / pixels),
+        b: Math.round(b / pixels),
+      };
+    }
+
+    function toHex(c) {
+      return "#" + [c.r, c.g, c.b].map(v => v.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function extractEdgeColors(bytes) {
+      const img = await loadImage(bytes);
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      const top = averageColor(ctx.getImageData(0, 0, img.width, 1));
+      const bottom = averageColor(ctx.getImageData(0, img.height - 1, img.width, 1));
+      return { top, bottom };
+    }
+
+    // --- Row Grouping ---
+
+    function groupSlicesIntoRows(slices) {
+      if (slices.length === 0) return [];
+      const rows = [];
+      let currentRow = [slices[0]];
+      for (let i = 1; i < slices.length; i++) {
+        if (Math.abs(slices[i].absY - currentRow[0].absY) <= 2) {
+          currentRow.push(slices[i]);
+        } else {
+          currentRow.sort((a, b) => a.absX - b.absX);
+          rows.push(currentRow);
+          currentRow = [slices[i]];
+        }
+      }
+      currentRow.sort((a, b) => a.absX - b.absX);
+      rows.push(currentRow);
+      return rows;
+    }
+
+    // --- HTML Generation ---
+
+    function escapeAttr(str) {
+      return str.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function generateEmailHTML(slices, addFooter) {
+      const maxWidth = 600;
+      const emailRows = groupSlicesIntoRows(slices);
+
+      const rows = emailRows.map(row => {
+        // Compute row-level gradient: top color from first column's top, bottom color from first column's bottom
+        const rowTopColor = toHex(row[0].colors.top);
+        const rowBottomColor = toHex(row[0].colors.bottom);
+        const rowMidColor = toHex({
+          r: Math.round((row[0].colors.top.r + row[0].colors.bottom.r) / 2),
+          g: Math.round((row[0].colors.top.g + row[0].colors.bottom.g) / 2),
+          b: Math.round((row[0].colors.top.b + row[0].colors.bottom.b) / 2),
+        });
+
+        if (row.length === 1) {
+          const s = row[0];
+          const imgTag = '<img src="images/' + s.fileName + '" width="' + maxWidth + '" alt="" style="display:block; width:100%; max-width:' + maxWidth + 'px; height:auto; border:0;" />';
+          const content = s.linkUrl
+            ? '<a href="' + escapeAttr(s.linkUrl) + '" target="_blank" style="text-decoration:none;">' + imgTag + "</a>"
+            : imgTag;
+          return '        <tr>\n' +
+            '          <td align="center" valign="top" bgcolor="' + rowMidColor + '" style="padding:0; margin:0; line-height:0; font-size:0; background:linear-gradient(to bottom, ' + rowTopColor + ', ' + rowBottomColor + ');">\n' +
+            '            ' + content + '\n' +
+            '          </td>\n' +
+            '        </tr>';
+        }
+
+        // Multi-column row
+        const totalWidth = row.reduce((sum, s) => sum + s.width, 0);
+        const columns = row.map((s, i) => {
+          let colWidth;
+          if (i === row.length - 1) {
+            colWidth = maxWidth - row.slice(0, i).reduce((sum, c) => sum + Math.round(c.width / totalWidth * maxWidth), 0);
+          } else {
+            colWidth = Math.round(s.width / totalWidth * maxWidth);
+          }
+          const pct = (colWidth / maxWidth * 100).toFixed(4);
+          const colTopColor = toHex(s.colors.top);
+          const colBottomColor = toHex(s.colors.bottom);
+          const colMidColor = toHex({
+            r: Math.round((s.colors.top.r + s.colors.bottom.r) / 2),
+            g: Math.round((s.colors.top.g + s.colors.bottom.g) / 2),
+            b: Math.round((s.colors.top.b + s.colors.bottom.b) / 2),
+          });
+          const imgTag = '<img src="images/' + s.fileName + '" width="' + colWidth + '" alt="" style="display:block; width:100%; max-width:' + colWidth + 'px; height:auto; border:0;" />';
+          const content = s.linkUrl
+            ? '<a href="' + escapeAttr(s.linkUrl) + '" target="_blank" style="text-decoration:none;">' + imgTag + "</a>"
+            : imgTag;
+          return '            <td align="center" valign="top" width="' + colWidth + '" bgcolor="' + colMidColor + '" style="padding:0; margin:0; line-height:0; font-size:0; width:' + pct + '%; background:linear-gradient(to bottom, ' + colTopColor + ', ' + colBottomColor + ');">\n              ' + content + '\n            </td>';
+        });
+
+        return '        <tr>\n' +
+          '          <td align="center" valign="top" bgcolor="' + rowMidColor + '" style="padding:0; margin:0; line-height:0; font-size:0; background:linear-gradient(to bottom, ' + rowTopColor + ', ' + rowBottomColor + ');">\n' +
+          '            <table role="presentation" width="' + maxWidth + '" cellpadding="0" cellspacing="0" border="0" style="width:100%; max-width:' + maxWidth + 'px;">\n' +
+          '              <tr>\n' +
+          columns.join("\n") + '\n' +
+          '              </tr>\n' +
+          '            </table>\n' +
+          '          </td>\n' +
+          '        </tr>';
+      }).join("\n");
+
+      return '<!DOCTYPE html>\n' +
+        '<html lang="en" xmlns="http://www.w3.org/1999/xhtml">\n' +
+        '<head>\n' +
+        '  <meta charset="UTF-8" />\n' +
+        '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n' +
+        '  <meta http-equiv="X-UA-Compatible" content="IE=edge" />\n' +
+        '  <title>Email</title>\n' +
+        '  <!--[if mso]>\n' +
+        '  <style type="text/css">\n' +
+        '    table { border-collapse: collapse; }\n' +
+        '  </style>\n' +
+        '  <![endif]-->\n' +
+        '  <style type="text/css">\n' +
+        '    body { margin: 0; padding: 0; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }\n' +
+        '    table { border-spacing: 0; border-collapse: collapse; }\n' +
+        '    img { border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }\n' +
+        '  </style>\n' +
+        '</head>\n' +
+        '<body style="margin:0; padding:0; background-color:#f4f4f4;">\n' +
+        '  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f4f4;">\n' +
+        '    <tr>\n' +
+        '      <td align="center" valign="top" style="padding:0;">\n' +
+        '        <table role="presentation" width="' + maxWidth + '" cellpadding="0" cellspacing="0" border="0" style="max-width:' + maxWidth + 'px; width:100%; margin:0 auto; background-color:#ffffff;">\n' +
+        rows + '\n' +
+        '        </table>\n' +
+        '      </td>\n' +
+        '    </tr>\n' +
+        '  </table>' + (addFooter ? '\n  <center>{{${email_footer}}}</center>' : '') + '\n' +
+        '</body>\n' +
+        '</html>';
+    }
+
+    // --- Full Export Pipeline ---
+
+    async function handlePackageZip(msg) {
       try {
-        setProgress("Packaging ZIP...", "");
+        setProgress("Extracting colors...", "");
 
+        // Extract edge colors for each slice
+        const slicesWithColors = [];
+        for (let i = 0; i < msg.slices.length; i++) {
+          const s = msg.slices[i];
+          const colors = await extractEdgeColors(s.bytes);
+          slicesWithColors.push({
+            fileName: s.fileName,
+            width: s.width,
+            height: s.height,
+            absX: s.absX,
+            absY: s.absY,
+            linkUrl: s.linkUrl,
+            colors: colors,
+          });
+        }
+
+        setProgress("Generating HTML...", "");
+        const htmlContent = generateEmailHTML(slicesWithColors, msg.addFooter);
+
+        setProgress("Packaging ZIP...", "");
         const zip = new JSZip();
         zip.file("index.html", htmlContent);
 
         const imgFolder = zip.folder("images");
-        for (const img of images) {
-          imgFolder.file(img.fileName, new Uint8Array(img.bytes));
+        for (const s of msg.slices) {
+          imgFolder.file(s.fileName, new Uint8Array(s.bytes));
         }
 
         const blob = await zip.generateAsync({ type: "blob" });
@@ -272,7 +484,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = (frameName || "email-export") + ".zip";
+        a.download = (msg.frameName || "email-export") + ".zip";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -280,7 +492,7 @@
 
         setProgress("Export complete! ZIP downloaded.", "success");
       } catch (err) {
-        setProgress("Error creating ZIP: " + err.message, "error");
+        setProgress("Error: " + err.message, "error");
       }
       enableButtonsIfValid();
     }

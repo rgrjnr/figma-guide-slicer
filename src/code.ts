@@ -11,17 +11,13 @@ interface SliceRegion {
   name: string;
 }
 
-interface SliceMeta {
-  name: string;
-  fileName: string;
-  linkUrl: string | null;
-}
-
 interface ExportedSlice {
   fileName: string;
   pngBytes: Uint8Array;
   width: number;
   height: number;
+  absX: number;
+  absY: number;
   linkUrl: string | null;
 }
 
@@ -93,8 +89,8 @@ function computeSliceRegions(frame: FrameNode): SliceRegion[] {
 
 // --- Slice Group Helpers ---
 
-function findSliceGroup(frame: FrameNode): GroupNode | null {
-  for (const child of frame.children) {
+function findSliceGroup(): GroupNode | null {
+  for (const child of figma.currentPage.children) {
     if (child.type === "GROUP" && child.name === "__EMAIL_SLICES__") {
       return child;
     }
@@ -102,8 +98,8 @@ function findSliceGroup(frame: FrameNode): GroupNode | null {
   return null;
 }
 
-function removeSliceGroup(frame: FrameNode): void {
-  const group = findSliceGroup(frame);
+function removeSliceGroup(): void {
+  const group = findSliceGroup();
   if (group) group.remove();
 }
 
@@ -130,30 +126,44 @@ function sanitizeFileName(name: string): string {
   );
 }
 
-// --- Resolve Slice Names from Group (if exists) ---
+// --- Read export entries from slice group ---
 
-function resolveSliceNames(
-  sliceGroup: GroupNode | null,
-  regions: SliceRegion[]
-): SliceMeta[] {
-  return regions.map((region, i) => {
-    let rawName = region.name;
+interface ExportEntry {
+  node: SliceNode;
+  name: string;
+  fileName: string;
+  linkUrl: string | null;
+}
 
-    // If slice group exists, try to find matching named rectangle
-    if (sliceGroup) {
-      for (const child of sliceGroup.children) {
-        const storedIndex = child.getPluginData("index");
-        if (storedIndex === String(region.index)) {
-          rawName = child.name;
-          break;
-        }
-      }
+function readExportEntries(sliceGroup: GroupNode): ExportEntry[] {
+  const entries: ExportEntry[] = [];
+
+  // Collect all slice children, sorted by absolute Y then X position
+  const sliceChildren = [...sliceGroup.children]
+    .filter((c): c is SliceNode => c.type === "SLICE")
+    .sort((a, b) => {
+      const dy = a.absoluteTransform[1][2] - b.absoluteTransform[1][2];
+      if (Math.abs(dy) > 2) return dy;
+      return a.absoluteTransform[0][2] - b.absoluteTransform[0][2];
+    });
+
+  for (const child of sliceChildren) {
+    const { cleanName, linkUrl } = parseLinkFromName(child.name);
+    const fileName = sanitizeFileName(cleanName) + ".jpg";
+    entries.push({ node: child, name: cleanName, fileName, linkUrl });
+  }
+
+  // Deduplicate file names
+  const seenNames = new Map<string, number>();
+  for (const entry of entries) {
+    const count = seenNames.get(entry.fileName) || 0;
+    seenNames.set(entry.fileName, count + 1);
+    if (count > 0) {
+      entry.fileName = entry.fileName.replace(".jpg", `-${count}.jpg`);
     }
+  }
 
-    const { cleanName, linkUrl } = parseLinkFromName(rawName);
-    const fileName = sanitizeFileName(cleanName) + ".png";
-    return { name: cleanName, fileName, linkUrl };
-  });
+  return entries;
 }
 
 // --- Generate Slices ---
@@ -177,25 +187,28 @@ async function handleGenerateSlices(): Promise<void> {
   }
 
   // Clear existing slices first
-  removeSliceGroup(frame);
+  removeSliceGroup();
 
-  // Create actual Figma slice nodes, then group them
+  // Frame absolute position on the page
+  const frameAbsX = frame.absoluteTransform[0][2];
+  const frameAbsY = frame.absoluteTransform[1][2];
+
+  // Create slice nodes at page root level using absolute coordinates
   const slices: SceneNode[] = [];
   for (const region of regions) {
     const slice = figma.createSlice();
     slice.name = region.name;
-    slice.x = 0;
-    slice.y = region.y0;
+    slice.x = frameAbsX;
+    slice.y = frameAbsY + region.y0;
     slice.resize(frame.width, region.y1 - region.y0);
     slice.setPluginData("kind", "email-slice");
     slice.setPluginData("index", String(region.index));
     slice.setPluginData("y0", String(region.y0));
     slice.setPluginData("y1", String(region.y1));
-    frame.appendChild(slice);
     slices.push(slice);
   }
 
-  const group = figma.group(slices, frame);
+  const group = figma.group(slices, figma.currentPage);
   group.name = "__EMAIL_SLICES__";
   figma.ui.postMessage({ type: "slices-generated", count: regions.length });
 }
@@ -203,9 +216,7 @@ async function handleGenerateSlices(): Promise<void> {
 // --- Clear Slices ---
 
 function handleClearSlices(): void {
-  const frame = getSelectedFrame();
-  if (!frame) return;
-  removeSliceGroup(frame);
+  removeSliceGroup();
   figma.ui.postMessage({ type: "slices-cleared" });
 }
 
@@ -221,176 +232,96 @@ function handleClearGuides(): void {
 
 // --- Export HTML ---
 
-async function handleExportHTML(): Promise<void> {
+async function handleExportHTML(addFooter: boolean): Promise<void> {
   const frame = getSelectedFrame();
   if (!frame) return;
 
-  const regions = computeSliceRegions(frame);
-  if (regions.length === 0) {
-    figma.ui.postMessage({ type: "error", message: "No horizontal guides found. Generate slices first." });
+  // Ensure slices exist — generate from guides if not already present
+  let sliceGroup = findSliceGroup();
+  if (!sliceGroup) {
+    await handleGenerateSlices();
+    sliceGroup = findSliceGroup();
+  }
+
+  if (!sliceGroup) {
+    figma.ui.postMessage({ type: "error", message: "No slices found. Add horizontal guides and generate slices first." });
     return;
   }
 
-  // Ensure slices exist — generate them if not already present
-  let sliceGroup = findSliceGroup(frame);
-  if (!sliceGroup) {
-    await handleGenerateSlices();
-    sliceGroup = findSliceGroup(frame);
-  }
-
-  const namedSlices = resolveSliceNames(sliceGroup, regions);
-
-  // Deduplicate file names
-  const seenNames = new Map<string, number>();
-  for (const s of namedSlices) {
-    const count = seenNames.get(s.fileName) || 0;
-    seenNames.set(s.fileName, count + 1);
-    if (count > 0) {
-      s.fileName = s.fileName.replace(".png", `-${count}.png`);
-    }
+  // Read all slice entries directly from the group (respects renames/custom names)
+  const entries = readExportEntries(sliceGroup);
+  if (entries.length === 0) {
+    figma.ui.postMessage({ type: "error", message: "No slice nodes found in __EMAIL_SLICES__ group." });
+    return;
   }
 
   const exportedSlices: ExportedSlice[] = [];
 
-  for (let i = 0; i < regions.length; i++) {
-    const region = regions[i];
-    const meta = namedSlices[i];
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
 
     figma.ui.postMessage({
       type: "export-progress",
       current: i + 1,
-      total: regions.length,
+      total: entries.length,
     });
 
-    // Find the matching slice node from the group, or create a temporary one
-    let sliceNode: SliceNode | null = null;
-    if (sliceGroup) {
-      for (const child of sliceGroup.children) {
-        if (
-          child.type === "SLICE" &&
-          child.getPluginData("index") === String(region.index)
-        ) {
-          sliceNode = child;
-          break;
-        }
-      }
-    }
+    // Create a standalone temp slice at the same absolute position (not inside any group)
+    // so exportAsync correctly captures the frame content beneath it
+    const absX = entry.node.absoluteTransform[0][2];
+    const absY = entry.node.absoluteTransform[1][2];
+    const w = entry.node.width;
+    const h = entry.node.height;
 
-    let tempSlice = false;
-    if (!sliceNode) {
-      // Fallback: create a temporary slice at absolute page coordinates
-      sliceNode = figma.createSlice();
-      sliceNode.x = frame.absoluteTransform[0][2];
-      sliceNode.y = frame.absoluteTransform[1][2] + region.y0;
-      sliceNode.resize(frame.width, region.y1 - region.y0);
-      tempSlice = true;
-    }
+    const tempSlice = figma.createSlice();
+    tempSlice.x = absX;
+    tempSlice.y = absY;
+    tempSlice.resize(w, h);
 
-    const pngBytes = await sliceNode.exportAsync({
-      format: "PNG",
+    const imgBytes = await tempSlice.exportAsync({
+      format: "JPG",
       constraint: { type: "SCALE", value: 1 },
     });
 
-    if (tempSlice) {
-      sliceNode.remove();
-    }
+    tempSlice.remove();
 
     exportedSlices.push({
-      fileName: meta.fileName,
-      pngBytes,
-      width: Math.round(frame.width),
-      height: region.y1 - region.y0,
-      linkUrl: meta.linkUrl,
+      fileName: entry.fileName,
+      pngBytes: imgBytes,
+      width: Math.round(w),
+      height: Math.round(h),
+      absX,
+      absY,
+      linkUrl: entry.linkUrl,
     });
   }
 
-  // Generate HTML
-  const html = generateEmailHTML(exportedSlices);
-
-  // Send to UI for ZIP packaging
+  // Send slice data to UI for color extraction, HTML generation, and ZIP packaging
   figma.ui.postMessage({
     type: "package-zip",
-    html,
-    images: exportedSlices.map(s => ({
+    addFooter,
+    slices: exportedSlices.map(s => ({
       fileName: s.fileName,
       bytes: s.pngBytes,
+      width: s.width,
+      height: s.height,
+      absX: s.absX,
+      absY: s.absY,
+      linkUrl: s.linkUrl,
     })),
     frameName: sanitizeFileName(frame.name),
   });
 }
 
-// --- HTML Generation ---
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-function generateEmailHTML(slices: ExportedSlice[]): string {
-  const maxWidth = 600;
-
-  const rows = slices
-    .map(slice => {
-      const imgTag = `<img src="images/${slice.fileName}" width="${maxWidth}" alt="" style="display:block; width:100%; max-width:${maxWidth}px; height:auto; border:0;" />`;
-
-      const content = slice.linkUrl
-        ? `<a href="${escapeHtml(slice.linkUrl)}" target="_blank" style="text-decoration:none;">${imgTag}</a>`
-        : imgTag;
-
-      return [
-        "        <tr>",
-        `          <td align="center" valign="top" style="padding:0; margin:0; line-height:0; font-size:0;">`,
-        `            ${content}`,
-        "          </td>",
-        "        </tr>",
-      ].join("\n");
-    })
-    .join("\n");
-
-  return `<!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Email</title>
-  <!--[if mso]>
-  <style type="text/css">
-    table { border-collapse: collapse; }
-  </style>
-  <![endif]-->
-  <style type="text/css">
-    body { margin: 0; padding: 0; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-    table { border-spacing: 0; border-collapse: collapse; }
-    img { border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
-  </style>
-</head>
-<body style="margin:0; padding:0; background-color:#f4f4f4;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f4f4;">
-    <tr>
-      <td align="center" valign="top" style="padding:0;">
-        <table role="presentation" width="${maxWidth}" cellpadding="0" cellspacing="0" border="0" style="max-width:${maxWidth}px; width:100%; margin:0 auto; background-color:#ffffff;">
-${rows}
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
-}
-
 // --- Message Handler ---
 
-figma.ui.onmessage = async (msg: { type: string }) => {
+figma.ui.onmessage = async (msg: { type: string; addFooter?: boolean }) => {
   switch (msg.type) {
     case "generate-slices":
       await handleGenerateSlices();
       break;
     case "export-html":
-      await handleExportHTML();
+      await handleExportHTML(msg.addFooter !== false);
       break;
     case "clear-slices":
       handleClearSlices();
