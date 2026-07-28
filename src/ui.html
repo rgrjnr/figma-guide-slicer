@@ -151,9 +151,178 @@
       margin: 0;
       cursor: pointer;
     }
+
+    /* Detected social icon rows */
+    .detect-results {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .detect-results.show { display: flex; }
+
+    .detect-row {
+      border: 1px solid var(--figma-color-border, #e5e5e5);
+      border-radius: 6px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .detect-row-title {
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .detect-cell {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .detect-cell .idx {
+      font-size: 10px;
+      opacity: 0.6;
+      width: 12px;
+      flex: none;
+    }
+
+    .detect-cell input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      height: 26px;
+      padding: 0 8px;
+      border: 1px solid var(--figma-color-border, #e5e5e5);
+      border-radius: 4px;
+      background: var(--figma-color-bg, #fff);
+      color: var(--figma-color-text, #333);
+      font-family: inherit;
+      font-size: 11px;
+    }
+
+    .detect-cell input[type="text"]:focus {
+      outline: none;
+      border-color: var(--figma-color-border-selected, #0d99ff);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--figma-color-border, #e5e5e5);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px 4px;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--figma-color-text-secondary, #888);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+
+    .tab.active {
+      color: var(--figma-color-text, #333);
+      border-bottom-color: var(--figma-color-bg-brand, #0d99ff);
+    }
+
+    .panel {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .panel.active {
+      display: flex;
+    }
+
+    /* Email tab */
+    #email-input {
+      flex: 1;
+      min-height: 120px;
+      resize: none;
+      width: 100%;
+      padding: 8px;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--figma-color-text, #333);
+      background: var(--figma-color-bg-secondary, #f5f5f5);
+      border: 1px solid var(--figma-color-border, #e5e5e5);
+      border-radius: 6px;
+    }
+
+    #email-input:focus {
+      outline: none;
+      border-color: var(--figma-color-bg-brand, #0d99ff);
+    }
+
+    .field-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .field-row label {
+      color: var(--figma-color-text-secondary, #888);
+      white-space: nowrap;
+    }
+
+    .field-row input[type="text"] {
+      flex: 1;
+      padding: 6px 8px;
+      font-family: inherit;
+      font-size: 11px;
+      color: var(--figma-color-text, #333);
+      background: var(--figma-color-bg, #fff);
+      border: 1px solid var(--figma-color-border, #e5e5e5);
+      border-radius: 6px;
+    }
+
+    .field-row input[type="text"]:focus {
+      outline: none;
+      border-color: var(--figma-color-bg-brand, #0d99ff);
+    }
+
+    .stats {
+      font-size: 11px;
+      line-height: 1.6;
+      background: var(--figma-color-bg-secondary, #f5f5f5);
+      border-radius: 6px;
+      padding: 10px;
+      display: none;
+    }
+
+    .stats.show { display: block; }
+
+    .stats .stat-line { display: flex; justify-content: space-between; }
+    .stats .stat-line .val { font-weight: 600; }
+    .stats .invalid-note {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid var(--figma-color-border, #e5e5e5);
+      color: #dc2626;
+      word-break: break-all;
+    }
   </style>
 </head>
 <body>
+  <div class="tabs">
+    <button class="tab active" id="tab-slicer" data-panel="panel-slicer">Slicer</button>
+    <button class="tab" id="tab-emails" data-panel="panel-emails">Emails</button>
+  </div>
+
+  <div class="panel active" id="panel-slicer">
   <div class="status empty" id="status">
     Select a frame to begin
   </div>
@@ -166,6 +335,10 @@
       Export HTML
     </button>
     <div class="options">
+      <label class="option-row">
+        <input type="checkbox" id="chk-detect" checked />
+        Auto-detect social icons
+      </label>
       <label class="option-row">
         <input type="checkbox" id="chk-footer" checked />
         Add footer liquid tag
@@ -182,7 +355,25 @@
     </div>
   </div>
 
+  <div class="detect-results" id="detect-results"></div>
+
   <div class="progress" id="progress"></div>
+  </div>
+
+  <div class="panel" id="panel-emails">
+    <textarea id="email-input" placeholder="Paste your email list here (one per line, or comma/semicolon separated). A header row is detected and skipped automatically."></textarea>
+
+    <div class="field-row">
+      <label for="email-filename">Save as</label>
+      <input type="text" id="email-filename" />
+    </div>
+
+    <button class="btn btn-primary" id="btn-process-emails">Process &amp; Download CSV</button>
+
+    <div class="stats" id="email-stats"></div>
+
+    <div class="progress" id="email-progress"></div>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
@@ -194,6 +385,8 @@
     const btnExport = document.getElementById("btn-export");
     const btnClearGuides = document.getElementById("btn-clear-guides");
     const btnClearSlices = document.getElementById("btn-clear-slices");
+    const chkDetect = document.getElementById("chk-detect");
+    const detectResultsEl = document.getElementById("detect-results");
     const allButtons = [btnGenerate, btnExport, btnClearGuides, btnClearSlices];
 
     let isValidSelection = false;
@@ -202,8 +395,12 @@
 
     btnGenerate.onclick = () => {
       setAllButtonsDisabled(true);
-      setProgress("Generating slices...", "");
-      parent.postMessage({ pluginMessage: { type: "generate-slices" } }, "*");
+      clearDetectResults();
+      setProgress(chkDetect.checked ? "Scanning for social icons..." : "Generating slices...", "");
+      parent.postMessage({ pluginMessage: {
+        type: "generate-slices",
+        detectSocial: chkDetect.checked,
+      } }, "*");
     };
 
     btnExport.onclick = () => {
@@ -235,6 +432,11 @@
           break;
 
         case "slices-generated":
+          if (msg.cells && msg.cells.length > 0) {
+            renderDetectResults({ found: true, cells: msg.cells, y0: msg.y0, y1: msg.y1 });
+          } else {
+            clearDetectResults();
+          }
           setProgress("Generated " + msg.count + " slice(s).", "success");
           enableButtonsIfValid();
           break;
@@ -243,11 +445,26 @@
           setProgress("Exporting " + msg.current + "/" + msg.total + " slices...", "");
           break;
 
+        case "detect-progress":
+          setProgress(msg.message || "Scanning...", "");
+          break;
+
+        case "analyze-frame":
+          setProgress("Analyzing frame...", "");
+          await handleAnalyzeFrame(msg);
+          break;
+
+        case "detect-result":
+          renderDetectResults(msg);
+          enableButtonsIfValid();
+          break;
+
         case "package-zip":
           await handlePackageZip(msg);
           break;
 
         case "slices-cleared":
+          clearDetectResults();
           setProgress("Slices cleared.", "");
           enableButtonsIfValid();
           break;
@@ -313,16 +530,655 @@
       return "#" + [c.r, c.g, c.b].map(v => v.toString(16).padStart(2, "0")).join("");
     }
 
-    async function extractEdgeColors(bytes) {
+    async function loadImageToCanvas(bytes) {
       const img = await loadImage(bytes);
       const canvas = document.createElement("canvas");
       canvas.width = img.width;
       canvas.height = img.height;
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0);
-      const top = averageColor(ctx.getImageData(0, 0, img.width, 1));
-      const bottom = averageColor(ctx.getImageData(0, img.height - 1, img.width, 1));
+      return { ctx, width: img.width, height: img.height };
+    }
+
+    async function extractEdgeColors(bytes) {
+      const { ctx, width, height } = await loadImageToCanvas(bytes);
+      const top = averageColor(ctx.getImageData(0, 0, width, 1));
+      const bottom = averageColor(ctx.getImageData(0, height - 1, width, 1));
       return { top, bottom };
+    }
+
+    // ============================================================
+    // Social Icon Detection
+    //
+    // Runs on a render of the whole frame — guides are not required. Two stages:
+    //
+    //   1. Vertical: measure how much each scanline differs from the frame's
+    //      background and segment the frame into horizontal content bands.
+    //   2. Horizontal: inside each band, project ink onto the x axis and look
+    //      for a run of evenly spaced, roughly square blobs.
+    //
+    // Cells are then split at the midpoints between icon centers, which also
+    // compensates for low-contrast buttons: if only the white glyph is detected,
+    // the midpoint split still re-inflates the cell to cover the whole button
+    // plus padding. Each icon's glyph is finally matched against a small
+    // template set to name the platform.
+    // ============================================================
+
+    const INK_THRESHOLD = 24;       // per-pixel distance from background, 0-255
+    const ASPECT_MIN = 0.5;         // blob w/h bounds — social glyphs are ~square,
+    const ASPECT_MAX = 1.4;         // wordmarks like "HBO family" are 2.5-4x wide
+    const MIN_ICONS = 2;
+    const MAX_ICONS = 6;
+    const PITCH_TOLERANCE = 0.25;   // consecutive gaps must match within +/-25%
+    const MAX_SPAN_RATIO = 0.7;     // icon group must not dominate the row
+    const MAX_ICON_WIDTH_RATIO = 0.25;
+    const SIZE_UNIFORMITY = 1.35;   // icons in a bar are all the same size
+    const MIN_BAND_H = 8;
+    const MAX_BAND_H = 240;
+    const MIN_CELL_FRAME_PX = 10;   // hairline <td>s break in Outlook
+    const BOTTOM_PRIOR_BONUS = 15;  // social bars live in footers
+
+    function median(values) {
+      if (values.length === 0) return 0;
+      const sorted = values.slice().sort((a, b) => a - b);
+      return sorted[(sorted.length - 1) >> 1];
+    }
+
+    // Per-pixel "is this content, not background" mask for the whole frame.
+    // Background is estimated per scanline from the left/right margins, so a
+    // vertical gradient does not poison it, and by median rather than mean so a
+    // wide element bleeding into the margin cannot skew it.
+    function buildInkMask(imageData) {
+      const { width, height, data } = imageData;
+      const mask = new Uint8Array(width * height);
+      const sample = Math.min(8, Math.max(2, Math.floor(width * 0.02)));
+      const rs = [], gs = [], bs = [];
+
+      for (let y = 0; y < height; y++) {
+        const rowStart = y * width * 4;
+
+        rs.length = 0; gs.length = 0; bs.length = 0;
+        for (let s = 0; s < sample; s++) {
+          const xs = [s, width - 1 - s];
+          for (let k = 0; k < 2; k++) {
+            const i = rowStart + xs[k] * 4;
+            rs.push(data[i]); gs.push(data[i + 1]); bs.push(data[i + 2]);
+          }
+        }
+        const bgR = median(rs), bgG = median(gs), bgB = median(bs);
+
+        const maskRow = y * width;
+        for (let x = 0; x < width; x++) {
+          const i = rowStart + x * 4;
+          const dr = Math.abs(data[i] - bgR);
+          const dg = Math.abs(data[i + 1] - bgG);
+          const db = Math.abs(data[i + 2] - bgB);
+          if ((dr * 2 + dg * 4 + db * 3) / 9 > INK_THRESHOLD) mask[maskRow + x] = 1;
+        }
+      }
+
+      return mask;
+    }
+
+    // Contiguous runs of scanlines that contain content, i.e. candidate rows.
+    function findBands(mask, width, height) {
+      const threshold = Math.max(2, Math.round(width * 0.004));
+      const on = new Uint8Array(height);
+      for (let y = 0; y < height; y++) {
+        let count = 0;
+        const row = y * width;
+        for (let x = 0; x < width; x++) count += mask[row + x];
+        on[y] = count >= threshold ? 1 : 0;
+      }
+
+      const bands = [];
+      let y = 0;
+      while (y < height) {
+        if (!on[y]) { y++; continue; }
+        let end = y;
+        while (end < height && on[end]) end++;
+        bands.push({ y0: y, y1: end });
+        y = end;
+      }
+      return bands;
+    }
+
+    function bandColumnProfile(mask, width, y0, y1) {
+      const h = y1 - y0;
+      const ink = new Int32Array(width);
+      const minY = new Int32Array(width).fill(h);
+      const maxY = new Int32Array(width).fill(-1);
+
+      for (let y = y0; y < y1; y++) {
+        const row = y * width;
+        const ry = y - y0;
+        for (let x = 0; x < width; x++) {
+          if (mask[row + x]) {
+            ink[x]++;
+            if (ry < minY[x]) minY[x] = ry;
+            if (ry > maxY[x]) maxY[x] = ry;
+          }
+        }
+      }
+      return { ink, minY, maxY, h };
+    }
+
+    function dilate(mask, k) {
+      if (k <= 0) return mask.slice();
+      const out = new Uint8Array(mask.length);
+      for (let x = 0; x < mask.length; x++) {
+        let on = 0;
+        for (let d = -k; d <= k && !on; d++) {
+          const j = x + d;
+          if (j >= 0 && j < mask.length && mask[j]) on = 1;
+        }
+        out[x] = on;
+      }
+      return out;
+    }
+
+    function erode(mask, k) {
+      if (k <= 0) return mask.slice();
+      const out = new Uint8Array(mask.length);
+      for (let x = 0; x < mask.length; x++) {
+        let on = 1;
+        for (let d = -k; d <= k && on; d++) {
+          const j = x + d;
+          // Out-of-range counts as set, so closing does not eat edge blobs.
+          if (j >= 0 && j < mask.length && !mask[j]) on = 0;
+        }
+        out[x] = on;
+      }
+      return out;
+    }
+
+    function maskToBlobs(mask, profile) {
+      const blobs = [];
+      let x = 0;
+      while (x < mask.length) {
+        if (!mask[x]) { x++; continue; }
+        let end = x;
+        while (end < mask.length && mask[end]) end++;
+
+        let top = profile.h, bottom = -1;
+        for (let i = x; i < end; i++) {
+          if (profile.maxY[i] >= 0) {
+            if (profile.minY[i] < top) top = profile.minY[i];
+            if (profile.maxY[i] > bottom) bottom = profile.maxY[i];
+          }
+        }
+        if (bottom >= 0) {
+          blobs.push({ x0: x, x1: end, w: end - x, h: bottom - top + 1, cx: (x + end) / 2 });
+        }
+        x = end;
+      }
+      return blobs;
+    }
+
+    // Longest run of blobs whose consecutive center-to-center gaps all match the
+    // gap that started the run. This is what isolates the icon cluster from a
+    // wordmark sitting in the same row.
+    function longestEvenlySpacedChain(blobs) {
+      let best = null;
+      for (let i = 0; i < blobs.length - 1; i++) {
+        for (let j = i + 1; j < blobs.length; j++) {
+          const pitch = blobs[j].cx - blobs[i].cx;
+          if (pitch <= 0) continue;
+          const chain = [blobs[i], blobs[j]];
+          let last = blobs[j];
+          for (let k = j + 1; k < blobs.length; k++) {
+            const gap = blobs[k].cx - last.cx;
+            if (Math.abs(gap - pitch) <= pitch * PITCH_TOLERANCE) {
+              chain.push(blobs[k]);
+              last = blobs[k];
+            }
+          }
+          if (!best || chain.length > best.length) best = chain;
+        }
+      }
+      return best;
+    }
+
+    function scoreChain(chain, width) {
+      if (!chain || chain.length < MIN_ICONS || chain.length > MAX_ICONS) return null;
+
+      const widths = chain.map(b => b.w);
+      const heights = chain.map(b => b.h);
+      const minW = Math.min.apply(null, widths), maxW = Math.max.apply(null, widths);
+      const minH = Math.min.apply(null, heights), maxH = Math.max.apply(null, heights);
+
+      if (maxW / minW > SIZE_UNIFORMITY) return null;
+      if (maxH / minH > SIZE_UNIFORMITY) return null;
+      if (maxW > width * MAX_ICON_WIDTH_RATIO) return null;
+      if (chain[chain.length - 1].x1 - chain[0].x0 > width * MAX_SPAN_RATIO) return null;
+
+      const gaps = [];
+      for (let i = 1; i < chain.length; i++) gaps.push(chain[i].cx - chain[i - 1].cx);
+      const pitch = median(gaps);
+      if (pitch <= 0) return null;
+
+      const spread = gaps.reduce((acc, g) => acc + Math.abs(g - pitch), 0) / gaps.length / pitch;
+      const aspectPenalty = chain.reduce((acc, b) => acc + Math.abs(b.w / b.h - 1), 0) / chain.length;
+
+      return { chain, pitch, score: chain.length * 100 - spread * 60 - aspectPenalty * 40 };
+    }
+
+    // The right amount of morphological closing depends on the glyph, not on the
+    // row: a solid circular button needs none, while "in" or a dotted "i" must be
+    // merged before it reads as one icon. Too much closing fuses adjacent icons
+    // into one wide blob. So try a range of kernels and keep the best-scoring
+    // result instead of guessing a single constant.
+    function detectInBand(mask, width, y0, y1) {
+      const profile = bandColumnProfile(mask, width, y0, y1);
+      const h = profile.h;
+
+      const minInk = Math.max(2, Math.round(h * 0.02));
+      const base = new Uint8Array(width);
+      for (let x = 0; x < width; x++) base[x] = profile.ink[x] >= minInk ? 1 : 0;
+
+      const minBlobW = Math.max(3, Math.round(h * 0.15));
+      const maxKernel = Math.max(2, Math.round(h * 0.25));
+      const kernels = [0, 2, 3, 5, 8, 12, 16, 20].filter(k => k <= maxKernel);
+
+      let best = null;
+      for (const k of kernels) {
+        let m = erode(dilate(base, k), k);   // close: merge glyph fragments
+        m = dilate(erode(m, 2), 2);          // open: drop JPEG speckle
+
+        const blobs = maskToBlobs(m, profile).filter(b => {
+          if (b.w < minBlobW || b.h <= 0) return false;
+          const aspect = b.w / b.h;
+          return aspect >= ASPECT_MIN && aspect <= ASPECT_MAX;
+        });
+        if (blobs.length < MIN_ICONS) continue;
+
+        const scored = scoreChain(longestEvenlySpacedChain(blobs), width);
+        if (scored && (!best || scored.score > best.score)) best = scored;
+      }
+      return best;
+    }
+
+    // Midpoint split: each icon's cell reaches halfway into the gap on both
+    // sides, so cells touch edge to edge and every icon sits centered in a cell
+    // slightly larger than itself. That margin is the padding.
+    function chainToCells(best, imageWidth, scale, frameWidth) {
+      const { chain, pitch } = best;
+      const n = chain.length;
+      const centers = chain.map(b => b.cx);
+
+      const bounds = [Math.max(0, centers[0] - pitch / 2)];
+      for (let i = 0; i < n - 1; i++) bounds.push((centers[i] + centers[i + 1]) / 2);
+      bounds.push(Math.min(imageWidth, centers[n - 1] + pitch / 2));
+
+      const minCellPx = MIN_CELL_FRAME_PX * scale;
+      let left = bounds[0];
+      let right = bounds[n];
+      if (left < minCellPx) left = 0;
+      if (imageWidth - right < minCellPx) right = imageWidth;
+
+      const raw = [];
+      if (left > 0) raw.push({ x0: 0, x1: left, isIcon: false, blob: null });
+      for (let i = 0; i < n; i++) {
+        raw.push({
+          x0: i === 0 ? left : bounds[i],
+          x1: i === n - 1 ? right : bounds[i + 1],
+          isIcon: true,
+          blob: chain[i],
+        });
+      }
+      if (right < imageWidth) raw.push({ x0: right, x1: imageWidth, isIcon: false, blob: null });
+
+      // Convert to frame pixels, forcing contiguity and exact edge alignment so
+      // the generated <td> widths sum back to the full row.
+      const cells = [];
+      let cursor = 0;
+      for (let i = 0; i < raw.length; i++) {
+        const isLast = i === raw.length - 1;
+        const x1 = isLast ? frameWidth : Math.round(raw[i].x1 / scale);
+        if (x1 - cursor < 1) continue;
+        cells.push({ x0: cursor, x1, isIcon: raw[i].isIcon, blob: raw[i].blob, platform: null });
+        cursor = x1;
+      }
+      if (cells.length > 0) cells[cells.length - 1].x1 = frameWidth;
+      return cells;
+    }
+
+    // ---- Platform identification ----
+    //
+    // Each icon's glyph is normalized to a 24x24 binary bitmap and compared
+    // against reference marks by Jaccard overlap, allowing a small translation.
+    // Anything that does not clearly win is left unlabelled rather than guessed.
+
+    const GLYPH_N = 24;
+    const GLYPH_ACCEPT = 0.55;
+    const GLYPH_MARGIN = 0.08;
+
+    const PLATFORM_TEMPLATES = {
+      linkedin: "000700000700fffff0fffff8fffffefffffefffffefffffeff81feff81feff81feff81feff81feff81feff81feff81feff81feff81feff81feff81feff80fe1f807e1f807e",
+      facebook: "001fc0003fc0007fc0007fc0007c00007c00007c00007c00007c00ffffc0ffffc0ffffc0ffffc0ffffc0007c00007c00007c00007c00007c00007c00007c00007c00007c00",
+      instagram: "7ffff8fffffcf0003ee0001ec0000ec0780fc1fe0fc3ff0ec3ff8ec781cec701cec601cec601cec303cec387cec3ff8ec3ff0ec1fe0ec0000ec0000efffffe7ffffe3ffffc1fffe0",
+    };
+
+    const PLATFORM_URLS = {
+      linkedin: "https://www.linkedin.com/company/…",
+      facebook: "https://www.facebook.com/…",
+      instagram: "https://www.instagram.com/…",
+    };
+
+    function unpackTemplate(hex) {
+      const out = new Uint8Array(GLYPH_N * GLYPH_N);
+      for (let i = 0; i < hex.length; i++) {
+        const nibble = parseInt(hex[i], 16);
+        for (let b = 0; b < 4; b++) out[i * 4 + b] = (nibble >> (3 - b)) & 1;
+      }
+      return out;
+    }
+
+    const TEMPLATES = Object.keys(PLATFORM_TEMPLATES).map(name => ({
+      name,
+      bits: unpackTemplate(PLATFORM_TEMPLATES[name]),
+    }));
+
+    // 8-connected components of `want` cells.
+    function connectedComponents(mask, w, h, want) {
+      const label = new Int32Array(w * h).fill(-1);
+      const comps = [];
+      for (let s = 0; s < w * h; s++) {
+        if (mask[s] !== want || label[s] >= 0) continue;
+        const idx = comps.length;
+        const cells = [];
+        const stack = [s];
+        label[s] = idx;
+        while (stack.length) {
+          const p = stack.pop();
+          cells.push(p);
+          const py = (p / w) | 0, px = p % w;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              const ny = py + dy, nx = px + dx;
+              if (ny < 0 || ny >= h || nx < 0 || nx >= w) continue;
+              const q = ny * w + nx;
+              if (mask[q] === want && label[q] < 0) { label[q] = idx; stack.push(q); }
+            }
+          }
+        }
+        comps.push(cells);
+      }
+      return comps;
+    }
+
+    // Pull the glyph out of an icon cell as a normalized 24x24 bitmap. The
+    // button plate/ring is discarded by dropping components that touch the cell
+    // border, and stray marks are discarded by keeping only what sits with the
+    // dominant component (an "i" dot belongs; a guide artifact does not).
+    function extractGlyph(imageData, cx0, cy0, cx1, cy1) {
+      const w = cx1 - cx0, h = cy1 - cy0;
+      if (w < 6 || h < 6) return null;
+
+      const lum = new Float32Array(w * h);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = ((cy0 + y) * imageData.width + (cx0 + x)) * 4;
+          lum[y * w + x] =
+            0.299 * imageData.data[i] + 0.587 * imageData.data[i + 1] + 0.114 * imageData.data[i + 2];
+        }
+      }
+
+      const sorted = Array.from(lum).sort((a, b) => a - b);
+      const lo = sorted[Math.floor(sorted.length * 0.02)];
+      const hi = sorted[Math.floor(sorted.length * 0.98)];
+      if (hi - lo < 20) return null;
+
+      let best = null;
+      for (const bright of [true, false]) {
+        const thr = lo + (hi - lo) * (bright ? 0.62 : 0.38);
+        const m = new Uint8Array(w * h);
+        let total = 0;
+        for (let i = 0; i < w * h; i++) {
+          const on = bright ? lum[i] > thr : lum[i] < thr;
+          if (on) { m[i] = 1; total++; }
+        }
+        if (total < 4 || total > w * h * 0.75) continue;
+
+        const comps = connectedComponents(m, w, h, 1);
+        let keep = comps.filter(c => !c.some(p => {
+          const px = p % w, py = (p / w) | 0;
+          return px === 0 || px === w - 1 || py === 0 || py === h - 1;
+        }));
+        if (keep.length === 0) keep = comps;
+
+        let main = keep[0];
+        for (const c of keep) if (c.length > main.length) main = c;
+        let px0 = w, px1 = -1, py0 = h, py1 = -1;
+        for (const p of main) {
+          const px = p % w, py = (p / w) | 0;
+          if (px < px0) px0 = px; if (px > px1) px1 = px;
+          if (py < py0) py0 = py; if (py > py1) py1 = py;
+        }
+        const padx = Math.max(2, Math.round((px1 - px0 + 1) * 0.25));
+        const pady = Math.max(2, Math.round((py1 - py0 + 1) * 0.25));
+
+        const cells = [];
+        for (const c of keep) {
+          let ok = true;
+          for (const p of c) {
+            const px = p % w, py = (p / w) | 0;
+            if (px < px0 - padx || px > px1 + padx || py < py0 - pady || py > py1 + pady) {
+              ok = false;
+              break;
+            }
+          }
+          if (ok) for (const p of c) cells.push(p);
+        }
+        if (cells.length < 4) continue;
+
+        let bx0 = w, bx1 = -1, by0 = h, by1 = -1;
+        for (const p of cells) {
+          const px = p % w, py = (p / w) | 0;
+          if (px < bx0) bx0 = px; if (px > bx1) bx1 = px;
+          if (py < by0) by0 = py; if (py > by1) by1 = py;
+        }
+        const bw = bx1 - bx0 + 1, bh = by1 - by0 + 1;
+        const compactness = cells.length / (bw * bh);
+        if (!best || compactness > best.compactness) {
+          best = { compactness, cells, bx0, by0, bw, bh };
+        }
+      }
+      if (!best) return null;
+
+      const { cells, bx0, by0, bw, bh } = best;
+      const src = new Uint8Array(bw * bh);
+      for (const p of cells) src[(((p / w) | 0) - by0) * bw + ((p % w) - bx0)] = 1;
+
+      // Inverse-mapped area resample into a 24x24 box, aspect preserved and
+      // centered, so upscaling a small glyph does not leave gaps.
+      const scale = Math.min(GLYPH_N / bw, GLYPH_N / bh);
+      const offx = (GLYPH_N - bw * scale) / 2;
+      const offy = (GLYPH_N - bh * scale) / 2;
+      const out = new Uint8Array(GLYPH_N * GLYPH_N);
+      for (let ny = 0; ny < GLYPH_N; ny++) {
+        for (let nx = 0; nx < GLYPH_N; nx++) {
+          const sx0 = (nx - offx) / scale, sy0 = (ny - offy) / scale;
+          const ax0 = Math.max(0, Math.floor(sx0)), ay0 = Math.max(0, Math.floor(sy0));
+          const ax1 = Math.min(bw, Math.max(ax0 + 1, Math.floor(sx0 + 1 / scale) + 1));
+          const ay1 = Math.min(bh, Math.max(ay0 + 1, Math.floor(sy0 + 1 / scale) + 1));
+          if (ax0 >= bw || ay0 >= bh || ax1 <= ax0 || ay1 <= ay0) continue;
+          let on = 0, tot = 0;
+          for (let yy = ay0; yy < ay1; yy++) {
+            for (let xx = ax0; xx < ax1; xx++) { tot++; on += src[yy * bw + xx]; }
+          }
+          if (tot && on * 2 >= tot) out[ny * GLYPH_N + nx] = 1;
+        }
+      }
+      return out;
+    }
+
+    function jaccardShifted(glyph, tmpl, shift) {
+      let best = 0;
+      for (let dy = -shift; dy <= shift; dy++) {
+        for (let dx = -shift; dx <= shift; dx++) {
+          let inter = 0, union = 0;
+          for (let y = 0; y < GLYPH_N; y++) {
+            for (let x = 0; x < GLYPH_N; x++) {
+              const sy = y + dy, sx = x + dx;
+              const a = (sy >= 0 && sy < GLYPH_N && sx >= 0 && sx < GLYPH_N)
+                ? glyph[sy * GLYPH_N + sx] : 0;
+              const b = tmpl[y * GLYPH_N + x];
+              if (a && b) inter++;
+              if (a || b) union++;
+            }
+          }
+          if (union) best = Math.max(best, inter / union);
+        }
+      }
+      return best;
+    }
+
+    function classifyGlyph(glyph) {
+      if (!glyph) return null;
+      const scores = TEMPLATES
+        .map(t => ({ name: t.name, score: jaccardShifted(glyph, t.bits, 2) }))
+        .sort((a, b) => b.score - a.score);
+      if (scores.length === 0) return null;
+      if (scores[0].score < GLYPH_ACCEPT) return null;
+      if (scores.length > 1 && scores[0].score - scores[1].score < GLYPH_MARGIN) return null;
+      return scores[0].name;
+    }
+
+    // ---- Entry point ----
+
+    async function handleAnalyzeFrame(msg) {
+      let band = { found: false, top: 0, bottom: 0, padTop: 0, padBottom: 0, cells: [] };
+
+      try {
+        const { ctx, width, height } = await loadImageToCanvas(msg.bytes);
+        const imageData = ctx.getImageData(0, 0, width, height);
+        const mask = buildInkMask(imageData);
+        const bands = findBands(mask, width, height);
+        const scale = msg.scale;
+
+        let bestBand = null;
+        for (let i = 0; i < bands.length; i++) {
+          const b = bands[i];
+          const h = (b.y1 - b.y0) / scale;
+          if (h < MIN_BAND_H || h > MAX_BAND_H) continue;
+
+          const hit = detectInBand(mask, width, b.y0, b.y1);
+          if (!hit) continue;
+
+          // Footers are where social bars live; use that only to break ties.
+          const center = (b.y0 + b.y1) / 2;
+          const score = hit.score + (center > height * 0.7 ? BOTTOM_PRIOR_BONUS : 0);
+          if (!bestBand || score > bestBand.score) {
+            bestBand = { score, hit, band: b, prev: bands[i - 1], next: bands[i + 1] };
+          }
+        }
+
+        if (bestBand) {
+          const b = bestBand.band;
+          const cells = chainToCells(bestBand.hit, width, scale, msg.frameWidth);
+
+          for (const cell of cells) {
+            if (!cell.isIcon || !cell.blob) continue;
+            const glyph = extractGlyph(
+              imageData,
+              Math.round(cell.blob.x0), b.y0,
+              Math.round(cell.blob.x1), b.y1
+            );
+            cell.platform = classifyGlyph(glyph);
+          }
+
+          // Pad the tight band out toward its neighbours so the row has some
+          // breathing room, without reaching into adjacent content.
+          const bandH = b.y1 - b.y0;
+          const gapAbove = bestBand.prev ? b.y0 - bestBand.prev.y1 : b.y0;
+          const gapBelow = bestBand.next ? bestBand.next.y0 - b.y1 : height - b.y1;
+          const padTop = b.y0 - Math.min(bandH, Math.floor(gapAbove / 2));
+          const padBottom = b.y1 + Math.min(bandH, Math.floor(gapBelow / 2));
+
+          band = {
+            found: cells.length > 1,
+            top: Math.round(b.y0 / scale),
+            bottom: Math.round(b.y1 / scale),
+            padTop: Math.max(0, Math.round(padTop / scale)),
+            padBottom: Math.min(msg.frameHeight, Math.round(padBottom / scale)),
+            cells: cells.map(c => ({ x0: c.x0, x1: c.x1, isIcon: c.isIcon, platform: c.platform })),
+          };
+        }
+      } catch (e) {
+        band = { found: false, top: 0, bottom: 0, padTop: 0, padBottom: 0, cells: [] };
+      }
+
+      parent.postMessage({ pluginMessage: { type: "frame-icons", band } }, "*");
+    }
+
+    // --- Detection Results UI ---
+
+    function clearDetectResults() {
+      detectResultsEl.innerHTML = "";
+      detectResultsEl.className = "detect-results";
+    }
+
+    function renderDetectResults(msg) {
+      clearDetectResults();
+
+      if (!msg.found || !msg.cells || msg.cells.length === 0) {
+        setProgress("No social icon row found.", "");
+        return;
+      }
+
+      const box = document.createElement("div");
+      box.className = "detect-row";
+
+      const title = document.createElement("div");
+      title.className = "detect-row-title";
+      const origin = msg.usedExistingGuides === undefined
+        ? ""
+        : (msg.usedExistingGuides ? " · your guides" : " · guides added");
+      title.textContent = msg.cells.length + " icons · y " + msg.y0 + "–" + msg.y1 + origin;
+      box.appendChild(title);
+
+      msg.cells.forEach((cell, i) => {
+        const line = document.createElement("div");
+        line.className = "detect-cell";
+
+        const label = document.createElement("span");
+        label.className = "idx";
+        label.textContent = cell.platform ? cell.platform.slice(0, 2) : String(i + 1);
+        label.title = cell.platform || "unidentified";
+        line.appendChild(label);
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = (cell.platform && PLATFORM_URLS[cell.platform]) || "https://…";
+        // Already applied to the slice by the sandbox; shown so it is editable.
+        if (cell.url) input.value = cell.url;
+        input.onchange = () => {
+          let url = input.value.trim();
+          if (url && !/^https?:\/\//i.test(url)) {
+            url = "https://" + url;
+            input.value = url;
+          }
+          parent.postMessage({
+            pluginMessage: { type: "set-slice-link", nodeId: cell.nodeId, url },
+          }, "*");
+        };
+        line.appendChild(input);
+
+        box.appendChild(line);
+      });
+
+      detectResultsEl.appendChild(box);
+      detectResultsEl.className = "detect-results show";
+
+      const named = msg.cells.filter(c => c.platform).length;
+      const linked = msg.cells.filter(c => c.url).length;
+      setProgress(
+        "Found " + msg.cells.length + " icon(s)" +
+        (named ? ", " + named + " identified" : "") +
+        (linked ? ", " + linked + " linked from saved URLs" : "") + ".",
+        "success"
+      );
     }
 
     // --- Row Grouping ---
@@ -517,6 +1373,147 @@
       div.textContent = str;
       return div.innerHTML;
     }
+
+    // ============================================================
+    // Tabs
+    // ============================================================
+
+    const tabs = document.querySelectorAll(".tab");
+    const panels = document.querySelectorAll(".panel");
+    tabs.forEach(tab => {
+      tab.onclick = () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        panels.forEach(p => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(tab.dataset.panel).classList.add("active");
+      };
+    });
+
+    // ============================================================
+    // Email Formatter (ported from the "Format Emails" extension)
+    // ============================================================
+
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    function isValidEmail(email) {
+      return EMAIL_REGEX.test(email);
+    }
+
+    function processEmailContent(content) {
+      const lines = content.split("\n");
+      const validEmails = new Set();
+      const invalidEntries = [];
+      let totalEntriesProcessed = 0;
+
+      // Skip the first line if it looks like a header (no "@")
+      const startIndex = lines[0] && !lines[0].includes("@") ? 1 : 0;
+
+      for (let i = startIndex; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        // Split by semicolon or comma to handle multiple emails per line.
+        // Normalize each entry: lowercase, then strip wrapping quotes and any
+        // whitespace/tabs around the value (e.g. `"  oscar@claro.com.br "`).
+        const potentialEmails = line.split(/[;,]/).map(e =>
+          e.trim().toLowerCase().replace(/^["']+|["']+$/g, "").trim()
+        );
+        for (const entry of potentialEmails) {
+          if (!entry) continue;
+          totalEntriesProcessed++;
+          if (isValidEmail(entry)) {
+            validEmails.add(entry);
+          } else {
+            invalidEntries.push({ line: i + 1, entry });
+          }
+        }
+      }
+
+      const outputLines = ["email,external_id"];
+      for (const email of validEmails) {
+        outputLines.push(email + "," + email);
+      }
+
+      const stats = {
+        totalProcessed: totalEntriesProcessed,
+        validUnique: validEmails.size,
+        invalid: invalidEntries.length,
+        duplicatesRemoved: totalEntriesProcessed - validEmails.size - invalidEntries.length,
+        invalidEntries,
+      };
+
+      return { output: outputLines.join("\n"), stats };
+    }
+
+    function todayStamp() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return "" + y + m + day;
+    }
+
+    function setEmailProgress(text, className) {
+      emailProgressEl.textContent = text;
+      emailProgressEl.className = "progress" + (className ? " " + className : "");
+    }
+
+    const emailInput = document.getElementById("email-input");
+    const emailFilenameInput = document.getElementById("email-filename");
+    const emailStatsEl = document.getElementById("email-stats");
+    const emailProgressEl = document.getElementById("email-progress");
+    const btnProcessEmails = document.getElementById("btn-process-emails");
+
+    // Default filename to today's date (YYYYMMDD.csv)
+    emailFilenameInput.value = todayStamp() + ".csv";
+
+    btnProcessEmails.onclick = () => {
+      const content = emailInput.value;
+      if (!content.trim()) {
+        setEmailProgress("Nothing to process — paste an email list first.", "error");
+        emailStatsEl.classList.remove("show");
+        return;
+      }
+
+      const { output, stats } = processEmailContent(content);
+
+      if (stats.validUnique === 0) {
+        setEmailProgress("No valid emails found.", "error");
+      } else {
+        setEmailProgress("", "");
+      }
+
+      // Render stats
+      let html =
+        '<div class="stat-line"><span>Entries processed</span><span class="val">' + stats.totalProcessed + "</span></div>" +
+        '<div class="stat-line"><span>Valid (unique)</span><span class="val">' + stats.validUnique + "</span></div>" +
+        '<div class="stat-line"><span>Duplicates removed</span><span class="val">' + stats.duplicatesRemoved + "</span></div>" +
+        '<div class="stat-line"><span>Invalid</span><span class="val">' + stats.invalid + "</span></div>";
+      if (stats.invalidEntries.length > 0) {
+        const invalidList = stats.invalidEntries.slice(0, 5).map(e => '"' + e.entry + '"').join(", ");
+        const more = stats.invalidEntries.length > 5 ? " and " + (stats.invalidEntries.length - 5) + " more" : "";
+        html += '<div class="invalid-note">Invalid: ' + escapeHtml(invalidList + more) + "</div>";
+      }
+      emailStatsEl.innerHTML = html;
+      emailStatsEl.classList.add("show");
+
+      if (stats.validUnique === 0) return;
+
+      // Save the list — download as CSV
+      let fileName = emailFilenameInput.value.trim() || todayStamp() + ".csv";
+      if (!/\.csv$/i.test(fileName)) fileName += ".csv";
+
+      const blob = new Blob([output], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+      setEmailProgress("Saved " + fileName + " (" + stats.validUnique + " emails).", "success");
+    };
   </script>
 </body>
 </html>

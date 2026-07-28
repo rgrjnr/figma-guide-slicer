@@ -23,7 +23,7 @@ interface ExportedSlice {
 
 // --- Show UI ---
 
-figma.showUI(__html__, { width: 320, height: 380, themeColors: true });
+figma.showUI(__html__, { width: 320, height: 460, themeColors: true });
 
 // --- Selection Handling ---
 
@@ -57,9 +57,10 @@ updateSelectionState();
 
 // --- Guide Parsing → Slice Regions ---
 
+// With no horizontal guides the frame is simply one region — detection can then
+// add the guides an icon row needs, and a guide-less frame still exports.
 function computeSliceRegions(frame: FrameNode): SliceRegion[] {
   const horizontalGuides = frame.guides.filter(g => g.axis === "Y");
-  if (horizontalGuides.length === 0) return [];
 
   let positions = horizontalGuides
     .map(g => Math.round(g.offset))
@@ -168,20 +169,80 @@ function readExportEntries(sliceGroup: GroupNode): ExportEntry[] {
 
 // --- Generate Slices ---
 
+// Icon cells created by the last generate pass, so the UI can offer a link
+// field per icon. Declared here because the plan is consumed while slicing.
+let lastPlanNodes: { nodeId: string; platform: string | null; url: string }[] = [];
+
+// --- Remembered links per platform ---
+//
+// The same social URLs recur across every email, so the last URL used for a
+// platform is remembered and re-applied automatically the next time that
+// platform is recognised. Stored per user via clientStorage, not in the file.
+
+const LINK_CACHE_KEY = "social-link-cache";
+
+let linkCache: { [platform: string]: string } = {};
+let linkCacheReady: Promise<void> | null = null;
+
+function ensureLinkCache(): Promise<void> {
+  if (!linkCacheReady) {
+    linkCacheReady = figma.clientStorage
+      .getAsync(LINK_CACHE_KEY)
+      .then(value => {
+        linkCache = (value as { [k: string]: string }) || {};
+      })
+      .catch(() => {
+        linkCache = {};
+      });
+  }
+  return linkCacheReady;
+}
+
+async function rememberLink(platform: string, url: string): Promise<void> {
+  await ensureLinkCache();
+  if (url) {
+    linkCache[platform] = url;
+  } else {
+    delete linkCache[platform];
+  }
+  try {
+    await figma.clientStorage.setAsync(LINK_CACHE_KEY, linkCache);
+  } catch (e) {
+    // A failed write only costs the convenience, so it is not worth surfacing.
+  }
+}
+
+// The detected column split applies to whichever region matches the row the
+// detector settled on — so re-running "Generate Slices" reproduces the columns
+// instead of flattening them back to one full-width slice.
+function planForRegion(region: SliceRegion): DetectionPlan | null {
+  if (!detectionPlan) return null;
+  if (Math.abs(detectionPlan.y0 - region.y0) > 2) return null;
+  if (Math.abs(detectionPlan.y1 - region.y1) > 2) return null;
+  return detectionPlan;
+}
+
 async function handleGenerateSlices(): Promise<void> {
   const frame = getSelectedFrame();
   if (!frame) return;
 
+  await ensureLinkCache();
+
   const regions = computeSliceRegions(frame);
   if (regions.length === 0) {
-    figma.ui.postMessage({ type: "error", message: "No horizontal guides found in the selected frame." });
+    figma.ui.postMessage({ type: "error", message: "Frame has no area to slice." });
     return;
   }
 
-  if (regions.length > 100) {
+  const plannedTotal = regions.reduce((acc, r) => {
+    const plan = planForRegion(r);
+    return acc + (plan ? plan.cells.length : 1);
+  }, 0);
+
+  if (plannedTotal > 100) {
     figma.ui.postMessage({
       type: "error",
-      message: `Too many slices (${regions.length}). Consider reducing guides.`,
+      message: `Too many slices (${plannedTotal}). Consider reducing guides.`,
     });
     return;
   }
@@ -195,12 +256,47 @@ async function handleGenerateSlices(): Promise<void> {
 
   // Create slice nodes at page root level using absolute coordinates
   const slices: SceneNode[] = [];
+  lastPlanNodes = [];
+
   for (const region of regions) {
+    const height = region.y1 - region.y0;
+
+    // A row the detector split into icon columns is emitted as N side-by-side
+    // slices sharing the same Y and height, which is the contract the export
+    // path's row grouping already understands.
+    const plan = planForRegion(region);
+    if (plan) {
+      plan.cells.forEach((cell: DetectedCell, col: number) => {
+        const slice = figma.createSlice();
+        const baseName = cell.platform
+          ? `${region.name}-${cell.platform}`
+          : `${region.name}-${col + 1}`;
+        // A recognised platform with a remembered URL is linked immediately, so
+        // the common case needs no typing at all.
+        const remembered = cell.platform ? linkCache[cell.platform] || "" : "";
+        slice.name = remembered ? `${baseName} (${remembered})` : baseName;
+        if (cell.platform) slice.setPluginData("platform", cell.platform);
+        slice.x = frameAbsX + cell.x0;
+        slice.y = frameAbsY + region.y0;
+        slice.resize(cell.x1 - cell.x0, height);
+        slice.setPluginData("kind", "email-slice");
+        slice.setPluginData("index", String(region.index));
+        slice.setPluginData("y0", String(region.y0));
+        slice.setPluginData("y1", String(region.y1));
+        slice.setPluginData("col", String(col));
+        slices.push(slice);
+        if (cell.isIcon) {
+          lastPlanNodes.push({ nodeId: slice.id, platform: cell.platform, url: remembered });
+        }
+      });
+      continue;
+    }
+
     const slice = figma.createSlice();
     slice.name = region.name;
     slice.x = frameAbsX;
     slice.y = frameAbsY + region.y0;
-    slice.resize(frame.width, region.y1 - region.y0);
+    slice.resize(frame.width, height);
     slice.setPluginData("kind", "email-slice");
     slice.setPluginData("index", String(region.index));
     slice.setPluginData("y0", String(region.y0));
@@ -210,7 +306,196 @@ async function handleGenerateSlices(): Promise<void> {
 
   const group = figma.group(slices, figma.currentPage);
   group.name = "__EMAIL_SLICES__";
-  figma.ui.postMessage({ type: "slices-generated", count: regions.length });
+
+  // Carry the icon cells along so a manual re-generate re-populates the link
+  // fields instead of leaving them pointing at slice nodes that no longer exist.
+  figma.ui.postMessage({
+    type: "slices-generated",
+    count: slices.length,
+    cells: lastPlanNodes.length > 0 ? lastPlanNodes : null,
+    y0: detectionPlan ? detectionPlan.y0 : null,
+    y1: detectionPlan ? detectionPlan.y1 : null,
+  });
+}
+
+// --- Social Icon Detection ---
+//
+// The sandbox has no canvas / image decoder, so pixel analysis happens in the UI
+// iframe. Flow: we export the whole frame here, post the bytes to the UI
+// ("analyze-frame"), the UI replies with the icon band it found plus the column
+// split inside it ("frame-icons"), and we reconcile that against the frame's
+// existing guides before slicing.
+//
+// Guides are not a prerequisite: if the frame has none — or none that bracket
+// the icon band tightly — we add the two the band needs. If the user already
+// placed guides close to the band, theirs win.
+
+const DETECT_SCALE = 1;
+const GUIDE_SNAP_PX = 10;
+
+interface DetectedCell {
+  x0: number;
+  x1: number;
+  isIcon: boolean;
+  platform: string | null;
+}
+
+interface DetectedBand {
+  found: boolean;
+  top: number;
+  bottom: number;
+  padTop: number;
+  padBottom: number;
+  cells: DetectedCell[];
+}
+
+interface DetectionPlan {
+  y0: number;
+  y1: number;
+  cells: DetectedCell[];
+}
+
+let detectionPlan: DetectionPlan | null = null;
+
+async function handleDetectSocial(): Promise<void> {
+  const frame = getSelectedFrame();
+  if (!frame) return;
+
+  figma.ui.postMessage({ type: "detect-progress", message: "Rendering frame..." });
+
+  // Same throwaway-slice trick as the export path: a slice inside a group does
+  // not capture the frame content beneath it.
+  const temp = figma.createSlice();
+  temp.x = frame.absoluteTransform[0][2];
+  temp.y = frame.absoluteTransform[1][2];
+  temp.resize(frame.width, frame.height);
+
+  const bytes = await temp.exportAsync({
+    format: "JPG",
+    constraint: { type: "SCALE", value: DETECT_SCALE },
+  });
+
+  temp.remove();
+
+  figma.ui.postMessage({
+    type: "analyze-frame",
+    bytes,
+    scale: DETECT_SCALE,
+    frameWidth: Math.round(frame.width),
+    frameHeight: Math.round(frame.height),
+  });
+}
+
+function snapToGuide(y: number, guides: number[]): number {
+  for (const g of guides) {
+    if (Math.abs(g - y) <= GUIDE_SNAP_PX) return g;
+  }
+  return y;
+}
+
+// Decide the row bounds for a detected icon band: prefer a row the user already
+// defined with guides, fall back to the band's own padded bounds.
+function reconcileRowBounds(
+  frame: FrameNode,
+  band: DetectedBand
+): { y0: number; y1: number; usedExistingGuides: boolean } {
+  const frameH = Math.round(frame.height);
+  const guides = frame.guides
+    .filter(g => g.axis === "Y")
+    .map(g => Math.round(g.offset))
+    .filter(y => y > 0 && y < frameH)
+    .sort((a, b) => a - b);
+
+  const bandH = band.bottom - band.top;
+  const center = (band.top + band.bottom) / 2;
+  const bounds = [0, ...guides, frameH];
+
+  let lo = 0;
+  let hi = frameH;
+  for (let i = 0; i < bounds.length - 1; i++) {
+    if (center >= bounds[i] && center < bounds[i + 1]) {
+      lo = bounds[i];
+      hi = bounds[i + 1];
+      break;
+    }
+  }
+
+  // The user's row counts as "close enough" when it contains the icons and is
+  // not so tall that it has clearly swallowed unrelated content.
+  const tightEnough = hi - lo <= Math.max(bandH * 3, bandH + 80);
+  if (guides.length > 0 && lo <= band.top && hi >= band.bottom && tightEnough) {
+    return { y0: lo, y1: hi, usedExistingGuides: true };
+  }
+
+  return {
+    y0: Math.max(0, snapToGuide(band.padTop, guides)),
+    y1: Math.min(frameH, snapToGuide(band.padBottom, guides)),
+    usedExistingGuides: false,
+  };
+}
+
+async function applyDetectedBand(band: DetectedBand): Promise<void> {
+  const frame = getSelectedFrame();
+  if (!frame) return;
+
+  if (!band.found || band.cells.length < 2) {
+    // Nothing found is not a failure to slice — fall through to plain rows.
+    detectionPlan = null;
+    await handleGenerateSlices();
+    figma.ui.postMessage({ type: "detect-result", found: false });
+    return;
+  }
+
+  const { y0, y1, usedExistingGuides } = reconcileRowBounds(frame, band);
+
+  if (y1 - y0 < 2) {
+    figma.ui.postMessage({ type: "error", message: "Detected icon row is too thin to slice." });
+    return;
+  }
+
+  // Add whatever guides the row needs that are not already there.
+  const frameH = Math.round(frame.height);
+  const existing = new Set(
+    frame.guides.filter(g => g.axis === "Y").map(g => Math.round(g.offset))
+  );
+  const nextGuides = [...frame.guides];
+  let addedGuides = 0;
+  for (const y of [y0, y1]) {
+    if (y > 0 && y < frameH && !existing.has(y)) {
+      nextGuides.push({ axis: "Y", offset: y });
+      existing.add(y);
+      addedGuides++;
+    }
+  }
+  if (addedGuides > 0) frame.guides = nextGuides;
+
+  detectionPlan = { y0, y1, cells: band.cells };
+
+  await handleGenerateSlices();
+  updateSelectionState();
+
+  figma.ui.postMessage({
+    type: "detect-result",
+    found: true,
+    usedExistingGuides,
+    addedGuides,
+    y0,
+    y1,
+    cells: lastPlanNodes,
+  });
+}
+
+async function handleSetSliceLink(nodeId: string, url: string): Promise<void> {
+  const node = await figma.getNodeByIdAsync(nodeId);
+  if (!node || node.type !== "SLICE") return;
+
+  // Reuse the export-side parser so the name always round-trips cleanly.
+  const { cleanName } = parseLinkFromName(node.name);
+  const trimmed = url.trim();
+  node.name = trimmed ? `${cleanName} (${trimmed})` : cleanName;
+
+  const platform = node.getPluginData("platform");
+  if (platform) await rememberLink(platform, trimmed);
 }
 
 // --- Clear Slices ---
@@ -225,6 +510,8 @@ function handleClearSlices(): void {
 function handleClearGuides(): void {
   const frame = getSelectedFrame();
   if (!frame) return;
+  // The column plan is keyed to guide positions, so it dies with the guides.
+  detectionPlan = null;
   frame.guides = frame.guides.filter(g => g.axis !== "Y");
   figma.ui.postMessage({ type: "guides-cleared" });
   updateSelectionState();
@@ -315,10 +602,32 @@ async function handleExportHTML(addFooter: boolean): Promise<void> {
 
 // --- Message Handler ---
 
-figma.ui.onmessage = async (msg: { type: string; addFooter?: boolean }) => {
+interface UIMessage {
+  type: string;
+  addFooter?: boolean;
+  detectSocial?: boolean;
+  band?: DetectedBand;
+  nodeId?: string;
+  url?: string;
+}
+
+figma.ui.onmessage = async (msg: UIMessage) => {
   switch (msg.type) {
     case "generate-slices":
-      await handleGenerateSlices();
+      if (msg.detectSocial) {
+        // Detection needs a round trip through the UI for pixel analysis; it
+        // calls back into handleGenerateSlices once it has an answer.
+        await handleDetectSocial();
+      } else {
+        detectionPlan = null;
+        await handleGenerateSlices();
+      }
+      break;
+    case "frame-icons":
+      if (msg.band) await applyDetectedBand(msg.band);
+      break;
+    case "set-slice-link":
+      if (msg.nodeId) await handleSetSliceLink(msg.nodeId, msg.url || "");
       break;
     case "export-html":
       await handleExportHTML(msg.addFooter !== false);
