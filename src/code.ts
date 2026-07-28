@@ -12,6 +12,8 @@ interface SliceRegion {
 }
 
 interface ExportedSlice {
+  nodeId: string;
+  name: string;
   fileName: string;
   pngBytes: Uint8Array;
   width: number;
@@ -19,6 +21,7 @@ interface ExportedSlice {
   absX: number;
   absY: number;
   linkUrl: string | null;
+  alt: string;
 }
 
 // --- Show UI ---
@@ -134,6 +137,7 @@ interface ExportEntry {
   name: string;
   fileName: string;
   linkUrl: string | null;
+  alt: string;
 }
 
 function readExportEntries(sliceGroup: GroupNode): ExportEntry[] {
@@ -151,7 +155,13 @@ function readExportEntries(sliceGroup: GroupNode): ExportEntry[] {
   for (const child of sliceChildren) {
     const { cleanName, linkUrl } = parseLinkFromName(child.name);
     const fileName = sanitizeFileName(cleanName) + ".jpg";
-    entries.push({ node: child, name: cleanName, fileName, linkUrl });
+    entries.push({
+      node: child,
+      name: cleanName,
+      fileName,
+      linkUrl,
+      alt: child.getPluginData("alt") || "",
+    });
   }
 
   // Deduplicate file names
@@ -211,6 +221,45 @@ async function rememberLink(platform: string, url: string): Promise<void> {
     // A failed write only costs the convenience, so it is not worth surfacing.
   }
 }
+
+// --- Detection settings ---
+//
+// The two thresholds that decide where section boundaries land. They live in
+// the UI as number inputs; the sandbox only persists them so the inputs come
+// back with the last values instead of the defaults on every launch.
+
+const SETTINGS_KEY = "slicer-settings";
+
+interface SlicerSettings {
+  minGutter: number;
+  minSection: number;
+}
+
+const DEFAULT_SETTINGS: SlicerSettings = { minGutter: 12, minSection: 60 };
+
+async function loadSettings(): Promise<void> {
+  let stored: Partial<SlicerSettings> = {};
+  try {
+    stored = ((await figma.clientStorage.getAsync(SETTINGS_KEY)) as Partial<SlicerSettings>) || {};
+  } catch (e) {
+    stored = {};
+  }
+  figma.ui.postMessage({
+    type: "settings",
+    minGutter: stored.minGutter || DEFAULT_SETTINGS.minGutter,
+    minSection: stored.minSection || DEFAULT_SETTINGS.minSection,
+  });
+}
+
+async function saveSettings(minGutter: number, minSection: number): Promise<void> {
+  try {
+    await figma.clientStorage.setAsync(SETTINGS_KEY, { minGutter, minSection });
+  } catch (e) {
+    // Losing the preference only costs re-typing it once.
+  }
+}
+
+loadSettings();
 
 // The detected column split applies to whichever region matches the row the
 // detector settled on — so re-running "Generate Slices" reproduces the columns
@@ -312,23 +361,29 @@ async function handleGenerateSlices(): Promise<void> {
   figma.ui.postMessage({
     type: "slices-generated",
     count: slices.length,
+    sectionGuides: lastSectionGuidesAdded,
     cells: lastPlanNodes.length > 0 ? lastPlanNodes : null,
     y0: detectionPlan ? detectionPlan.y0 : null,
     y1: detectionPlan ? detectionPlan.y1 : null,
   });
 }
 
-// --- Social Icon Detection ---
+// --- Frame Analysis (sections + social icons) ---
 //
 // The sandbox has no canvas / image decoder, so pixel analysis happens in the UI
 // iframe. Flow: we export the whole frame here, post the bytes to the UI
-// ("analyze-frame"), the UI replies with the icon band it found plus the column
-// split inside it ("frame-icons"), and we reconcile that against the frame's
+// ("analyze-frame"), the UI replies ("frame-analysis") with whatever it was
+// asked for — the section boundaries it found and/or the social icon band plus
+// the column split inside it — and we reconcile that against the frame's
 // existing guides before slicing.
 //
-// Guides are not a prerequisite: if the frame has none — or none that bracket
-// the icon band tightly — we add the two the band needs. If the user already
-// placed guides close to the band, theirs win.
+// Section detection only runs on a frame with no horizontal guides at all: the
+// moment you have placed guides yourself, they are the answer and nothing is
+// proposed on top of them.
+//
+// Icon-band guides are not a prerequisite either: if the frame has none — or
+// none that bracket the band tightly — we add the two the band needs. If the
+// user already placed guides close to the band, theirs win.
 
 const DETECT_SCALE = 1;
 const GUIDE_SNAP_PX = 10;
@@ -357,7 +412,14 @@ interface DetectionPlan {
 
 let detectionPlan: DetectionPlan | null = null;
 
-async function handleDetectSocial(): Promise<void> {
+// Guides the last analysis pass proposed, reported alongside the slice count so
+// the status line can say where the boundaries came from.
+let lastSectionGuidesAdded = 0;
+
+async function requestFrameAnalysis(
+  detectSections: boolean,
+  detectSocial: boolean
+): Promise<void> {
   const frame = getSelectedFrame();
   if (!frame) return;
 
@@ -383,7 +445,56 @@ async function handleDetectSocial(): Promise<void> {
     scale: DETECT_SCALE,
     frameWidth: Math.round(frame.width),
     frameHeight: Math.round(frame.height),
+    detectSections,
+    detectSocial,
   });
+}
+
+// Append the guides that are not already there, and report how many were new.
+// `frame.guides` is immutable in place, so this builds a fresh array and assigns.
+function applyGuideOffsets(frame: FrameNode, offsets: number[]): number {
+  const frameH = Math.round(frame.height);
+  const existing = new Set(
+    frame.guides.filter(g => g.axis === "Y").map(g => Math.round(g.offset))
+  );
+  const nextGuides = [...frame.guides];
+  let added = 0;
+
+  for (const raw of offsets) {
+    const y = Math.round(raw);
+    if (y > 0 && y < frameH && !existing.has(y)) {
+      nextGuides.push({ axis: "Y", offset: y });
+      existing.add(y);
+      added++;
+    }
+  }
+
+  if (added > 0) frame.guides = nextGuides;
+  return added;
+}
+
+// Section guides land first so the icon-band reconciliation can snap to them —
+// a proposed boundary that already brackets the icon row is exactly the "your
+// guides win" case reconcileRowBounds is looking for.
+async function applyFrameAnalysis(
+  sections: number[] | undefined,
+  band: DetectedBand | undefined
+): Promise<void> {
+  const frame = getSelectedFrame();
+  if (!frame) return;
+
+  lastSectionGuidesAdded = sections && sections.length > 0
+    ? applyGuideOffsets(frame, sections)
+    : 0;
+
+  if (band) {
+    await applyDetectedBand(band);
+  } else {
+    detectionPlan = null;
+    await handleGenerateSlices();
+  }
+
+  updateSelectionState();
 }
 
 function snapToGuide(y: number, guides: number[]): number {
@@ -454,20 +565,7 @@ async function applyDetectedBand(band: DetectedBand): Promise<void> {
   }
 
   // Add whatever guides the row needs that are not already there.
-  const frameH = Math.round(frame.height);
-  const existing = new Set(
-    frame.guides.filter(g => g.axis === "Y").map(g => Math.round(g.offset))
-  );
-  const nextGuides = [...frame.guides];
-  let addedGuides = 0;
-  for (const y of [y0, y1]) {
-    if (y > 0 && y < frameH && !existing.has(y)) {
-      nextGuides.push({ axis: "Y", offset: y });
-      existing.add(y);
-      addedGuides++;
-    }
-  }
-  if (addedGuides > 0) frame.guides = nextGuides;
+  const addedGuides = applyGuideOffsets(frame, [y0, y1]);
 
   detectionPlan = { y0, y1, cells: band.cells };
 
@@ -517,12 +615,12 @@ function handleClearGuides(): void {
   updateSelectionState();
 }
 
-// --- Export HTML ---
+// --- Slice Image Collection ---
+//
+// Rendering every slice is the shared prefix of both "Export HTML" and
+// "Read text (OCR)", so it lives here and both entry points call it.
 
-async function handleExportHTML(addFooter: boolean): Promise<void> {
-  const frame = getSelectedFrame();
-  if (!frame) return;
-
+async function collectSliceImages(): Promise<ExportedSlice[] | null> {
   // Ensure slices exist — generate from guides if not already present
   let sliceGroup = findSliceGroup();
   if (!sliceGroup) {
@@ -532,14 +630,14 @@ async function handleExportHTML(addFooter: boolean): Promise<void> {
 
   if (!sliceGroup) {
     figma.ui.postMessage({ type: "error", message: "No slices found. Add horizontal guides and generate slices first." });
-    return;
+    return null;
   }
 
   // Read all slice entries directly from the group (respects renames/custom names)
   const entries = readExportEntries(sliceGroup);
   if (entries.length === 0) {
     figma.ui.postMessage({ type: "error", message: "No slice nodes found in __EMAIL_SLICES__ group." });
-    return;
+    return null;
   }
 
   const exportedSlices: ExportedSlice[] = [];
@@ -573,6 +671,8 @@ async function handleExportHTML(addFooter: boolean): Promise<void> {
     tempSlice.remove();
 
     exportedSlices.push({
+      nodeId: entry.node.id,
+      name: entry.name,
       fileName: entry.fileName,
       pngBytes: imgBytes,
       width: Math.round(w),
@@ -580,8 +680,21 @@ async function handleExportHTML(addFooter: boolean): Promise<void> {
       absX,
       absY,
       linkUrl: entry.linkUrl,
+      alt: entry.alt,
     });
   }
+
+  return exportedSlices;
+}
+
+// --- Export HTML ---
+
+async function handleExportHTML(addFooter: boolean): Promise<void> {
+  const frame = getSelectedFrame();
+  if (!frame) return;
+
+  const exportedSlices = await collectSliceImages();
+  if (!exportedSlices) return;
 
   // Send slice data to UI for color extraction, HTML generation, and ZIP packaging
   figma.ui.postMessage({
@@ -595,9 +708,38 @@ async function handleExportHTML(addFooter: boolean): Promise<void> {
       absX: s.absX,
       absY: s.absY,
       linkUrl: s.linkUrl,
+      alt: s.alt,
     })),
     frameName: sanitizeFileName(frame.name),
   });
+}
+
+// --- OCR ---
+//
+// The sandbox only supplies the pixels; recognition itself runs in the UI
+// iframe, which is the only side with a canvas and network access.
+
+async function handleOcrSlices(): Promise<void> {
+  const exportedSlices = await collectSliceImages();
+  if (!exportedSlices) return;
+
+  figma.ui.postMessage({
+    type: "slice-images",
+    slices: exportedSlices.map(s => ({
+      nodeId: s.nodeId,
+      name: s.name,
+      fileName: s.fileName,
+      bytes: s.pngBytes,
+      height: s.height,
+      alt: s.alt,
+    })),
+  });
+}
+
+async function handleSetSliceAlt(nodeId: string, alt: string): Promise<void> {
+  const node = await figma.getNodeByIdAsync(nodeId);
+  if (!node || node.type !== "SLICE") return;
+  node.setPluginData("alt", alt.trim());
 }
 
 // --- Message Handler ---
@@ -607,27 +749,53 @@ interface UIMessage {
   addFooter?: boolean;
   detectSocial?: boolean;
   band?: DetectedBand;
+  sections?: number[];
   nodeId?: string;
   url?: string;
+  alt?: string;
+  minGutter?: number;
+  minSection?: number;
 }
 
 figma.ui.onmessage = async (msg: UIMessage) => {
   switch (msg.type) {
-    case "generate-slices":
-      if (msg.detectSocial) {
-        // Detection needs a round trip through the UI for pixel analysis; it
-        // calls back into handleGenerateSlices once it has an answer.
-        await handleDetectSocial();
+    case "generate-slices": {
+      const frame = getSelectedFrame();
+      if (!frame) break;
+
+      // A frame you have already put guides on is answered; only a bare frame
+      // gets boundaries proposed for it.
+      const detectSections = frame.guides.filter(g => g.axis === "Y").length === 0;
+      const detectSocial = !!msg.detectSocial;
+
+      if (detectSections || detectSocial) {
+        // Analysis needs a round trip through the UI for pixel work; it calls
+        // back into handleGenerateSlices once it has an answer.
+        await requestFrameAnalysis(detectSections, detectSocial);
       } else {
         detectionPlan = null;
+        lastSectionGuidesAdded = 0;
         await handleGenerateSlices();
       }
       break;
-    case "frame-icons":
-      if (msg.band) await applyDetectedBand(msg.band);
+    }
+    case "frame-analysis":
+      await applyFrameAnalysis(msg.sections, msg.band);
       break;
     case "set-slice-link":
       if (msg.nodeId) await handleSetSliceLink(msg.nodeId, msg.url || "");
+      break;
+    case "set-slice-alt":
+      if (msg.nodeId) await handleSetSliceAlt(msg.nodeId, msg.alt || "");
+      break;
+    case "set-settings":
+      await saveSettings(
+        msg.minGutter || DEFAULT_SETTINGS.minGutter,
+        msg.minSection || DEFAULT_SETTINGS.minSection
+      );
+      break;
+    case "ocr-slices":
+      await handleOcrSlices();
       break;
     case "export-html":
       await handleExportHTML(msg.addFooter !== false);

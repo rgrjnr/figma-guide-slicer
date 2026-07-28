@@ -1,5 +1,22 @@
 # WIP
 
+## 2026-07-28 — main (uncommitted, stacked on the social-icon work below)
+
+Auto section guides + OCR alt text. Generate Slices on a guide-less frame now
+detects the background gaps between cards, writes them as real Y guides, and
+slices; a frame that already has guides is untouched. Min gap / Min section
+inputs (12/60, persisted in clientStorage) are the knobs. New "Read text (OCR)"
+button runs tesseract.js in the iframe over the rendered slices and fills an
+editable alt list, stored per-slice in pluginData and emitted into `<img alt>`.
+Works: detection validated in a Node harness against the WBD email render —
+scratchpad/harness.js pulls detectSectionOffsets straight out of ui.html; 11–12
+sensible cuts, no mid-card slicing, ~180ms. typecheck + build clean.
+Not done: never run inside Figma. **Tesseract in the Figma iframe is unverified**
+— it blob-loads a worker + wasm; if the sandbox CSP blocks it, only OCR dies.
+Next: load in Figma (`npm run watch`, Cmd-Opt-P), Clear Guides → Generate on a
+real email, then press Read text (OCR) and watch for a worker/CSP error first.
+Note: alt text lives on the slice nodes, so regenerating slices discards it.
+
 ## 2026-07-28 — main (uncommitted)
 
 Social-icon auto-detection, as an "Auto-detect social icons" checkbox on Generate

@@ -7,6 +7,11 @@
   "editorType": ["figma"],
   "documentAccess": "dynamic-page",
   "networkAccess": {
-    "allowedDomains": ["https://cdnjs.cloudflare.com"]
+    "allowedDomains": [
+      "https://cdnjs.cloudflare.com",
+      "https://cdn.jsdelivr.net",
+      "https://tessdata.projectnaptha.com"
+    ],
+    "reasoning": "cdnjs serves JSZip for packaging the export. jsdelivr serves tesseract.js and its wasm core, and tessdata.projectnaptha.com serves the OCR language data, used to read text out of flattened artwork for image alt attributes. No plugin data is sent anywhere."
   }
 }

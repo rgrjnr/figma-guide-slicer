@@ -152,6 +152,36 @@
       cursor: pointer;
     }
 
+    /* Section detection thresholds */
+    .num-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--figma-color-text-secondary, #888);
+    }
+
+    .num-row label { white-space: nowrap; }
+
+    .num-row input[type="number"] {
+      width: 100%;
+      min-width: 0;
+      flex: 1;
+      height: 26px;
+      padding: 0 6px;
+      border: 1px solid var(--figma-color-border, #e5e5e5);
+      border-radius: 4px;
+      background: var(--figma-color-bg, #fff);
+      color: var(--figma-color-text, #333);
+      font-family: inherit;
+      font-size: 11px;
+    }
+
+    .num-row input[type="number"]:focus {
+      outline: none;
+      border-color: var(--figma-color-border-selected, #0d99ff);
+    }
+
     /* Detected social icon rows */
     .detect-results {
       display: none;
@@ -334,6 +364,9 @@
     <button class="btn btn-export" id="btn-export" disabled>
       Export HTML
     </button>
+    <button class="btn btn-secondary" id="btn-ocr" disabled>
+      Read text (OCR)
+    </button>
     <div class="options">
       <label class="option-row">
         <input type="checkbox" id="chk-detect" checked />
@@ -343,6 +376,13 @@
         <input type="checkbox" id="chk-footer" checked />
         Add footer liquid tag
       </label>
+    </div>
+    <div class="divider"></div>
+    <div class="num-row">
+      <label for="num-gutter" title="A background gap this tall or taller becomes a section boundary.">Min gap</label>
+      <input type="number" id="num-gutter" min="2" max="400" step="1" value="12" />
+      <label for="num-section" title="Boundaries that would leave a section shorter than this are dropped.">Min section</label>
+      <input type="number" id="num-section" min="4" max="2000" step="1" value="60" />
     </div>
     <div class="divider"></div>
     <div class="btn-row">
@@ -356,6 +396,7 @@
   </div>
 
   <div class="detect-results" id="detect-results"></div>
+  <div class="detect-results" id="alt-results"></div>
 
   <div class="progress" id="progress"></div>
   </div>
@@ -385,22 +426,53 @@
     const btnExport = document.getElementById("btn-export");
     const btnClearGuides = document.getElementById("btn-clear-guides");
     const btnClearSlices = document.getElementById("btn-clear-slices");
+    const btnOcr = document.getElementById("btn-ocr");
     const chkDetect = document.getElementById("chk-detect");
     const detectResultsEl = document.getElementById("detect-results");
-    const allButtons = [btnGenerate, btnExport, btnClearGuides, btnClearSlices];
+    const altResultsEl = document.getElementById("alt-results");
+    const numGutter = document.getElementById("num-gutter");
+    const numSection = document.getElementById("num-section");
+    const allButtons = [btnGenerate, btnExport, btnOcr, btnClearGuides, btnClearSlices];
 
     let isValidSelection = false;
+    let lastGenerateSummary = "";
+
+    // --- Detection settings ---
+
+    function readSetting(input, fallback) {
+      const v = parseInt(input.value, 10);
+      return Number.isFinite(v) && v > 0 ? v : fallback;
+    }
+
+    function pushSettings() {
+      parent.postMessage({ pluginMessage: {
+        type: "set-settings",
+        minGutter: readSetting(numGutter, 12),
+        minSection: readSetting(numSection, 60),
+      } }, "*");
+    }
+
+    numGutter.onchange = pushSettings;
+    numSection.onchange = pushSettings;
 
     // --- Button Click Handlers (UI -> Plugin) ---
 
     btnGenerate.onclick = () => {
       setAllButtonsDisabled(true);
       clearDetectResults();
-      setProgress(chkDetect.checked ? "Scanning for social icons..." : "Generating slices...", "");
+      clearAltResults();
+      lastGenerateSummary = "";
+      setProgress("Analyzing frame...", "");
       parent.postMessage({ pluginMessage: {
         type: "generate-slices",
         detectSocial: chkDetect.checked,
       } }, "*");
+    };
+
+    btnOcr.onclick = () => {
+      setAllButtonsDisabled(true);
+      setProgress("Rendering slices...", "");
+      parent.postMessage({ pluginMessage: { type: "ocr-slices" } }, "*");
     };
 
     btnExport.onclick = () => {
@@ -431,14 +503,28 @@
           handleSelectionChanged(msg);
           break;
 
+        case "settings":
+          numGutter.value = msg.minGutter;
+          numSection.value = msg.minSection;
+          break;
+
         case "slices-generated":
           if (msg.cells && msg.cells.length > 0) {
             renderDetectResults({ found: true, cells: msg.cells, y0: msg.y0, y1: msg.y1 });
           } else {
             clearDetectResults();
           }
-          setProgress("Generated " + msg.count + " slice(s).", "success");
+          // Icon detection reports after this and would otherwise overwrite the
+          // slice count, so it is kept and re-used as a prefix there.
+          lastGenerateSummary =
+            (msg.sectionGuides ? "Proposed " + msg.sectionGuides + " guide(s), generated " : "Generated ") +
+            msg.count + " slice(s).";
+          setProgress(lastGenerateSummary, "success");
           enableButtonsIfValid();
+          break;
+
+        case "slice-images":
+          await handleOcrSlices(msg);
           break;
 
         case "export-progress":
@@ -465,6 +551,7 @@
 
         case "slices-cleared":
           clearDetectResults();
+          clearAltResults();
           setProgress("Slices cleared.", "");
           enableButtonsIfValid();
           break;
@@ -545,6 +632,87 @@
       const top = averageColor(ctx.getImageData(0, 0, width, 1));
       const bottom = averageColor(ctx.getImageData(0, height - 1, width, 1));
       return { top, bottom };
+    }
+
+    // ============================================================
+    // Section Detection
+    //
+    // Marketing emails are stacks of cards separated by bands of untouched
+    // background, and those bands are what a human drags a guide through. So:
+    // find the rows that are pure background, and cut through the middle of the
+    // thick ones.
+    //
+    // "Pure background" is judged per scanline against that row's own median
+    // colour, never a global one — the frame background is usually a vertical
+    // gradient, so a global reference would call the whole bottom half content.
+    // A row crossing a card is not uniform (page background on both sides, card
+    // in the middle) and so is never a gutter.
+    //
+    // The known failure mode is a solid, full-bleed colour block: its interior
+    // rows are uniform too, so a tall flat area inside one card can read as a
+    // gap. MIN_GUTTER and MIN_SECTION are the knobs for that, which is why they
+    // are exposed in the panel rather than hardcoded here.
+    // ============================================================
+
+    const SECTION_UNIFORM_TOL = 12;      // per-pixel distance from the row median
+    const SECTION_DEVIANT_MAX = 0.004;   // JPEG ringing needs a little slack
+    const SECTION_SAMPLES = 240;         // columns sampled per row
+    const MAX_SECTION_CUTS = 60;
+
+    function detectSectionOffsets(imageData, scale, frameHeight, minGutter, minSection) {
+      const { width, height, data } = imageData;
+      const step = Math.max(1, Math.floor(width / SECTION_SAMPLES));
+
+      const rs = [], gs = [], bs = [];
+      const uniform = new Uint8Array(height);
+
+      for (let y = 0; y < height; y++) {
+        const rowStart = y * width * 4;
+
+        rs.length = 0; gs.length = 0; bs.length = 0;
+        for (let x = 0; x < width; x += step) {
+          const i = rowStart + x * 4;
+          rs.push(data[i]); gs.push(data[i + 1]); bs.push(data[i + 2]);
+        }
+
+        const bgR = median(rs), bgG = median(gs), bgB = median(bs);
+        let deviant = 0;
+        for (let k = 0; k < rs.length; k++) {
+          const d = (Math.abs(rs[k] - bgR) * 2 + Math.abs(gs[k] - bgG) * 4 + Math.abs(bs[k] - bgB) * 3) / 9;
+          if (d > SECTION_UNIFORM_TOL) deviant++;
+        }
+        uniform[y] = deviant / rs.length <= SECTION_DEVIANT_MAX ? 1 : 0;
+      }
+
+      // Cut through the middle of each thick gap. Gaps touching the top or
+      // bottom edge are the frame's own padding, not a boundary between
+      // sections, so they are skipped.
+      const minGutterPx = Math.max(2, Math.round(minGutter * scale));
+      const cuts = [];
+      let y = 0;
+      while (y < height) {
+        if (!uniform[y]) { y++; continue; }
+        let end = y;
+        while (end < height && uniform[end]) end++;
+        if (end - y >= minGutterPx && y > 0 && end < height) {
+          cuts.push(Math.round(((y + end) / 2) / scale));
+        }
+        y = end;
+      }
+
+      // Drop boundaries that would carve off a sliver — paragraph leading and
+      // the gap between a heading and its body both show up as real gaps, and
+      // slicing there is noise, not structure.
+      const kept = [];
+      let prev = 0;
+      for (const c of cuts) {
+        if (c - prev < minSection) continue;
+        if (frameHeight - c < minSection) break;
+        kept.push(c);
+        prev = c;
+      }
+
+      return kept;
     }
 
     // ============================================================
@@ -1048,14 +1216,37 @@
     // ---- Entry point ----
 
     async function handleAnalyzeFrame(msg) {
-      let band = { found: false, top: 0, bottom: 0, padTop: 0, padBottom: 0, cells: [] };
+      let band = msg.detectSocial
+        ? { found: false, top: 0, bottom: 0, padTop: 0, padBottom: 0, cells: [] }
+        : undefined;
+      let sections = [];
 
       try {
         const { ctx, width, height } = await loadImageToCanvas(msg.bytes);
         const imageData = ctx.getImageData(0, 0, width, height);
+        const scale = msg.scale;
+
+        if (msg.detectSections) {
+          sections = detectSectionOffsets(
+            imageData,
+            scale,
+            msg.frameHeight,
+            readSetting(numGutter, 12),
+            readSetting(numSection, 60)
+          );
+          // A frame that produces this many boundaries is one where the
+          // thresholds are wrong, not one with 60 sections — proposing them all
+          // would bury the real structure and blow the slice cap downstream.
+          if (sections.length > MAX_SECTION_CUTS) sections = [];
+        }
+
+        if (!msg.detectSocial) {
+          parent.postMessage({ pluginMessage: { type: "frame-analysis", sections } }, "*");
+          return;
+        }
+
         const mask = buildInkMask(imageData);
         const bands = findBands(mask, width, height);
-        const scale = msg.scale;
 
         let bestBand = null;
         for (let i = 0; i < bands.length; i++) {
@@ -1106,10 +1297,13 @@
           };
         }
       } catch (e) {
-        band = { found: false, top: 0, bottom: 0, padTop: 0, padBottom: 0, cells: [] };
+        band = msg.detectSocial
+          ? { found: false, top: 0, bottom: 0, padTop: 0, padBottom: 0, cells: [] }
+          : undefined;
+        sections = [];
       }
 
-      parent.postMessage({ pluginMessage: { type: "frame-icons", band } }, "*");
+      parent.postMessage({ pluginMessage: { type: "frame-analysis", band, sections } }, "*");
     }
 
     // --- Detection Results UI ---
@@ -1122,8 +1316,10 @@
     function renderDetectResults(msg) {
       clearDetectResults();
 
+      const prefix = lastGenerateSummary ? lastGenerateSummary + " " : "";
+
       if (!msg.found || !msg.cells || msg.cells.length === 0) {
-        setProgress("No social icon row found.", "");
+        setProgress(prefix + "No social icon row found.", prefix ? "success" : "");
         return;
       }
 
@@ -1174,11 +1370,208 @@
       const named = msg.cells.filter(c => c.platform).length;
       const linked = msg.cells.filter(c => c.url).length;
       setProgress(
-        "Found " + msg.cells.length + " icon(s)" +
+        prefix + "Found " + msg.cells.length + " icon(s)" +
         (named ? ", " + named + " identified" : "") +
         (linked ? ", " + linked + " linked from saved URLs" : "") + ".",
         "success"
       );
+    }
+
+    // ============================================================
+    // OCR (alt text)
+    //
+    // The artwork in these emails is flattened, so the copy only exists as
+    // pixels — there are no text nodes to read. Tesseract runs here in the
+    // iframe, which is the only side of the plugin with a canvas and network
+    // access. Results are treated as a draft: every line is editable before it
+    // reaches the export, because OCR on display type is never clean.
+    // ============================================================
+
+    const TESSERACT_VERSION = "5.1.1";
+    const TESSERACT_JS = "https://cdn.jsdelivr.net/npm/tesseract.js@" + TESSERACT_VERSION + "/dist/tesseract.min.js";
+    const OCR_LANGS = "por+eng";
+    const OCR_MIN_CONFIDENCE = 55;
+    const OCR_MAX_CHARS = 120;
+    const OCR_MAX_DIM = 4000;      // beyond this the 2x upscale stops paying off
+
+    let ocrWorker = null;
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error("could not load " + src));
+        document.head.appendChild(s);
+      });
+    }
+
+    // Loaded on first use rather than at startup: it is ~1MB of JS plus ~15MB of
+    // language data, and most sessions never press the button.
+    async function ensureOcrWorker() {
+      if (ocrWorker) return ocrWorker;
+
+      if (typeof Tesseract === "undefined") {
+        setProgress("Downloading OCR engine...", "");
+        await loadScript(TESSERACT_JS);
+      }
+
+      setProgress("Loading language data (first run downloads ~15MB)...", "");
+      ocrWorker = await Tesseract.createWorker(OCR_LANGS, 1, {
+        // Pinned explicitly so every fetch lands on a domain the manifest allows.
+        workerPath: "https://cdn.jsdelivr.net/npm/tesseract.js@" + TESSERACT_VERSION + "/dist/worker.min.js",
+        corePath: "https://cdn.jsdelivr.net/npm/tesseract.js-core@5",
+        langPath: "https://tessdata.projectnaptha.com/4.0.0",
+      });
+
+      return ocrWorker;
+    }
+
+    // Upscaled, greyscaled, and flipped to dark-on-light when the slice is
+    // mostly dark — light type on a dark card is the common case here and
+    // Tesseract reads it far better the right way round.
+    async function preprocessForOcr(bytes) {
+      const img = await loadImage(bytes);
+      const scale = Math.max(img.width, img.height) * 2 > OCR_MAX_DIM ? 1 : 2;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+
+      const ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const px = frame.data;
+      let sum = 0;
+      for (let i = 0; i < px.length; i += 4) {
+        const l = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
+        px[i] = px[i + 1] = px[i + 2] = l;
+        sum += l;
+      }
+
+      if (sum / (px.length / 4) < 128) {
+        for (let i = 0; i < px.length; i += 4) {
+          const v = 255 - px[i];
+          px[i] = px[i + 1] = px[i + 2] = v;
+        }
+      }
+
+      ctx.putImageData(frame, 0, 0);
+      return canvas;
+    }
+
+    function cleanOcrText(raw, confidence) {
+      if (confidence < OCR_MIN_CONFIDENCE) return "";
+      const text = String(raw || "").replace(/[\u0000-\u001f]+/g, " ").replace(/\s+/g, " ").trim();
+      // Two stray glyphs off a photograph is noise, not a caption.
+      const letters = text.match(/[\p{L}\p{N}]/gu);
+      if (!letters || letters.length < 3) return "";
+      return text.length > OCR_MAX_CHARS ? text.slice(0, OCR_MAX_CHARS - 1).trimEnd() + "…" : text;
+    }
+
+    async function handleOcrSlices(msg) {
+      const slices = msg.slices || [];
+      if (slices.length === 0) {
+        setProgress("No slices to read.", "error");
+        enableButtonsIfValid();
+        return;
+      }
+
+      let worker;
+      try {
+        worker = await ensureOcrWorker();
+      } catch (err) {
+        setProgress(
+          "OCR engine failed to load (" + err.message + "). Check manifest networkAccess.",
+          "error"
+        );
+        enableButtonsIfValid();
+        return;
+      }
+
+      const items = [];
+      for (let i = 0; i < slices.length; i++) {
+        const s = slices[i];
+        setProgress("Reading text " + (i + 1) + "/" + slices.length + "...", "");
+        let text = "";
+        try {
+          const canvas = await preprocessForOcr(s.bytes);
+          const result = await worker.recognize(canvas);
+          text = cleanOcrText(result.data.text, result.data.confidence);
+        } catch (err) {
+          text = "";
+        }
+        // An alt you already wrote or edited outranks a fresh guess.
+        items.push({ nodeId: s.nodeId, name: s.name, alt: s.alt || text, ocr: text });
+      }
+
+      renderAltResults(items);
+
+      // Persist the drafts so the export picks them up without a click each.
+      for (const item of items) {
+        if (item.alt) {
+          parent.postMessage({
+            pluginMessage: { type: "set-slice-alt", nodeId: item.nodeId, alt: item.alt },
+          }, "*");
+        }
+      }
+
+      const filled = items.filter(i => i.alt).length;
+      setProgress(
+        "Read " + filled + "/" + items.length + " slice(s). Edit before exporting.",
+        filled > 0 ? "success" : ""
+      );
+      enableButtonsIfValid();
+    }
+
+    // --- Alt Text UI ---
+
+    function clearAltResults() {
+      altResultsEl.innerHTML = "";
+      altResultsEl.className = "detect-results";
+    }
+
+    function renderAltResults(items) {
+      clearAltResults();
+      if (items.length === 0) return;
+
+      const box = document.createElement("div");
+      box.className = "detect-row";
+
+      const title = document.createElement("div");
+      title.className = "detect-row-title";
+      title.textContent = "Alt text";
+      box.appendChild(title);
+
+      items.forEach((item, i) => {
+        const line = document.createElement("div");
+        line.className = "detect-cell";
+
+        const label = document.createElement("span");
+        label.className = "idx";
+        label.textContent = String(i + 1);
+        label.title = item.name;
+        line.appendChild(label);
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = "no text found";
+        input.value = item.alt;
+        input.onchange = () => {
+          parent.postMessage({
+            pluginMessage: { type: "set-slice-alt", nodeId: item.nodeId, alt: input.value },
+          }, "*");
+        };
+        line.appendChild(input);
+
+        box.appendChild(line);
+      });
+
+      altResultsEl.appendChild(box);
+      altResultsEl.className = "detect-results show";
     }
 
     // --- Row Grouping ---
@@ -1223,7 +1616,7 @@
 
         if (row.length === 1) {
           const s = row[0];
-          const imgTag = '<img src="images/' + s.fileName + '" width="' + maxWidth + '" alt="" style="display:block; width:100%; max-width:' + maxWidth + 'px; height:auto; border:0;" />';
+          const imgTag = '<img src="images/' + s.fileName + '" width="' + maxWidth + '" alt="' + escapeAttr(s.alt || "") + '" style="display:block; width:100%; max-width:' + maxWidth + 'px; height:auto; border:0;" />';
           const content = s.linkUrl
             ? '<a href="' + escapeAttr(s.linkUrl) + '" target="_blank" style="text-decoration:none;">' + imgTag + "</a>"
             : imgTag;
@@ -1251,7 +1644,7 @@
             g: Math.round((s.colors.top.g + s.colors.bottom.g) / 2),
             b: Math.round((s.colors.top.b + s.colors.bottom.b) / 2),
           });
-          const imgTag = '<img src="images/' + s.fileName + '" width="' + colWidth + '" alt="" style="display:block; width:100%; max-width:' + colWidth + 'px; height:auto; border:0;" />';
+          const imgTag = '<img src="images/' + s.fileName + '" width="' + colWidth + '" alt="' + escapeAttr(s.alt || "") + '" style="display:block; width:100%; max-width:' + colWidth + 'px; height:auto; border:0;" />';
           const content = s.linkUrl
             ? '<a href="' + escapeAttr(s.linkUrl) + '" target="_blank" style="text-decoration:none;">' + imgTag + "</a>"
             : imgTag;
@@ -1319,6 +1712,7 @@
             absX: s.absX,
             absY: s.absY,
             linkUrl: s.linkUrl,
+            alt: s.alt || "",
             colors: colors,
           });
         }
