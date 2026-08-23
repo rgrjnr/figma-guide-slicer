@@ -18,10 +18,13 @@ export const VERIFIED = {
    *  behind it (password, factor) still need a recording session. */
   oktaIdentifier: true,
   brazeSignIn: true,
+  // Every Braze selector below was read off the live dashboard and driven end
+  // to end: a real campaign was composed from a ZIP, scheduled, targeted at a
+  // segment, and saved as a draft; a real CSV was imported.
+  createEmailDraft: true,
+  scheduleCampaign: true,
+  importAudience: true,
   login: false,
-  createEmailDraft: false,
-  importAudience: false,
-  scheduleCampaign: false,
 };
 
 /**
@@ -89,71 +92,162 @@ export const braze = {
   /**
    * Braze's own sign-in is identifier-first too: you enter the email address,
    * it recognises the SSO domain, and only then hands off to Okta. Verified
-   * against dashboard-03.braze.com/sign_in — `input[name="email"]` and an
-   * `<input type="submit" value="Continue">`.
+   * against dashboard-03.braze.com/sign_in.
    */
   signIn: {
     email: p => p.locator('input[name="email"]'),
     submit: p => p.locator('input[type="submit"], button[type="submit"]').first(),
     /** Present exactly when we are NOT signed in. */
     isShowing: p => p.locator('input[name="email"]'),
-
     /**
      * A third screen sits between the email and Okta: "Sign In to US Cluster 03"
-     * with one button per configured identity provider — here, "WBD Okta".
+     * with one button per configured identity provider — WBD's is "WBD Okta".
      * Read off a screenshot rather than the DOM: the page is client-rendered
-     * from the previous step's state and comes back blank on a direct GET, so
-     * it cannot be probed in isolation. Override the name with
-     * BRAZE_SSO_BUTTON if it does not match.
+     * from the previous step's state and comes back blank on a direct GET.
      */
     ssoProvider: (p, name) =>
       p.getByRole("button", { name }).or(p.getByRole("link", { name })).first(),
   },
 
-  // Signed-in is judged by URL first — the sign-in path is unambiguous, whereas
-  // the dashboard's own chrome is not verified yet.
-  signedIn: p => p.getByRole("navigation").first(),
+  /** The left rail only renders once the workspace has loaded. */
+  signedIn: p => p.getByRole("link", { name: /^Campaigns$/i }).first(),
 
   campaigns: {
-    nav: p => p.getByRole("link", { name: /^campaigns$/i }).first(),
-    create: p => p.getByRole("button", { name: /create campaign/i }).first(),
-    chooseEmail: p => p.getByRole("link", { name: /^email$/i }).first(),
-    nameField: p => p.getByLabel(/campaign name/i).first(),
-    search: p => p.getByPlaceholder(/search/i).first(),
+    create: p => p.getByRole("button", { name: /^Create campaign$/i }).first(),
+    /** "Create campaign" opens a channel menu; Email is one of its entries. */
+    chooseEmail: p => p.getByRole("button", { name: /^Email$/i }).first(),
+    search: p => p.getByPlaceholder(/^Search$/i).first(),
     byName: (p, name) => p.getByRole("link", { name }).first(),
   },
 
-  email: {
-    // Braze offers several editors; the ZIP goes into the HTML one.
-    chooseHtmlEditor: p => p.getByRole("button", { name: /html editor|upload html/i }).first(),
-    // The upload control is often a hidden <input type=file>, which
-    // setInputFiles drives directly without needing the visible button.
-    zipInput: p => p.locator('input[type="file"]').first(),
-    subject: p => p.getByLabel(/^subject/i).first(),
-    preheader: p => p.getByLabel(/preheader|preview text/i).first(),
-    fromAddress: p => p.getByLabel(/from address|sender/i).first(),
-    replyTo: p => p.getByLabel(/reply.?to/i).first(),
-    saveDraft: p => p.getByRole("button", { name: /save as draft|save draft/i }).first(),
-    savedConfirmation: p => p.getByText(/saved|draft saved/i).first(),
+  /**
+   * The compose step. Note the whole of it has to happen in one page session:
+   * an uploaded message that has not been saved is discarded on reload.
+   */
+  compose: {
+    name: p => p.locator('input[name="name"]'),
+    /** Hidden behind a styled control; setInputFiles drives it regardless. */
+    zipInput: p => p.locator('input[type="file"][accept=".zip"]').first(),
+    /** Appears in the upload dialog once the archive has been unpacked. */
+    buildMessage: p => p.getByRole("button", { name: /^Build message$/i }).first(),
+    /** Closes the editor drawer. Used by both the editor and sending info. */
+    done: p => p.getByRole("button", { name: /^Done$/i }).first(),
+    editSendingInfo: p => p.getByRole("button", { name: /^Edit sending info$/i }).first(),
+
+    // Subject and preheader are both textareas carrying aria-label "Liquid text
+    // area", so the accessible name cannot tell them apart. Their id prefixes
+    // can; the numeric suffix is regenerated per render.
+    subject: p => p.locator('textarea[id^="sending-info-subject-input"]'),
+    preheader: p => p.locator('textarea[id^="sending-info-preheader-input"]'),
+    fromAddress: p => p.locator('input[id^="sending-info-from-address-select"]'),
+    replyTo: p => p.locator('input[id^="sending-info-reply-to-address-select"]'),
+
+    preview: p => p.locator("#preview-iframe, iframe[id*=preview]").first(),
+
+    /**
+     * Variants. When a design changes, the campaign is kept and its message
+     * replaced: add a fresh variant, build it from the new ZIP, then remove the
+     * old one. The `db-` class names are Braze's own semantics rather than the
+     * hashed styled-components ones beside them, so they are the stable anchor.
+     *
+     * "Remove Variant" exists once per variant, so it must always be scoped to
+     * the row being removed — an unscoped match deletes whichever comes first.
+     */
+    variants: p => p.locator("li.db-variant-item"),
+    variantNamed: (p, name) => p.locator("li.db-variant-item").filter({ hasText: name }).first(),
+    addVariant: p => p.locator('button[aria-label="Add variant"]').first(),
+    /** A copy would carry over the very HTML being replaced. */
+    composeBlank: p => p.getByText(/^Compose blank Email message$/i).first(),
+    copyFromVariant: p => p.getByText(/^Copy from /i).first(),
+    renameVariantIn: row => row.locator('button[aria-label="Rename Variant"]').first(),
+    /**
+     * Renaming happens in a small popover with its own Save and Cancel buttons.
+     * Enter does not commit it and neither does blurring — the change is
+     * discarded unless Save is clicked. Braze gives this one a data-testid,
+     * which is the most stable anchor in the whole composer.
+     */
+    renamePopover: p => p.locator('[data-testid="variant-item-rename-popover-body"]'),
+    variantNameInput: p =>
+      p.locator('[data-testid="variant-item-rename-popover-body"] input').first(),
+    renameSave: p =>
+      p.locator('[data-testid="variant-item-rename-popover-body"] button[aria-label="Save"]').first(),
+    removeVariantIn: row => row.locator('button[aria-label="Remove Variant"]').first(),
   },
 
-  audience: {
-    nav: p => p.getByRole("link", { name: /import users|user import/i }).first(),
-    csvInput: p => p.locator('input[type="file"]').first(),
-    submit: p => p.getByRole("button", { name: /import|upload/i }).first(),
-    // Braze processes imports asynchronously; this is the terminal state.
-    complete: p => p.getByText(/import (complete|finished|succeeded)/i).first(),
-    failed: p => p.getByText(/import failed|error/i).first(),
-  },
-
+  /**
+   * The schedule step. There is no time-zone control: a designated time is
+   * interpreted in the workspace's own zone (see BRAZE_WORKSPACE_TZ), unless
+   * "local time zone" is ticked, which sends at that wall-clock time in each
+   * recipient's zone instead.
+   */
   schedule: {
-    tab: p => p.getByRole("tab", { name: /schedule|delivery/i }).first(),
-    scheduledOption: p => p.getByRole("radio", { name: /scheduled/i }).first(),
-    date: p => p.getByLabel(/date/i).first(),
-    time: p => p.getByLabel(/time/i).first(),
-    timeZone: p => p.getByLabel(/time ?zone/i).first(),
-    localTimeDelivery: p => p.getByLabel(/local time ?zones?|in each user/i).first(),
-    confirm: p => p.getByRole("button", { name: /schedule|confirm/i }).first(),
+    entryFrequency: p => p.locator("#entry-frequency"),
+    /** The date and time fields only render once a frequency is chosen. */
+    date: p => p.locator('input[placeholder="yyyy/mm/dd"]').first(),
+    time: p => p.locator('input[placeholder="h:mm am"]').first(),
+    localTimeZone: p => p.getByLabel(/local time zone/i).first(),
+  },
+
+  /**
+   * A/B Testing on the Target step. Braze defaults to a 20% Control Group,
+   * which means a fifth of the audience is deliberately sent nothing. That is
+   * almost never wanted for a one-off broadcast, and it is invisible unless you
+   * scroll to it — the reachable-user count on Review does not reflect it.
+   */
+  abTesting: {
+    /** An <a> with no href, so it has no link role; match it by text. */
+    removeControlGroup: p => p.getByText("Remove Control Group", { exact: true }).first(),
+    distributeEvenly: p => p.getByText("Distribute Variants Evenly", { exact: true }).first(),
+    percentages: p => p.locator('input[type="number"]'),
+  },
+
+  /**
+   * Test sends. The recipient box takes several addresses, and Send Test stays
+   * disabled until at least one is entered. A subject is required too — without
+   * one Braze flags the campaign and will not send anything, test or otherwise.
+   */
+  testSend: {
+    openPreview: p => p.getByRole("button", { name: /^Preview and test$/i }).first(),
+    tab: p => p.getByRole("tab", { name: /^Test Send$/i }).first(),
+    recipients: p => p.locator('input[id^="test-send-recipient-input-"]').first(),
+    contentTestGroup: p => p.locator('input[id^="test-send-user-group-select-"]').first(),
+    send: p => p.getByRole("button", { name: /^Send Test$/i }).first(),
+  },
+
+  target: {
+    /**
+     * react-select paints a placeholder div over its own input, so a click is
+     * intercepted; typing into the input opens the menu just the same.
+     */
+    segment: p => p.getByLabel(/Target Users By Segment/i).first(),
+    audienceSummary: p => p.getByText(/Email Reachable Users/i).first(),
+  },
+
+  review: {
+    reachable: p => p.getByText(/Reachable users is/i).first(),
+    /**
+     * THE SEND. Nothing in this project ever clicks it — see braze/SENDING.md
+     * for what it does and how to do it by hand.
+     */
+    launch: p => p.getByRole("button", { name: /^Launch Campaign$/i }).first(),
+  },
+
+  saveDraft: p => p.getByRole("button", { name: /^Save Draft$/i }).first(),
+
+  userImport: {
+    /** "Browse files" stays disabled until an import type is chosen. */
+    chooseAttributes: p => p.getByText("Attributes", { exact: true }).first(),
+    csvInput: p => p.locator('input[type="file"]').first(),
+    next: p => p.getByRole("button", { name: /^Next$/i }).first(),
+    /**
+     * The default is "Don't create a targeting filter", which imports the users
+     * but leaves nothing to target. This is the option that produces the
+     * per-file segment the campaign is then pointed at.
+     */
+    createSegment: p => p.getByText(/^Create targeting filter and segment$/i).first(),
+    start: p => p.getByRole("button", { name: /^Start Import$/i }).first(),
+    /** The history table on the landing page; first row is the newest import. */
+    rowFor: (p, fileName) => p.locator("tr").filter({ hasText: fileName }).first(),
   },
 };
 

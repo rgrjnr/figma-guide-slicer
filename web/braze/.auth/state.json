@@ -5,19 +5,9 @@
       "value": "en",
       "domain": "dashboard-03.braze.com",
       "path": "/",
-      "expires": 1790112315.98413,
+      "expires": 1790116660.25041,
       "httpOnly": false,
       "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "sign_in_email",
-      "value": "roger%40rogerjunior.com",
-      "domain": "dashboard-03.braze.com",
-      "path": "/",
-      "expires": 1787523904.006011,
-      "httpOnly": true,
-      "secure": true,
       "sameSite": "Lax"
     },
     {
@@ -95,7 +85,7 @@
       "value": "60106fe73d519f17d1749fd6",
       "domain": "dashboard-03.braze.com",
       "path": "/",
-      "expires": 1790198715.979477,
+      "expires": 1790203060.250275,
       "httpOnly": true,
       "secure": true,
       "sameSite": "Lax"
@@ -105,7 +95,7 @@
       "value": "60106fe73d519f17d1749fd6",
       "domain": "dashboard-03.braze.com",
       "path": "/",
-      "expires": 1790198715.982519,
+      "expires": 1790203060.250326,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -121,21 +111,11 @@
       "sameSite": "None"
     },
     {
-      "name": "__cf_bm",
-      "value": "gfZTqrby3YC1IzUIG8lquTsnNbLU.4ck85RSTAiOtvs-1787520314.108172-1.0.1.1-48zWzq0a0X_Owe1YnR0rew3Z9Nl1vlvsh2S6SapKlmqm9pXqRExwLNB7uhGWMU2I9HBQwhTyEGpA6GIFcPaPBhZU7PHGymkGnLskf9uSHdDOAokHSPgACJynqGcaAz2h",
-      "domain": ".braze.com",
-      "path": "/",
-      "expires": 1787522114.136116,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
       "name": "ab.storage.userId.bef30adf-6179-4b26-a3b5-42268996ad95",
       "value": "g%3A6654ea119dc7430058c1dc94%7Ce%3Aundefined%7Cc%3A1787520315244%7Cl%3A1787520315262",
       "domain": ".braze.com",
       "path": "/",
-      "expires": 1822080315,
+      "expires": 1822084658,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -145,27 +125,57 @@
       "value": "g%3Ade22e3a5-afda-467d-bb72-b9d54ad96ee6%7Ce%3Aundefined%7Cc%3A1787520315265%7Cl%3A1787520315265",
       "domain": ".braze.com",
       "path": "/",
-      "expires": 1822080315,
+      "expires": 1822084658,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
     },
     {
+      "name": "fs_lua",
+      "value": "1.1787524507288",
+      "domain": ".braze.com",
+      "path": "/",
+      "expires": 1787526307,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Strict"
+    },
+    {
+      "name": "fs_uid",
+      "value": "#HT1ND#e94eb1a2-9e32-4c5f-9925-8deaf96f684b:8ca3c46a-0cfe-41f5-a30a-6c77ca76e528:1787520754949::45#c8895193###/1819056889",
+      "domain": ".braze.com",
+      "path": "/",
+      "expires": 1819056889,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Strict"
+    },
+    {
+      "name": "__cf_bm",
+      "value": "ugSPF6m1J9eiTmCM22ckhFChBJ9XPQpEqDtXvkpZfzw-1787524658.9402425-1.0.1.1-Q_LXUyormskLfdwDC7j0Fa6KsJFWTqLCYfvhq0v7aFZ5J5HgPYcb6JEBH5.rOBNnb05kiSpBZL894KWPS__bVoPMlx8RHYGecoiQKK.4mEpFbXkX_.Y7VoZvSkp3XiPF",
+      "domain": ".braze.com",
+      "path": "/",
+      "expires": 1787526458.92886,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
       "name": "_dd_s",
-      "value": "logs=1&id=c7700cab-700b-4388-8431-41ad61a6471e&created=1787520313230&expire=1787521213254&rum=2",
+      "value": "logs=1&id=c7700cab-700b-4388-8431-41ad61a6471e&created=1787520313230&expire=1787525557223&rum=2",
       "domain": "dashboard-03.braze.com",
       "path": "/",
-      "expires": 1787521217,
+      "expires": 1787525559,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Strict"
     },
     {
       "name": "ab.storage.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
-      "value": "g%3A19cbfffe-ec6b-49e6-b0a7-3a8a6454d032%7Ce%3A1787520617282%7Cc%3A1787520315250%7Cl%3A1787520317282",
+      "value": "g%3Ac37197f8-1238-46c0-99bb-faa244edaa65%7Ce%3A1787524960148%7Cc%3A1787523934696%7Cl%3A1787524660148",
       "domain": ".braze.com",
       "path": "/",
-      "expires": 1822080317,
+      "expires": 1822084660,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -176,8 +186,92 @@
       "origin": "https://dashboard-03.braze.com",
       "localStorage": [
         {
+          "name": "ab.storage.triggers.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":[{\"i\":\"632c98e474c14225d2832d04\",\"c\":[{\"t\":\"custom_event\",\"d\":\"pm.shopify_install_successful\"}],\"s\":\"2022-09-26T04:00:00.000Z\",\"e\":null,\"p\":2000510000,\"t\":\"templated_iam\",\"da\":{\"prefetch_file_urls\":[\"https://braze-images.com/appboy/communication/assets/image_assets/images/67d1e4e12e846e0067efeffe/original.gif?1741808865\"],\"trigger_id\":\"NjMyYzk4ZTQ3NGMxNDIyNWQyODMyZDA0XyRfbXY9NjdkMWU4NjJlNzdlZGUwMDY0MDI5YTJlJnBpPWNtcA==\"},\"d\":1,\"r\":0,\"tm\":31000,\"ld\":null}]}"
+        },
+        {
+          "name": "chmln:c:Queue.items",
+          "value": "{\"element_actions\":[{\"uid\":\"6968e349a205e100211045b3\",\"elapsed\":0.24,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/60106fe73d519f17d1749fd6?start=0&limit=12&globalFilter=&columnFilters%5Bstatus%5D=active&sortby=last_edited&sortdir=-1&display=list\",\"_id\":\"6a8b66f77c63cc5a3dda8385\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b66f67c63cc5a3dda8384\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6968d440a205e10021103ea3\",\"elapsed\":0.24,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/60106fe73d519f17d1749fd6?start=0&limit=12&globalFilter=&columnFilters%5Bstatus%5D=active&sortby=last_edited&sortdir=-1&display=list\",\"_id\":\"6a8b66f77c63cc5a3dda8386\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b66f67c63cc5a3dda8384\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6967df23f14ac7001443bbad\",\"elapsed\":0.25,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/60106fe73d519f17d1749fd6?start=0&limit=12&globalFilter=&columnFilters%5Bstatus%5D=active&sortby=last_edited&sortdir=-1&display=list\",\"_id\":\"6a8b66f77c63cc5a3dda8387\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b66f67c63cc5a3dda8384\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6968e21da205e10025d8f0f1\",\"elapsed\":0,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/60106fe73d519f17d1749fd6?locale=en\",\"_id\":\"6a8b670b6b0870aa222bb3c5\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b670a6b0870aa222bb3c4\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6626bcd1cfd372001b17fd3b\",\"elapsed\":8.15,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&campaignName=New%20Campaign%20-%20August%2023%2C%202026&page=0\",\"_id\":\"6a8b67136b0870aa222bb3c6\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b670a6b0870aa222bb3c4\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"66df756fb2fe08002b3bb2b1\",\"elapsed\":8.15,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&campaignName=New%20Campaign%20-%20August%2023%2C%202026&page=0\",\"_id\":\"6a8b67136b0870aa222bb3c7\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b670a6b0870aa222bb3c4\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6968e21da205e10025d8f0f0\",\"elapsed\":0,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&page=0\",\"_id\":\"6a8b672e99eb0c57005a7584\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b672d99eb0c57005a7583\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"698e31db086e65002c6626d5\",\"elapsed\":1.27,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b672f99eb0c57005a7585\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b672d99eb0c57005a7583\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"696935ef6b1380001b2c7ebb\",\"elapsed\":0,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&page=0\",\"_id\":\"6a8b676d6305202f9abb32e9\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b676c6305202f9abb32e8\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6967da2493c055002921fdea\",\"elapsed\":0,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&page=0\",\"_id\":\"6a8b676d6305202f9abb32ea\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b676c6305202f9abb32e8\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"684b4bbcb9eeb5a0a0675d9e\",\"elapsed\":0.05,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&page=0\",\"_id\":\"6a8b676d6305202f9abb32eb\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b676c6305202f9abb32e8\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"669fd266e32563002f1f46a4\",\"elapsed\":38.66,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b6802174f52ce4e3c46f9\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b67da174f52ce4e3c46f8\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6626bb4dcfd372001f73b5b3\",\"elapsed\":0.09,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b68467c9319611b198079\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b68457c9319611b198078\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"662aaf3a2cbefe002567c0ef\",\"elapsed\":38.99,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b686d7c9319611b19807a\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b68457c9319611b198078\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6967da2493c055002921fdf1\",\"elapsed\":0,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&page=0\",\"_id\":\"6a8b68ab04ff722d1daa3b57\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b68aa04ff722d1daa3b56\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"67d307316a36e6001b419cbb\",\"elapsed\":0,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&page=0\",\"_id\":\"6a8b691c30ef7b3dde024498\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b691b30ef7b3dde024497\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6a172ee06954c01713cbdd15\",\"elapsed\":63.49,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b695b30ef7b3dde024499\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b691b30ef7b3dde024497\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6792968040f77f69fcd4f88f\",\"elapsed\":0,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b69ea4545189c6100ade4\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b69e74545189c6100ade3\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6671b4be5e5cb9002f9879bc\",\"elapsed\":0.04,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&page=0\",\"_id\":\"6a8b6ae49295d14b7b877fe8\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b6ae39295d14b7b877fe7\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6626bba0127b61001fca9f42\",\"elapsed\":1.14,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b6ae59295d14b7b877fe9\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b6ae39295d14b7b877fe7\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6970806cc202d60026256956\",\"elapsed\":0,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&page=0\",\"_id\":\"6a8b6b4ca136204fa91c6668\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b6b4ba136204fa91c6667\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"66e4a45f65767d001f55a2e4\",\"elapsed\":0.6,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b6b4da136204fa91c6669\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b6b4ba136204fa91c6667\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6968dac9a205e1002dd4ffc2\",\"elapsed\":1.47,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b6b4ea136204fa91c666a\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b6b4ba136204fa91c6667\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6985006018f3a930da4ce41a\",\"elapsed\":15.89,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&campaignName=TEST-claude-20260823%20(delete%20me)&page=1\",\"_id\":\"6a8b6c0272df6de57b9c7b3a\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b6bf072df6de57b9c7b39\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6967da2493c055002921fdf7\",\"elapsed\":0,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&page=2\",\"_id\":\"6a8b6c9b07bd72c6e53f8b5e\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b6c9a07bd72c6e53f8b5d\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6626bb61127b61002b601203\",\"elapsed\":0.04,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=2&locale=en\",\"_id\":\"6a8b6fa35bd4b0b8c312f7b6\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b6fa05bd4b0b8c312f7b5\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"679297dd40f77f69fcd4f895\",\"elapsed\":0,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&page=1\",\"_id\":\"6a8b700b8fc7d5d7dd1a0368\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b700a8fc7d5d7dd1a0367\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"66452df5a2cc1e002324d3e7\",\"elapsed\":0.07,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=2&locale=en\",\"_id\":\"6a8b7019c260ec7bd057e422\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b7017c260ec7bd057e421\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6968dda4a205e1002dd5025a\",\"elapsed\":0,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&page=1\",\"_id\":\"6a8b704924a88f433bee1178\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b704924a88f433bee1177\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6967da2493c055002921fddc\",\"elapsed\":0,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b70613fca990086697dc6/60106fe73d519f17d1749fd6?locale=en&page=0\",\"_id\":\"6a8b736294b05bb60762ac25\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b736194b05bb60762ac24\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6968dc04a205e1002dd500d0\",\"elapsed\":1.7,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b70613fca990086697dc6/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b736494b05bb60762ac26\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b736194b05bb60762ac24\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6626bd66127b61001aa5b5dc\",\"elapsed\":0.77,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b70613fca990086697dc6/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b7395f58a457990010317\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b7394f58a457990010316\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6968d9e2a205e1001d96bcb6\",\"elapsed\":0.77,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b70613fca990086697dc6/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b7395f58a457990010318\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b7394f58a457990010316\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6626bd3a127b61001367ca78\",\"elapsed\":1.5,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b74faee2d3e542fd94e4a\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b74f8ee2d3e542fd94e49\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"66a02e5fe3256300132cb859\",\"elapsed\":1.5,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b74faee2d3e542fd94e4b\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b74f8ee2d3e542fd94e49\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6967da2493c055002921fde3\",\"elapsed\":0.05,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&page=2\",\"_id\":\"6a8b755036bc6d93157aa23b\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b754f36bc6d93157aa23a\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"6626b758127b61002f89fcab\",\"elapsed\":1.93,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=2&locale=en\",\"_id\":\"6a8b755136bc6d93157aa23c\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b754f36bc6d93157aa23a\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"66a02ddfc90743001e1ffaff\",\"elapsed\":0.7,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=4&locale=en\",\"_id\":\"6a8b757580462377517ed455\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b757480462377517ed454\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"66df756fb2fe08002b3bb2b7\",\"elapsed\":0.07,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?locale=en&page=0\",\"_id\":\"6a8b759dd4e3b17a93cb3e53\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b759cd4e3b17a93cb3e52\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"},{\"uid\":\"696932113caeb54476fed3a8\",\"elapsed\":0.95,\"rate\":0.015217,\"href\":\"https://dashboard-03.braze.com/engagement/campaigns/6a8b6712e8ab2a0086d51749/60106fe73d519f17d1749fd6?page=0&locale=en\",\"_id\":\"6a8b759ed4e3b17a93cb3e54\",\"library\":\"chmln\",\"revision\":\"stable\",\"tab_id\":\"6a8b759cd4e3b17a93cb3e52\",\"kind\":\"element_action\",\"url_group_id\":\"6467d5fed9383d0900000000\"}]}"
+        },
+        {
+          "name": "ab.storage.banners.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":\"c37197f8-1238-46c0-99bb-faa244edaa65\"}"
+        },
+        {
+          "name": "ab.storage.ccLastFullSync.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":1787524371}"
+        },
+        {
+          "name": "ab.storage.lastSdkReq.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":1787524659224}"
+        },
+        {
+          "name": "chmln:l.C.d",
+          "value": "{\"profile\":{\"M\":\"Profile\",\"attributes\":{\"id\":\"6655a7cd3a5d160036066c9e\",\"uid\":\"6654ea119dc7430058c1dc94\",\"last_anonymous_at\":\"2026-08-23T22:34:03.870Z\"}},\"elements:observed\":{\"6968e349a205e100211045b3\":{\"at\":\"2026-08-23T21:32:39.169Z\"},\"6968d440a205e10021103ea3\":{\"at\":\"2026-08-23T21:32:39.172Z\"},\"6967df23f14ac7001443bbad\":{\"at\":\"2026-08-23T21:32:39.185Z\"},\"6968e21da205e10025d8f0f1\":{\"at\":\"2026-08-23T21:32:59.531Z\"},\"6626bcd1cfd372001b17fd3b\":{\"at\":\"2026-08-23T21:33:07.664Z\"},\"66df756fb2fe08002b3bb2b1\":{\"at\":\"2026-08-23T21:33:07.664Z\"},\"6968e21da205e10025d8f0f0\":{\"at\":\"2026-08-23T21:33:34.313Z\"},\"698e31db086e65002c6626d5\":{\"at\":\"2026-08-23T21:33:35.548Z\"},\"696935ef6b1380001b2c7ebb\":{\"at\":\"2026-08-23T21:34:37.214Z\"},\"6967da2493c055002921fdea\":{\"at\":\"2026-08-23T21:34:37.231Z\"},\"684b4bbcb9eeb5a0a0675d9e\":{\"at\":\"2026-08-23T21:34:37.248Z\"},\"669fd266e32563002f1f46a4\":{\"at\":\"2026-08-23T21:37:06.537Z\"},\"6626bb4dcfd372001f73b5b3\":{\"at\":\"2026-08-23T21:38:14.667Z\"},\"662aaf3a2cbefe002567c0ef\":{\"at\":\"2026-08-23T21:38:53.565Z\"},\"6967da2493c055002921fdf1\":{\"at\":\"2026-08-23T21:39:55.449Z\"},\"67d307316a36e6001b419cbb\":{\"at\":\"2026-08-23T21:41:48.421Z\"},\"6a172ee06954c01713cbdd15\":{\"at\":\"2026-08-23T21:42:51.873Z\"},\"6792968040f77f69fcd4f88f\":{\"at\":\"2026-08-23T21:45:14.105Z\"},\"6671b4be5e5cb9002f9879bc\":{\"at\":\"2026-08-23T21:49:23.989Z\"},\"6626bba0127b61001fca9f42\":{\"at\":\"2026-08-23T21:49:25.090Z\"},\"6970806cc202d60026256956\":{\"at\":\"2026-08-23T21:51:08.706Z\"},\"66e4a45f65767d001f55a2e4\":{\"at\":\"2026-08-23T21:51:09.288Z\"},\"6968dac9a205e1002dd4ffc2\":{\"at\":\"2026-08-23T21:51:10.155Z\"},\"6985006018f3a930da4ce41a\":{\"at\":\"2026-08-23T21:54:10.108Z\"},\"6967da2493c055002921fdf7\":{\"at\":\"2026-08-23T21:56:43.265Z\"},\"6626bb61127b61002b601203\":{\"at\":\"2026-08-23T22:09:39.002Z\"},\"679297dd40f77f69fcd4f895\":{\"at\":\"2026-08-23T22:11:23.359Z\"},\"66452df5a2cc1e002324d3e7\":{\"at\":\"2026-08-23T22:11:37.576Z\"},\"6968dda4a205e1002dd5025a\":{\"at\":\"2026-08-23T22:12:25.609Z\"},\"6967da2493c055002921fddc\":{\"at\":\"2026-08-23T22:25:38.752Z\"},\"6968dc04a205e1002dd500d0\":{\"at\":\"2026-08-23T22:25:40.422Z\"},\"6626bd66127b61001aa5b5dc\":{\"at\":\"2026-08-23T22:26:29.769Z\"},\"6968d9e2a205e1001d96bcb6\":{\"at\":\"2026-08-23T22:26:29.770Z\"},\"696931ed6b1380001b2c7d61\":{\"at\":\"2026-08-23T22:28:18.629Z\"},\"662a73d5dbc0f4002b970ae0\":{\"at\":\"2026-08-23T22:28:18.668Z\"},\"6626bd3a127b61001367ca78\":{\"at\":\"2026-08-23T22:32:26.471Z\"},\"66a02e5fe3256300132cb859\":{\"at\":\"2026-08-23T22:32:26.472Z\"},\"6967da2493c055002921fde3\":{\"at\":\"2026-08-23T22:33:52.003Z\"},\"6626b758127b61002f89fcab\":{\"at\":\"2026-08-23T22:33:53.876Z\"},\"66a02ddfc90743001e1ffaff\":{\"at\":\"2026-08-23T22:34:29.685Z\"},\"66df756fb2fe08002b3bb2b7\":{\"at\":\"2026-08-23T22:35:09.854Z\"},\"696932113caeb54476fed3a8\":{\"at\":\"2026-08-23T22:35:10.736Z\"}}}"
+        },
+        {
+          "name": "ab.storage.ff.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":\"c37197f8-1238-46c0-99bb-faa244edaa65\"}"
+        },
+        {
+          "name": "ab.storage.globalRateLimitCurrentTokenCount.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":0}"
+        },
+        {
+          "name": "ab.storage.ccDismissals.invalid_api_key",
+          "value": "{\"v\":{}}"
+        },
+        {
+          "name": "ab.storage.ffLastRefreshAt.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":1787523935813}"
+        },
+        {
+          "name": "ab.storage.ccDismissals.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{}}"
+        },
+        {
+          "name": "ab.storage.attributes.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"6654ea119dc7430058c1dc94\":{\"user_id\":\"6654ea119dc7430058c1dc94\",\"email\":\"roger@rogerjunior.com\",\"first_name\":\"Roger\",\"last_name\":\"Junior\",\"custom\":{\"is admin\":false,\"department\":\"agency\",\"company timezone\":\"America/New_York\",\"company id\":\"5a12fb5ea12f7457f92c5c91\",\"company name\":\"Turner\",\"company created\":\"2017-11-20T15:57:18\",\"company has sessions\":true,\"Dashboard Domain\":\"https://dashboard-03.braze.com\",\"selected locale\":\"en\",\"localstorage is available\":true}}}}"
+        },
+        {
+          "name": "ab.storage.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":\"g:c37197f8-1238-46c0-99bb-faa244edaa65|e:1787524960148|c:1787523934696|l:1787524660148\"}"
+        },
+        {
+          "name": "pusherTransportTLS",
+          "value": "{\"timestamp\":1787524659446,\"transport\":\"ws\",\"latency\":666,\"cacheSkipCount\":0}"
+        },
+        {
+          "name": "ab.storage.events.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":[{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524508765,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"ca05c5af-379b-49de-9759-68bb336bef04\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524510149,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/6a8b6712e8ab2a0086d51749?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524510226,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"Began editing any campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaignId\":\"6a8b6712e8ab2a0086d51749\",\"campaignType\":\"email\",\"postLaunchDraft\":false}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787524658804,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"key\":\"feature_flags\",\"value\":[\"featureflags.prospect_overview\",\"product_announcement_banner\",\"chameleon_sdk\"]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524660147,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524660148,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"7397cf05-79f4-487a-adde-530e803a5c1c\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}}]}"
+        },
+        {
+          "name": "_fs_uid",
+          "value": "#HT1ND#e94eb1a2-9e32-4c5f-9925-8deaf96f684b:8ca3c46a-0cfe-41f5-a30a-6c77ca76e528:1787520754949::45#c8895193###/1819056889"
+        },
+        {
+          "name": "ab.storage.device.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"browser\":\"Chrome\",\"browser_version\":\"151\",\"os_version\":\"Mac\",\"locale\":\"en-us\",\"time_zone\":\"Europe/Lisbon\",\"user_agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36\"}}"
+        },
+        {
           "name": "ab.storage.requestAttempts.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"content_cards/sync\":1,\"data\":4}}"
+          "value": "{\"v\":{\"content_cards/sync\":3,\"data\":3,\"feature_flags/sync\":1,\"banners/sync\":2}}"
+        },
+        {
+          "name": "ab.storage.ffImpressions.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"NjgxMGY0YzA4MTA2NjIwMDY0MmMwN2I2XyRfbXY9NjgxMGY1YWU0NjEwMWQwMDY0ZTYyYTc3JnBpPWNtcA==\":true}}"
+        },
+        {
+          "name": "ab.storage.banners.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{}}"
+        },
+        {
+          "name": "ab.storage.ccImpressions.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{}}"
+        },
+        {
+          "name": "ab.storage.ccLastCardUpdated.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":1787520757}"
         },
         {
           "name": "operator_auto_loaded",
@@ -192,28 +286,40 @@
           "value": "{\"v\":1787520315250}"
         },
         {
-          "name": "ab.storage.lastSdkReq.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":1787520315286}"
+          "name": "ab.storage.sdkVersion.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":\"6.11.0\"}"
         },
         {
           "name": "i18nextLng",
           "value": "en"
         },
         {
-          "name": "ab.storage.globalRateLimitCurrentTokenCount.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":28}"
+          "name": "ab.storage.triggers.ts.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":1787523935372}"
         },
         {
-          "name": "ab.storage.ccDismissals.invalid_api_key",
-          "value": "{\"v\":{}}"
+          "name": "_fs_lua",
+          "value": "1.1787524507288"
         },
         {
-          "name": "ab.storage.attributes.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"6654ea119dc7430058c1dc94\":{\"user_id\":\"6654ea119dc7430058c1dc94\",\"email\":\"roger@rogerjunior.com\",\"first_name\":\"Roger\",\"last_name\":\"Junior\",\"custom\":{\"is admin\":false,\"department\":\"agency\",\"company timezone\":\"America/New_York\",\"company id\":\"5a12fb5ea12f7457f92c5c91\",\"company name\":\"Turner\",\"company created\":\"2017-11-20T15:57:18\",\"company has sessions\":true,\"Dashboard Domain\":\"https://dashboard-03.braze.com\",\"selected locale\":\"en\",\"localstorage is available\":true}}}}"
+          "name": "ab.storage.ff.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"featureflags.prospect_overview\":{\"id\":\"featureflags.prospect_overview\",\"e\":true,\"pr\":{\"title\":{\"type\":\"string\",\"value\":\"Coordinate product launches with Feature Flags\"},\"subtitle\":{\"type\":\"string\",\"value\":\"Release, test, and measure new feature launches with Braze Feature Flags\"},\"button-color-intent\":{\"type\":\"string\",\"value\":\"primary\"}},\"fts\":\"NjUyZGVmODFkNzNkMGUwMDRkMzYwZDQ1XyRfbXY9NjUyZGVmODFkNzNkMGUwMDRkMzYwZDRhJnBpPWNtcA==\"},\"product_announcement_banner\":{\"id\":\"product_announcement_banner\",\"e\":true,\"pr\":{\"layout\":{\"type\":\"string\",\"value\":\"lower_placement\"}},\"fts\":\"NjgxMGY0YzA4MTA2NjIwMDY0MmMwN2I2XyRfbXY9NjgxMGY1YWU0NjEwMWQwMDY0ZTYyYTc3JnBpPWNtcA==\"},\"chameleon_sdk\":{\"id\":\"chameleon_sdk\",\"e\":true,\"pr\":{}}}}"
+        },
+        {
+          "name": "ab.storage.cc.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":[{\"tp\":\"captioned_image\",\"id\":\"NmE2YmM4MGMwZjBiYzIwMDg0NDE1NjI3XyRfY2M9ZDg0NzUwOGQtNmI2NS1mNWMzLTk2ZWQtOTc5NTZjNTVmNjc4Jm12PTZhNmJjODBjMGYwYmMyMDA4NDQxNTYyMSZwaT1jbXA=\",\"v\":false,\"tt\":\"Braze 2026 ESG Report: Climate Action, Community Impact, Global Inclusion & Opportunity\",\"i\":\"https://braze-images.com/appboy/communication/marketing/content_cards_message_variations/images/6a6bc80c0f0bc20084415621/a1a033aac7ea17b8182c76ea4c6f9e08354a8bd7/original.png?1786138396\",\"ds\":\"Five years of commitments. Five years of delivering on them. Our 2026 ESG Report reflects our efforts to grow responsibly and create lasting value for our people, our customers, and the communities we serve. \\n\\nThis year’s progress, by the numbers:\\n\\nAn 18% reduction in year-over-year company-wide emissions.\\n\\n$4.4M in charitable grants to over 200 organizations since launching the Braze for Social Impact Fund, 94% of which were directed by Braze employees in FY’26.\\n\\nEight consecutive years of ISO 27001 and SOC 2 Type 2 compliance.\\n\",\"ca\":\"2026-08-20T23:00:00.000Z\",\"ea\":\"2026-09-03T23:00:00.000Z\",\"u\":\"https://esg.braze.com/overview/default.aspx?utm_campaign=fy27-q3-global-customer-customer-esg-2026&utm_medium=dashboard-cc&utm_source=braze&utm_content=lp-esg-report-\",\"dm\":\"Read the full ESG Report\",\"ar\":1.7772511848341233,\"e\":{},\"p\":false,\"db\":true,\"cl\":false,\"l\":null,\"ia\":\"2026 Braze ESG Report\",\"s\":false},{\"tp\":\"captioned_image\",\"id\":\"NmE3MjRhN2VhYjNmZTAwMDg4NTZkZjNjXyRfYnAmY2M9ZWU4Y2JjMDItMGQ3MS0wOWI2LTU2N2EtMWIyYzg4YjhmYTBlJmN0JmRpJmRtJm12PTZhNzI0YTdlYWIzZmUwMDA4ODU2ZGYzZSZvZCZwaT13ZnMmcm0mdz02YTcyNGE3ZWFiM2ZlMDAwODg1NmRmMzkmd3A9MjAyNi0wOC0wNFQyMCUzQTI4JTNBNTMuMDAwWiZ3dj02YTcyNGE3ZWFiM2ZlMDAwODg1NmRmNTU=\",\"v\":false,\"tt\":\"July 23, 2026 release\",\"i\":\"https://braze-images.com/appboy/communication/marketing/content_cards_message_variations/images/6a724a7eab3fe0008856df3e/d81e05be4e99e6dc6de79d7f71462895f07920e3/original.png?1785875073\",\"ds\":\"This release is a step forward for AI, observability, and creative workflows:\\n\\n• Braze MCP Server — Connect AI agents like Claude or ChatGPT directly to your workspace to read analytics, manage templates, and update Content Blocks through natural language.\\n\\n• Messaging Diagnostics Dashboard — A structured breakdown of why messages were sent, aborted, or dropped — by reason, channel, and user — without opening a support ticket.\\n\\n• Asset Swap — Update a creative asset once in the Media Library and have it propagate automatically to every campaign, Canvas, and template that references it.\\n\\n• WhatsApp Limited Time Offer Templates — Add a native countdown to time-sensitive promotions directly in WhatsApp marketing messages.\\n\",\"ca\":\"2026-08-04T20:29:24.000Z\",\"ea\":\"2026-08-24T04:00:00.000Z\",\"u\":\"https://www.braze.com/docs/releases/2026/7_23_26\",\"dm\":\"See everything that launched\",\"ar\":6.94,\"e\":{},\"p\":true,\"db\":false,\"cl\":false,\"l\":null,\"ia\":\"What's new in Braze\",\"s\":false}]}"
+        },
+        {
+          "name": "ab.storage.dynamicRateLimitCurrentTokenCount.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"content_cards/sync\":3,\"banners/sync\":0}}"
         },
         {
           "name": "ab.storage.lastReqToEndpoint.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"data\":1787520315286}}"
+          "value": "{\"v\":{\"data\":1787524658806,\"content_cards/sync\":1787524658937,\"feature_flags/sync\":1787523935377,\"banners/sync\":1787524659224}}"
+        },
+        {
+          "name": "ab.storage.banners.lastRequestedTime.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"product_announcements_banner_2\":1787524659224,\"product_announcements_banner_3\":1787524659224}}"
         },
         {
           "name": "ab.storage.ccImpressions.invalid_api_key",
@@ -224,16 +330,12 @@
           "value": "{\"v\":\"g:de22e3a5-afda-467d-bb72-b9d54ad96ee6|e:undefined|c:1787520315265|l:1787520315265\"}"
         },
         {
-          "name": "ab.storage.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":\"g:19cbfffe-ec6b-49e6-b0a7-3a8a6454d032|e:1787520617282|c:1787520315250|l:1787520317282\"}"
+          "name": "ab.storage.serverConfig.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"s\":\"6.11.0\",\"l\":1786729667,\"e\":[\"Test event\",\"pm.homepagebanner.button1.click\"],\"a\":[\"SEGA XD Gamification WS Attend\",\"SEGA_XD_Gamification_WS_Attend\",\"irt_affected_keys\"],\"p\":[],\"m\":21600,\"v\":\"BK264h2HOM_IExXTO5F6OR80SeBcDMCMy9Ep45xyls93PswX5KEqAesHxmjcGY3da_dn7ihx6jh8lvME6U0Uhqo=\",\"c\":{\"enabled\":true},\"f\":{\"enabled\":true,\"refresh_rate_limit\":300},\"grl\":{\"capacity\":30,\"enabled\":true,\"endpoint_overrides\":{\"banners/sync\":{\"capacity\":5,\"refill_rate\":180},\"content_cards/sync\":{\"capacity\":5,\"refill_rate\":10},\"push/redeliver\":{\"capacity\":1,\"refill_rate\":180}},\"refill_rate\":30},\"b\":{\"dismissals_cache_size\":200,\"enabled\":true,\"max_placements\":10},\"d\":{\"enabled\":true},\"rb\":{\"max_sleep_duration_ms\":300000,\"min_sleep_duration_ms\":10000,\"scale_factor\":3},\"mst\":null,\"ch\":null}}"
         },
         {
-          "name": "pusherTransportTLS",
-          "value": "{\"timestamp\":1787520316110,\"transport\":\"ws\",\"latency\":914,\"cacheSkipCount\":0}"
-        },
-        {
-          "name": "ab.storage.events.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":[{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ss\",\"ts\":1787520315250,\"s\":\"19cbfffe-ec6b-49e6-b0a7-3a8a6454d032\",\"d\":{}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787520315284,\"s\":\"19cbfffe-ec6b-49e6-b0a7-3a8a6454d032\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787520317277,\"s\":\"19cbfffe-ec6b-49e6-b0a7-3a8a6454d032\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787520317278,\"s\":\"19cbfffe-ec6b-49e6-b0a7-3a8a6454d032\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"326053ae-99bb-4f9a-b7cf-ddeb642cc86a\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787520317281,\"s\":\"19cbfffe-ec6b-49e6-b0a7-3a8a6454d032\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"automatic open\",\"sage_chat_session_id\":\"326053ae-99bb-4f9a-b7cf-ddeb642cc86a\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787520317281,\"s\":\"19cbfffe-ec6b-49e6-b0a7-3a8a6454d032\",\"d\":{\"n\":\"pm.pick_up_where_you_left_off_impression\",\"p\":{\"count\":15,\"type\":\"success\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787520317282,\"s\":\"19cbfffe-ec6b-49e6-b0a7-3a8a6454d032\",\"d\":{\"n\":\"pm.pick_up_where_you_left_off_impression\",\"p\":{\"count\":15,\"type\":\"success\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}}]}"
+          "name": "ab.storage.ccClicks.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{}}"
         }
       ]
     },
@@ -259,56 +361,136 @@
       "origin": "https://us03.bz-rndr.com",
       "localStorage": [
         {
-          "name": "ab.storage.requestAttempts.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"content_cards/sync\":1,\"data\":4}}"
+          "name": "ab.storage.triggers.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":[{\"i\":\"632c98e474c14225d2832d04\",\"c\":[{\"t\":\"custom_event\",\"d\":\"pm.shopify_install_successful\"}],\"s\":\"2022-09-26T04:00:00.000Z\",\"e\":null,\"p\":2000510000,\"t\":\"templated_iam\",\"da\":{\"prefetch_file_urls\":[\"https://braze-images.com/appboy/communication/assets/image_assets/images/67d1e4e12e846e0067efeffe/original.gif?1741808865\"],\"trigger_id\":\"NjMyYzk4ZTQ3NGMxNDIyNWQyODMyZDA0XyRfbXY9NjdkMWU4NjJlNzdlZGUwMDY0MDI5YTJlJnBpPWNtcA==\"},\"d\":1,\"r\":0,\"tm\":31000,\"ld\":null}]}"
+        },
+        {
+          "name": "ab.storage.banners.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":\"b3eb02b5-0d6f-42e4-a613-97f589ab1dc3\"}"
+        },
+        {
+          "name": "ab.storage.ccLastFullSync.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":1787524262}"
+        },
+        {
+          "name": "ab.storage.lastSdkReq.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":1787524660050}"
+        },
+        {
+          "name": "chmln:l.C.d",
+          "value": "{\"profile\":{\"M\":\"Profile\",\"attributes\":{\"id\":\"6655a7cd3a5d160036066c9e\",\"uid\":\"6654ea119dc7430058c1dc94\"}},\"elements:observed\":{\"6969368520b0eb1ad75a334b\":{\"at\":\"2026-08-23T21:34:36.865Z\"},\"696ff93c2a733d00244f73c6\":{\"at\":\"2026-08-23T21:35:35.235Z\"},\"6967da2493c055002921fdf8\":{\"at\":\"2026-08-23T21:35:35.252Z\"},\"6968e21da205e10025d8f0f0\":{\"at\":\"2026-08-23T21:36:26.633Z\"},\"679296f340f77f69fcd4f890\":{\"at\":\"2026-08-23T21:36:26.665Z\"},\"6968dda4a205e1002dd5025a\":{\"at\":\"2026-08-23T21:41:47.840Z\"},\"67d307316a36e6001b419cba\":{\"at\":\"2026-08-23T21:45:12.139Z\"},\"6967da2493c055002921fdea\":{\"at\":\"2026-08-23T21:51:08.374Z\"},\"67929870bec912001fcdc2ef\":{\"at\":\"2026-08-23T21:51:33.808Z\"},\"6792979140f77f69fcd4f893\":{\"at\":\"2026-08-23T21:51:33.824Z\"},\"684b4aa4b9eeb5a0a0675d9d\":{\"at\":\"2026-08-23T21:56:42.985Z\"},\"67d307316a36e6001b419cbb\":{\"at\":\"2026-08-23T22:12:48.462Z\"}}}"
+        },
+        {
+          "name": "ab.storage.ff.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":\"b3eb02b5-0d6f-42e4-a613-97f589ab1dc3\"}"
         },
         {
           "name": "ab.storage.globalRateLimitCurrentTokenCount.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":28}"
-        },
-        {
-          "name": "i18nextLng",
-          "value": "en"
+          "value": "{\"v\":17}"
         },
         {
           "name": "ab.storage.ccDismissals.invalid_api_key",
           "value": "{\"v\":{}}"
         },
         {
+          "name": "ab.storage.ffLastRefreshAt.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":1787523935815}"
+        },
+        {
+          "name": "ab.storage.ccDismissals.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{}}"
+        },
+        {
           "name": "ab.storage.attributes.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"6654ea119dc7430058c1dc94\":{\"user_id\":\"6654ea119dc7430058c1dc94\",\"email\":\"roger@rogerjunior.com\",\"first_name\":\"Roger\",\"last_name\":\"Junior\",\"custom\":{\"is admin\":false,\"department\":\"agency\",\"company timezone\":\"America/New_York\",\"company id\":\"5a12fb5ea12f7457f92c5c91\",\"company name\":\"Turner\",\"company created\":\"2017-11-20T15:57:18\",\"company has sessions\":true,\"Dashboard Domain\":\"https://us03.bz-rndr.com\",\"selected locale\":\"en\",\"localstorage is available\":true},\"push_token\":null,\"custom_push_public_key\":null,\"custom_push_user_auth\":null,\"custom_push_vapid_public_key\":null}}}"
+          "value": "{\"v\":{\"6654ea119dc7430058c1dc94\":{\"user_id\":\"6654ea119dc7430058c1dc94\",\"email\":\"roger@rogerjunior.com\",\"first_name\":\"Roger\",\"last_name\":\"Junior\",\"custom\":{\"is admin\":false,\"department\":\"agency\",\"company timezone\":\"America/New_York\",\"company id\":\"5a12fb5ea12f7457f92c5c91\",\"company name\":\"Turner\",\"company created\":\"2017-11-20T15:57:18\",\"company has sessions\":true,\"Dashboard Domain\":\"https://us03.bz-rndr.com\",\"selected locale\":\"en\",\"localstorage is available\":true}}}}"
+        },
+        {
+          "name": "ab.storage.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":\"g:b3eb02b5-0d6f-42e4-a613-97f589ab1dc3|e:1787524960786|c:1787523935178|l:1787524660786\"}"
+        },
+        {
+          "name": "ab.storage.events.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":[{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524506686,\"s\":\"b3eb02b5-0d6f-42e4-a613-97f589ab1dc3\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787524660050,\"s\":\"b3eb02b5-0d6f-42e4-a613-97f589ab1dc3\",\"d\":{\"key\":\"feature_flags\",\"value\":[\"featureflags.prospect_overview\",\"product_announcement_banner\",\"chameleon_sdk\"]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524660786,\"s\":\"b3eb02b5-0d6f-42e4-a613-97f589ab1dc3\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}}]}"
+        },
+        {
+          "name": "ab.storage.device.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"browser\":\"Chrome\",\"browser_version\":\"151\",\"os_version\":\"Mac\",\"locale\":\"en-us\",\"time_zone\":\"Europe/Lisbon\",\"user_agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36\"}}"
+        },
+        {
+          "name": "ab.storage.requestAttempts.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"content_cards/sync\":1,\"data\":3,\"feature_flags/sync\":1,\"banners/sync\":1}}"
+        },
+        {
+          "name": "ab.storage.ffImpressions.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"NjgxMGY0YzA4MTA2NjIwMDY0MmMwN2I2XyRfbXY9NjgxMGY1YWU0NjEwMWQwMDY0ZTYyYTc3JnBpPWNtcA==\":true}}"
+        },
+        {
+          "name": "ab.storage.banners.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{}}"
+        },
+        {
+          "name": "ab.storage.ccImpressions.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{}}"
+        },
+        {
+          "name": "ab.storage.ccLastCardUpdated.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":1787520757}"
         },
         {
           "name": "ab.storage.userId.bef30adf-6179-4b26-a3b5-42268996ad95",
           "value": "{\"v\":\"g:6654ea119dc7430058c1dc94|e:undefined|c:1787520316441|l:1787520316443\"}"
         },
         {
-          "name": "ab.storage.lastReqToEndpoint.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"data\":1787520316451}}"
-        },
-        {
           "name": "ab.storage.messagingSessionStart.bef30adf-6179-4b26-a3b5-42268996ad95",
           "value": "{\"v\":1787520316442}"
+        },
+        {
+          "name": "ab.storage.sdkVersion.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":\"6.11.0\"}"
+        },
+        {
+          "name": "i18nextLng",
+          "value": "en"
+        },
+        {
+          "name": "ab.storage.triggers.ts.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":1787523935603}"
+        },
+        {
+          "name": "ab.storage.ff.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"featureflags.prospect_overview\":{\"id\":\"featureflags.prospect_overview\",\"e\":true,\"pr\":{\"title\":{\"type\":\"string\",\"value\":\"Coordinate product launches with Feature Flags\"},\"subtitle\":{\"type\":\"string\",\"value\":\"Release, test, and measure new feature launches with Braze Feature Flags\"},\"button-color-intent\":{\"type\":\"string\",\"value\":\"primary\"}},\"fts\":\"NjUyZGVmODFkNzNkMGUwMDRkMzYwZDQ1XyRfbXY9NjUyZGVmODFkNzNkMGUwMDRkMzYwZDRhJnBpPWNtcA==\"},\"product_announcement_banner\":{\"id\":\"product_announcement_banner\",\"e\":true,\"pr\":{\"layout\":{\"type\":\"string\",\"value\":\"lower_placement\"}},\"fts\":\"NjgxMGY0YzA4MTA2NjIwMDY0MmMwN2I2XyRfbXY9NjgxMGY1YWU0NjEwMWQwMDY0ZTYyYTc3JnBpPWNtcA==\"},\"chameleon_sdk\":{\"id\":\"chameleon_sdk\",\"e\":true,\"pr\":{}}}}"
+        },
+        {
+          "name": "ab.storage.cc.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":[{\"tp\":\"captioned_image\",\"id\":\"NmE2YmM4MGMwZjBiYzIwMDg0NDE1NjI3XyRfY2M9ZDg0NzUwOGQtNmI2NS1mNWMzLTk2ZWQtOTc5NTZjNTVmNjc4Jm12PTZhNmJjODBjMGYwYmMyMDA4NDQxNTYyMSZwaT1jbXA=\",\"v\":false,\"tt\":\"Braze 2026 ESG Report: Climate Action, Community Impact, Global Inclusion & Opportunity\",\"i\":\"https://braze-images.com/appboy/communication/marketing/content_cards_message_variations/images/6a6bc80c0f0bc20084415621/a1a033aac7ea17b8182c76ea4c6f9e08354a8bd7/original.png?1786138396\",\"ds\":\"Five years of commitments. Five years of delivering on them. Our 2026 ESG Report reflects our efforts to grow responsibly and create lasting value for our people, our customers, and the communities we serve. \\n\\nThis year’s progress, by the numbers:\\n\\nAn 18% reduction in year-over-year company-wide emissions.\\n\\n$4.4M in charitable grants to over 200 organizations since launching the Braze for Social Impact Fund, 94% of which were directed by Braze employees in FY’26.\\n\\nEight consecutive years of ISO 27001 and SOC 2 Type 2 compliance.\\n\",\"ca\":\"2026-08-20T23:00:00.000Z\",\"ea\":\"2026-09-03T23:00:00.000Z\",\"u\":\"https://esg.braze.com/overview/default.aspx?utm_campaign=fy27-q3-global-customer-customer-esg-2026&utm_medium=dashboard-cc&utm_source=braze&utm_content=lp-esg-report-\",\"dm\":\"Read the full ESG Report\",\"ar\":1.7772511848341233,\"e\":{},\"p\":false,\"db\":true,\"cl\":false,\"l\":null,\"ia\":\"2026 Braze ESG Report\",\"s\":false},{\"tp\":\"captioned_image\",\"id\":\"NmE3MjRhN2VhYjNmZTAwMDg4NTZkZjNjXyRfYnAmY2M9ZWU4Y2JjMDItMGQ3MS0wOWI2LTU2N2EtMWIyYzg4YjhmYTBlJmN0JmRpJmRtJm12PTZhNzI0YTdlYWIzZmUwMDA4ODU2ZGYzZSZvZCZwaT13ZnMmcm0mdz02YTcyNGE3ZWFiM2ZlMDAwODg1NmRmMzkmd3A9MjAyNi0wOC0wNFQyMCUzQTI4JTNBNTMuMDAwWiZ3dj02YTcyNGE3ZWFiM2ZlMDAwODg1NmRmNTU=\",\"v\":false,\"tt\":\"July 23, 2026 release\",\"i\":\"https://braze-images.com/appboy/communication/marketing/content_cards_message_variations/images/6a724a7eab3fe0008856df3e/d81e05be4e99e6dc6de79d7f71462895f07920e3/original.png?1785875073\",\"ds\":\"This release is a step forward for AI, observability, and creative workflows:\\n\\n• Braze MCP Server — Connect AI agents like Claude or ChatGPT directly to your workspace to read analytics, manage templates, and update Content Blocks through natural language.\\n\\n• Messaging Diagnostics Dashboard — A structured breakdown of why messages were sent, aborted, or dropped — by reason, channel, and user — without opening a support ticket.\\n\\n• Asset Swap — Update a creative asset once in the Media Library and have it propagate automatically to every campaign, Canvas, and template that references it.\\n\\n• WhatsApp Limited Time Offer Templates — Add a native countdown to time-sensitive promotions directly in WhatsApp marketing messages.\\n\",\"ca\":\"2026-08-04T20:29:24.000Z\",\"ea\":\"2026-08-24T04:00:00.000Z\",\"u\":\"https://www.braze.com/docs/releases/2026/7_23_26\",\"dm\":\"See everything that launched\",\"ar\":6.94,\"e\":{},\"p\":true,\"db\":false,\"cl\":false,\"l\":null,\"ia\":\"What's new in Braze\",\"s\":false}]}"
+        },
+        {
+          "name": "ab.storage.dynamicRateLimitCurrentTokenCount.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"content_cards/sync\":3,\"banners/sync\":0}}"
+        },
+        {
+          "name": "ab.storage.lastReqToEndpoint.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"data\":1787524660050,\"content_cards/sync\":1787524507127,\"feature_flags/sync\":1787523935457,\"banners/sync\":1787524262308}}"
+        },
+        {
+          "name": "ab.storage.banners.lastRequestedTime.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"product_announcements_banner_2\":1787524262307,\"product_announcements_banner_3\":1787524262307}}"
         },
         {
           "name": "ab.storage.ccImpressions.invalid_api_key",
           "value": "{\"v\":{}}"
         },
         {
-          "name": "ab.storage.lastSdkReq.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":1787520316451}"
-        },
-        {
           "name": "ab.storage.deviceId.bef30adf-6179-4b26-a3b5-42268996ad95",
           "value": "{\"v\":\"g:39c3a951-03ff-4fb8-b45a-d0e0903a9e7f|e:undefined|c:1787520316444|l:1787520316444\"}"
         },
         {
-          "name": "ab.storage.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":\"g:4a1e295d-3049-458d-8684-4f18bfc31e0e|e:1787520617165|c:1787520316442|l:1787520317165\"}"
+          "name": "ab.storage.serverConfig.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{\"s\":\"6.11.0\",\"l\":1786729667,\"e\":[\"Test event\",\"pm.homepagebanner.button1.click\"],\"a\":[\"SEGA XD Gamification WS Attend\",\"SEGA_XD_Gamification_WS_Attend\",\"irt_affected_keys\"],\"p\":[],\"m\":21600,\"v\":\"BK264h2HOM_IExXTO5F6OR80SeBcDMCMy9Ep45xyls93PswX5KEqAesHxmjcGY3da_dn7ihx6jh8lvME6U0Uhqo=\",\"c\":{\"enabled\":true},\"f\":{\"enabled\":true,\"refresh_rate_limit\":300},\"grl\":{\"capacity\":30,\"enabled\":true,\"endpoint_overrides\":{\"banners/sync\":{\"capacity\":5,\"refill_rate\":180},\"content_cards/sync\":{\"capacity\":5,\"refill_rate\":10},\"push/redeliver\":{\"capacity\":1,\"refill_rate\":180}},\"refill_rate\":30},\"b\":{\"dismissals_cache_size\":200,\"enabled\":true,\"max_placements\":10},\"d\":{\"enabled\":true},\"rb\":{\"max_sleep_duration_ms\":300000,\"min_sleep_duration_ms\":10000,\"scale_factor\":3},\"mst\":null,\"ch\":null}}"
         },
         {
-          "name": "ab.storage.events.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":[{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ss\",\"ts\":1787520316442,\"s\":\"4a1e295d-3049-458d-8684-4f18bfc31e0e\",\"d\":{}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787520316451,\"s\":\"4a1e295d-3049-458d-8684-4f18bfc31e0e\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787520316988,\"s\":\"4a1e295d-3049-458d-8684-4f18bfc31e0e\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787520317165,\"s\":\"4a1e295d-3049-458d-8684-4f18bfc31e0e\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}}]}"
+          "name": "ab.storage.ccClicks.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{}}"
         }
       ]
     }

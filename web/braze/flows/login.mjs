@@ -1,6 +1,7 @@
 import { config } from "../config.mjs";
 import { freshTotp } from "../auth.mjs";
 import { braze, okta, warnIfUnverified } from "../selectors.mjs";
+import { appGroupFromUrl } from "../urls.mjs";
 
 /**
  * Okta orgs run on custom domains: WBD's Braze IdP is ssobiz.wbd.com (confirmed
@@ -218,4 +219,22 @@ async function assertNoError(ctx, what) {
   if (await error.isVisible({ timeout: 3_000 }).catch(() => false)) {
     throw new Error(`${what}: ${(await error.innerText()).trim().replace(/\s+/g, " ")}`);
   }
+}
+
+
+/**
+ * The app-group id scopes every dashboard URL. It is read off wherever the
+ * dashboard lands rather than configured, so the robot follows whichever
+ * workspace the account opens in — override with BRAZE_APP_GROUP.
+ */
+export async function appGroup(ctx) {
+  if (config.appGroup) return config.appGroup;
+  if (ctx.appGroupId) return ctx.appGroupId;
+  const found = appGroupFromUrl(ctx.page.url());
+  if (found) return (ctx.appGroupId = found);
+  await ctx.page.goto(config.url, { waitUntil: "domcontentloaded" });
+  await ctx.page.waitForURL(/[0-9a-f]{24}/, { timeout: 30_000 });
+  const id = appGroupFromUrl(ctx.page.url());
+  if (!id) throw new Error("Could not determine the app-group id — set BRAZE_APP_GROUP.");
+  return (ctx.appGroupId = id);
 }

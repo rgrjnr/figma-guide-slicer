@@ -13,10 +13,11 @@ import { RUNS_DIR, config, requireConfig } from "./config.mjs";
 import { contextOptions, saveSession } from "./auth.mjs";
 
 export class RunContext {
-  constructor(page, dir, onEvent) {
+  constructor(page, dir, onEvent, base) {
     this.page = page;
     this.dir = dir;
     this.onEvent = onEvent;
+    this.base = (base || "").replace(/\/$/, "");
     this.stepIndex = 0;
   }
 
@@ -74,7 +75,7 @@ export async function runFlow(name, flow, { onEvent, runId } = {}) {
     browser = await chromium.launch({ headless: config.headless, slowMo: config.slowMo });
     context = await browser.newContext(contextOptions({ viewport: { width: 1600, height: 1000 } }));
     page = await context.newPage();
-    ctx = new RunContext(page, dir, onEvent);
+    ctx = new RunContext(page, dir, onEvent, config.url);
   } catch (err) {
     const line = { at: new Date().toISOString(), level: "error", message: err.message };
     console.error(`!! ${err.message}`);

@@ -89,11 +89,62 @@ Still unverified: the password and factor screens. If this org only offers a
 push notification rather than a code, the flow says so explicitly and you can
 approve it on your phone while it waits.
 
-## Record before you script
+## The campaign flow
 
-**The Braze selectors in `selectors.mjs` are unverified.** They were written
-from how the dashboard is normally laid out, not from Braze's actual DOM, and
-several are probably wrong. Fixing them is the first real task:
+Driven end to end against the live dashboard on 2026-08-23 and encoded in
+`flows/`. What the DOM turned out to be:
+
+- **Create campaign** opens a channel menu; **Email** creates the campaign
+  immediately, so the id only exists from that click onwards.
+- The ZIP goes into a hidden `input[type=file][accept=".zip"]`. Braze unpacks it,
+  rewrites the image srcs to its own CDN, and shows **Build message** when done.
+- **The compose step must run in one page session.** An uploaded message that
+  has not been saved is discarded on reload — there is no resuming halfway.
+- Subject and preheader are both textareas with `aria-label="Liquid text area"`,
+  so the accessible name cannot tell them apart. Their id *prefixes* can
+  (`sending-info-subject-input--…`); the numeric suffix changes per render.
+- From and reply-to are workspace presets, not free text — the "customize"
+  boxes are disabled by the workspace's email settings.
+- A campaign with no subject cannot be launched; Braze shows "Fix issue".
+- The wizard is five steps, addressable as `&page=0..4`: Compose, Schedule,
+  Target, Assign, Review.
+
+### Scheduling
+
+**Braze has no time-zone control on the schedule step.** A designated time is
+read in the *workspace's* zone — Eastern, for this workspace, as shown in the
+dashboard header. `scheduleCampaign` therefore resolves your requested zone to
+an instant and converts it to workspace-local wall clock before typing it in.
+Set `BRAZE_WORKSPACE_TZ` to match the workspace or every send lands hours out.
+
+The date and time fields only render after an entry frequency is chosen.
+"Enter users into this Campaign in their local time zone" is the per-recipient
+option, and Braze does that conversion itself.
+
+### Targeting
+
+`Target Users By Segment` is a react-select that paints a placeholder div over
+its own input, so clicking it is intercepted. Type into the input instead.
+
+### Importing an audience
+
+`Browse files` is disabled until an import type is chosen. The wizard is four
+steps: file preview, review mapping, import settings, summary → **Start Import**.
+
+In import settings the default is *"Don't create a targeting filter"*, which
+imports the users but leaves nothing to target. **"Create targeting filter and
+segment"** is the option that produces a segment — and Braze names it after the
+file, which is why the existing campaigns target segments called `20260810.csv`.
+Name the CSV whatever you want the segment called.
+
+## Sending
+
+See [SENDING.md](SENDING.md). Nothing here clicks **Launch Campaign**.
+
+## Fixing what is left
+
+The Okta password and factor screens are still unexercised — the stored session
+has meant login has not needed them yet. If they break:
 
 ```
 npm run braze:record

@@ -2,6 +2,8 @@ import { spawn } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { getProject, updateProject } from "@/lib/server/store";
+import type { ProjectRecord, StepRecord } from "@/lib/types";
 
 export const runtime = "nodejs";
 // Playwright drives a real browser; a flow can take minutes.
@@ -10,7 +12,13 @@ export const maxDuration = 900;
 const WEB_ROOT = process.cwd();
 
 interface RunRequest {
-  flow: "login" | "draft" | "audience" | "schedule";
+  flow: "login" | "draft" | "replace" | "audience" | "schedule" | "refresh" | "test";
+  /** When given, the run's outcome is recorded against this project. */
+  projectId?: string;
+  campaignId?: string;
+  segment?: string;
+  recipients?: string;
+  confirmSend?: boolean;
   campaignName?: string;
   subject?: string;
   preheader?: string;
@@ -33,6 +41,28 @@ function argsFor(body: RunRequest, dir: string): string[] {
   switch (body.flow) {
     case "login":
       return ["login"];
+    case "refresh": {
+      if (!body.campaignId) throw new Error("Nothing to refresh — this project has no campaign yet.");
+      return ["refresh", "--id", body.campaignId];
+    }
+    case "test": {
+      if (!body.campaignId) throw new Error("Nothing to test — this project has no campaign yet.");
+      if (!body.recipients) throw new Error("Give at least one address to send the test to.");
+      const out = ["test", "--id", body.campaignId, "--to", body.recipients];
+      // Sending real mail is opt-in, all the way down to the CLI flag.
+      if (body.confirmSend) out.push("--confirm", "true");
+      return out;
+    }
+    case "replace": {
+      if (!body.campaignId) throw new Error("Nothing to replace — this project has no campaign yet.");
+      if (!body.zipBase64) throw new Error("No build to upload — slice the email first.");
+      const zipPath = join(dir, "build.zip");
+      writeFileSync(zipPath, Buffer.from(body.zipBase64, "base64"));
+      const out = ["replace", "--id", body.campaignId, "--zip", zipPath];
+      push(out, "--subject", body.subject);
+      push(out, "--preheader", body.preheader);
+      return out;
+    }
     case "draft": {
       if (!body.zipBase64) throw new Error("No build to upload — slice the email first.");
       const zipPath = join(dir, "build.zip");
@@ -52,10 +82,11 @@ function argsFor(body: RunRequest, dir: string): string[] {
       return ["audience", "--csv", csvPath];
     }
     case "schedule": {
-      const out = ["schedule"];
-      push(out, "--name", body.campaignName);
+      if (!body.campaignId) throw new Error("Nothing to schedule — create the draft first.");
+      const out = ["schedule", "--id", body.campaignId];
       push(out, "--at", body.sendAt);
       push(out, "--zone", body.timeZone);
+      push(out, "--segment", body.segment);
       if (body.localTimeDelivery) out.push("--local", "true");
       return out;
     }
@@ -91,7 +122,10 @@ export async function POST(request: Request) {
         env: process.env,
       });
 
+      // Kept so the flow's structured result can be parsed out at the end.
+      let output = "";
       const relay = (chunk: Buffer, level: "info" | "error") => {
+        output += chunk.toString();
         for (const line of chunk.toString().split("\n")) {
           if (line.trim()) send("log", { level, message: line.trimEnd() });
         }
@@ -104,7 +138,16 @@ export async function POST(request: Request) {
         controller.close();
       });
       child.on("close", code => {
-        send("done", { ok: code === 0, code });
+        const ok = code === 0;
+        // Record the outcome against the project so the links survive the run.
+        if (body.projectId) {
+          try {
+            recordRun(body, ok, output);
+          } catch (err) {
+            send("log", { level: "error", message: `could not save to the project: ${String(err)}` });
+          }
+        }
+        send("done", { ok, code });
         controller.close();
       });
 
@@ -119,4 +162,66 @@ export async function POST(request: Request) {
       Connection: "keep-alive",
     },
   });
+}
+
+
+/** The step each flow advances, for the project's progress record. */
+const STEP_FOR: Partial<Record<RunRequest["flow"], keyof ProjectRecord["steps"]>> = {
+  draft: "draft",
+  replace: "draft",
+  schedule: "schedule",
+  audience: "import",
+};
+
+/**
+ * Pull whatever the flow reported out of its log and merge it into the project.
+ * The flows print a JSON object for machine-readable results (refresh does);
+ * everything else is recovered from the lines they log.
+ */
+function recordRun(body: RunRequest, ok: boolean, output: string): void {
+  const projectId = body.projectId!;
+  if (!getProject(projectId)) return;
+
+  const step = STEP_FOR[body.flow];
+  const record: StepRecord = {
+    status: ok ? "done" : "failed",
+    at: new Date().toISOString(),
+    runId: output.match(/run (\S+) —/)?.[1],
+    ...(ok ? {} : { error: output.trim().split("\n").slice(-1)[0]?.slice(0, 300) }),
+  };
+
+  const patch: Partial<ProjectRecord> = step ? { steps: { [step]: record } as never } : {};
+  const braze: ProjectRecord["braze"] = {};
+
+  const campaignId = output.match(/campaign ([0-9a-f]{24})/)?.[1] || body.campaignId;
+  const campaignUrl = output.match(/(https:\/\/[^\s]*\/engagement\/campaigns\/[^\s]+)/)?.[1];
+  if (campaignId) {
+    braze.campaign = {
+      id: campaignId,
+      name: body.campaignName || "",
+      url: campaignUrl || "",
+      checkedAt: new Date().toISOString(),
+    };
+  }
+
+  const reachable = output.match(/Reachable users: ([\d,]+)/)?.[1];
+  if (reachable) braze.reachableUsers = Number(reachable.replace(/,/g, ""));
+  if (/control group removed/i.test(output)) braze.controlGroupRemoved = true;
+
+  // refresh prints one JSON line; prefer it over anything scraped.
+  const json = output.split("\n").map(l => l.trim()).reverse().find(l => l.startsWith("{") && l.endsWith("}"));
+  if (json) {
+    try {
+      const live = JSON.parse(json) as Record<string, unknown>;
+      if (typeof live.reachableUsers === "number") braze.reachableUsers = live.reachableUsers;
+      if (typeof live.controlGroupPresent === "boolean") braze.controlGroupRemoved = !live.controlGroupPresent;
+      if (typeof live.url === "string" && braze.campaign) braze.campaign.url = live.url;
+      if (typeof live.name === "string" && braze.campaign) braze.campaign.name = live.name;
+    } catch {
+      /* the last brace-wrapped line was not ours */
+    }
+  }
+
+  if (Object.keys(braze).length) patch.braze = braze;
+  updateProject(projectId, patch);
 }

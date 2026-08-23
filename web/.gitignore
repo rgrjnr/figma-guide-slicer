@@ -3,4 +3,9 @@ node_modules/
 next-env.d.ts
 *.tsbuildinfo
 .env.local
+# Playwright run artifacts: screenshots and page dumps per step.
 .runs/
+# The local JSON database and the ZIP/CSV assets it points at.
+data/
+braze/.auth/
+braze/recordings/

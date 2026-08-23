@@ -36,6 +36,14 @@ export const config = {
   appTile: process.env.BRAZE_APP_TILE || "Braze",
   /** The identity-provider button on Braze's cluster sign-in screen. */
   ssoButton: process.env.BRAZE_SSO_BUTTON || "Okta",
+  /** Workspace scope for every dashboard URL. Discovered at run time if unset. */
+  appGroup: process.env.BRAZE_APP_GROUP || "",
+  /**
+   * Braze's schedule step has no time-zone control — a designated time is read
+   * in the workspace's own zone, shown in the dashboard header. Getting this
+   * wrong shifts every send by the offset between the two zones.
+   */
+  workspaceTimeZone: process.env.BRAZE_WORKSPACE_TZ || "America/New_York",
   email: process.env.BRAZE_EMAIL || "",
   password: process.env.BRAZE_PASSWORD || "",
   totpSecret: process.env.BRAZE_TOTP_SECRET || "",

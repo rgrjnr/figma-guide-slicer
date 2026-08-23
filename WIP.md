@@ -1,5 +1,31 @@
 # WIP
 
+## 2026-08-23 — main (Phase 4, Braze flows driven for real)
+
+Drove a real campaign end to end in Braze and encoded every step. No campaign
+was ever launched and no test mail sent.
+Works: draft (create -> upload ZIP -> build -> subject/preheader -> save),
+replace (add blank variant -> new ZIP -> remove old variant -> rename; for when
+a design changes but the campaign is reused), schedule (+ timezone conversion
+into the workspace zone, + removes Braze's default 20% A/B control group,
++ reads back the reachable-user count), audience import (4-step wizard; must
+pick "Create targeting filter and segment" or nothing is targetable), refresh
+(read-only, re-reads live state), test send (staged; needs --confirm to fire).
+JSON store at web/data/projects.json + /api/projects CRUD; nested merge so one
+step cannot clobber another's Braze links.
+Gotchas found the hard way: compose must be one page session (reload discards
+the upload); each wizard step must be saved before navigating or it is lost;
+variant rename needs its popover's Save button, not Enter/blur; Remove Variant
+only renders on hover; react-select placeholders swallow clicks (fill instead);
+subject+preheader share aria-label, tell them apart by id prefix; reachable
+count and schedule read 0/null if you read before the SPA settles.
+Not done: UI still talks to localStorage, not the new API. Okta password/factor
+screens still unexercised (stored session keeps skipping them).
+Next: wire the Studio UI onto /api/projects; add a project list + reopen.
+TEST objects to delete in Braze: campaigns "TEST-claude-20260823 (delete me)"
+(6a8b6712e8ab2a0086d51749) and "TEST-claude-flow-20260823 (delete me)"
+(6a8b70613fca990086697dc6); user import TEST-claude-20260823.csv (3 fake users).
+
 ## 2026-08-23 — main (Phase 3e, custom Okta domains)
 
 Braze's IdP is **ssobiz.wbd.com**, not wmbiz.okta.com — confirmed by decoding
