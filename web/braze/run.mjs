@@ -47,7 +47,16 @@ if (!flows[command]) {
   process.exit(1);
 }
 
-const result = await runFlow(command, flows[command]);
+let result;
+try {
+  result = await runFlow(command, flows[command]);
+} catch (err) {
+  // runFlow returns failures rather than throwing, so anything reaching here is
+  // a bug in the flow itself. Print the message, not the minified bundle.
+  console.error(`\nFAILED — ${err.message}`);
+  process.exit(1);
+}
+
 if (result.ok) {
   console.log(`\nOK — artifacts in ${result.dir}`);
 } else {

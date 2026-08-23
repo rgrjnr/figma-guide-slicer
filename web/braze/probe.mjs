@@ -21,7 +21,11 @@ if (!target) {
   process.exit(1);
 }
 
-const browser = await chromium.launch({ headless: config.headless });
+// Bundled deps are minified onto a single line, so an escaping error makes Node
+// print the entire bundle as the "source line". Everything below is wrapped.
+let browser;
+try {
+browser = await chromium.launch({ headless: config.headless });
 const context = await browser.newContext(contextOptions({ viewport: { width: 1600, height: 1000 } }));
 const page = await context.newPage();
 
@@ -79,4 +83,9 @@ mkdirSync(RUNS_DIR, { recursive: true });
 const shot = join(RUNS_DIR, "probe.png");
 await page.screenshot({ path: shot, fullPage: true });
 console.log(`screenshot: ${shot}`);
-await browser.close();
+} catch (err) {
+  console.error(err.message);
+  process.exitCode = 1;
+} finally {
+  await browser?.close();
+}

@@ -1,5 +1,19 @@
 # WIP
 
+## 2026-08-23 — main (Phase 3d, TOTP working on the real secret)
+
+`npm run braze:totp` now generates real codes. Two bugs: otplib v13 enforces the
+RFC 4226 128-bit minimum, but Okta issues 80-bit secrets (16 base32 chars), so
+a valid secret was rejected — guardrail lowered to 10 bytes. And any error in a
+CLI script made Node print the whole minified bundle as the "source line", so
+every entry point now catches and prints one message.
+Works: 20 node tests, incl. a second TOTP written from RFC 4226 with node crypto
+kept as an independent cross-check on the library, plus friendly errors for a
+truncated secret and for pasting the otpauth:// URL instead of the secret.
+5 e2e suites green.
+Next: `npm run braze login`, headed, and watch which screen it stops on. Should
+now get through Braze email -> "WBD Okta" -> Okta username -> password -> code.
+
 ## 2026-08-23 — main (Phase 3c, sign-in chain mapped)
 
 Getting into Braze is four screens, not one, all verified by reading real DOM

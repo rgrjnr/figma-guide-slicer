@@ -23,7 +23,12 @@ import { mkdirSync } from "node:fs";
 import { AUTH_DIR, RECORDINGS_DIR, STORAGE_STATE, config, requireConfig } from "./config.mjs";
 import { totp, totpTimeRemaining } from "./auth.mjs";
 
-requireConfig("url");
+try {
+  requireConfig("url");
+} catch (err) {
+  console.error(err.message);
+  process.exit(1);
+}
 mkdirSync(AUTH_DIR, { recursive: true });
 mkdirSync(RECORDINGS_DIR, { recursive: true });
 
@@ -36,8 +41,12 @@ Recording a Braze session
 `);
 
 if (config.totpSecret) {
-  const code = await totp();
-  console.log(`  Okta code     ${code}  (valid ${totpTimeRemaining()}s — run \`npm run braze:totp\` for a fresh one)\n`);
+  try {
+    const code = await totp();
+    console.log(`  Okta code     ${code}  (valid ${totpTimeRemaining()}s — run \`npm run braze:totp\` for a fresh one)\n`);
+  } catch (err) {
+    console.log(`  Okta code     unavailable: ${err.message}\n`);
+  }
 } else {
   console.log("  BRAZE_TOTP_SECRET is not set, so you will need your authenticator app.\n");
 }

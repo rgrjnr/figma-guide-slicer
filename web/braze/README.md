@@ -12,13 +12,21 @@ cp .env.example .env.local     # in web/, gitignored
 
 `BRAZE_TOTP_SECRET` is the base32 string behind your Okta authenticator entry —
 what you would have typed in instead of scanning the QR code. If you only ever
-scanned it, re-enrol the factor and pick "can't scan" to reveal it.
+scanned it, re-enrol the factor and pick "can't scan" to reveal it. Only the
+secret itself, not the whole `otpauth://` URL; spaces, dashes and lower case are
+all fine.
 
 Check it works before anything else:
 
 ```
 npm run braze:totp    # should match your authenticator app
 ```
+
+Okta issues 80-bit secrets (16 base32 characters). RFC 4226 says a secret MUST
+be at least 128 bits and otplib enforces that, so the guardrail is lowered to
+match what Okta actually hands out — see the note in `auth.mjs`. The generator
+is checked both against the RFC reference vectors and against a second
+implementation written from the RFC with node's own crypto.
 
 ## The sign-in chain
 
