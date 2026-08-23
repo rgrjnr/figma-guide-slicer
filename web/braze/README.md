@@ -20,11 +20,54 @@ Check it works before anything else:
 npm run braze:totp    # should match your authenticator app
 ```
 
+## The sign-in chain
+
+Verified by loading each page and reading its DOM — no password was ever
+submitted. Getting into Braze takes four screens, not one:
+
+1. `dashboard-03.braze.com/sign_in` — email address, then Continue.
+   `input[name="email"]`, submit is `<input type="submit" value="Continue">`.
+2. `/auth?cluster_name=…` — "Sign In to US Cluster 03", one button per identity
+   provider. WBD's is labelled **"WBD Okta"**; `BRAZE_SSO_BUTTON` matches it by
+   name. This screen is client-rendered from the previous step's state and comes
+   back blank on a direct GET, so its selector is read off a screenshot rather
+   than the DOM — the one part of the chain still worth confirming.
+3. `wmbiz.okta.com` — the Okta widget (below).
+4. Back to the Braze dashboard.
+
+Braze does **not** redirect to Okta on its own, which is what the flow originally
+assumed. Steps 1 and 2 are Braze's, not Okta's.
+
+## What is known about the sign-in
+
+The org is **Okta Identity Engine**, not Classic, and it is identifier-first:
+username -> Next -> password -> second factor. This was read off the real
+`wmbiz.okta.com` widget (loading the public page and inspecting the DOM; nothing
+was submitted), so the identifier screen's selectors are correct:
+
+- the username field is `input[name="identifier"]`, labelled "Username";
+- the submit is an `<input type="submit" value="Next">`, not a `<button>`;
+- element ids are generated per render (`input28`, `form20`) — never select on
+  them.
+
+One OIE trap is already handled: **the password field and the one-time code
+field share the name `credentials.passcode`**, on different screens. They are
+told apart by type — the password is `type=password`, the code is not.
+
+The URL you shared redirects to `/enduser/callback`, which is the Okta app-tile
+portal — a second way in, separate from the chain above. The flow supports both:
+it starts at `BRAZE_URL`, and if it ends up on the Okta portal rather than in
+Braze it clicks the tile named by `BRAZE_APP_TILE` (default "Braze") and follows
+it into the new tab.
+
+Still unverified: the password and factor screens (a push-only factor would need
+a different approach), and all of Braze itself.
+
 ## Record before you script
 
-**The selectors in `selectors.mjs` are unverified.** They were written from how
-the dashboard is normally laid out, not from Braze's actual DOM, and several are
-probably wrong. Fixing them is the first real task:
+**The Braze selectors in `selectors.mjs` are unverified.** They were written
+from how the dashboard is normally laid out, not from Braze's actual DOM, and
+several are probably wrong. Fixing them is the first real task:
 
 ```
 npm run braze:record
@@ -63,6 +106,17 @@ npm run braze schedule -- --name "TEST-2026-08-23" --at "2026-09-01 09:30" --zon
 The browser is headed by default so you can watch and take over. Set
 `BRAZE_HEADLESS=1` once a flow is trusted, and `BRAZE_SLOWMO=250` to watch one
 in slow motion.
+
+## Fixing a selector
+
+`npm run braze:probe -- <url>` loads a page with the stored session and prints
+its real inputs, buttons, labels, tabs and iframes, then screenshots it. It
+reads the DOM only — nothing is typed or submitted. This is how the Okta screen
+above was verified, and it is the quickest way to fix anything that has moved.
+
+It flags iframes specifically, because an iframe is the usual reason a
+selector that looks right finds nothing: the control is in a separate document
+and needs `page.frameLocator(...)`. Expect the Braze email editor to be one.
 
 ## When a run breaks
 

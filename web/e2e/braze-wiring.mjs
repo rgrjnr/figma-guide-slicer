@@ -30,7 +30,9 @@ await page.waitForFunction(() => document.querySelector(".braze-log .err"), null
 const zipError = await page.locator(".braze-log .err").first().innerText();
 check("refuses to build a draft before the email is sliced", /[Ss]lice the email/.test(zipError), zipError);
 
-// Test sign-in reaches the real flow, which should stop on missing config.
+// Test sign-in reaches the real flow. What it then does depends on whether
+// .env.local is filled in, so the assertions below hold either way: what is
+// being tested here is the wiring, not Braze.
 await page.getByRole("button", { name: "Test sign-in" }).click();
 await page.waitForFunction(
   () => [...document.querySelectorAll(".braze-log div")].some(d => /finished|failed/.test(d.textContent)),
@@ -38,8 +40,10 @@ await page.waitForFunction(
   { timeout: 60000 }
 );
 const log = await page.locator(".braze-log").innerText();
-check("the flow actually spawned and streamed back", log.includes("run ") || /BRAZE_/.test(log), log.slice(0, 200));
-check("missing credentials are reported by name", /BRAZE_URL|BRAZE_EMAIL/.test(log), log.slice(0, 300));
+check("the flow actually spawned and streamed back", /run \d{4}-|BRAZE_/.test(log), log.slice(0, 200));
+check("the run reported a terminal result", /finished|failed/.test(log), log.slice(-200));
+check("an unconfigured setup names the variable it needs",
+  !/BRAZE_/.test(log) || /BRAZE_(URL|EMAIL|TOTP_SECRET)/.test(log), log.slice(0, 200));
 check("no page errors", errors.length === 0, errors.join("; "));
 
 console.log("\nlog tail:\n" + log.split("\n").slice(-6).map(l => "   " + l).join("\n"));

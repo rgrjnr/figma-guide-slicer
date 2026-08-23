@@ -26,6 +26,16 @@ loadEnvFile();
 
 export const config = {
   url: process.env.BRAZE_URL || "",
+  /**
+   * The Okta org, e.g. https://wmbiz.okta.com. Only needed for the portal-first
+   * path: sign into Okta, then click the Braze tile. If Braze redirects you to
+   * Okta by itself, BRAZE_URL alone is enough.
+   */
+  oktaUrl: process.env.BRAZE_OKTA_URL || "",
+  /** Accessible name of the Braze tile on the Okta dashboard. */
+  appTile: process.env.BRAZE_APP_TILE || "Braze",
+  /** The identity-provider button on Braze's cluster sign-in screen. */
+  ssoButton: process.env.BRAZE_SSO_BUTTON || "Okta",
   email: process.env.BRAZE_EMAIL || "",
   password: process.env.BRAZE_PASSWORD || "",
   totpSecret: process.env.BRAZE_TOTP_SECRET || "",

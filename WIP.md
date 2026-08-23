@@ -1,5 +1,38 @@
 # WIP
 
+## 2026-08-23 — main (Phase 3c, sign-in chain mapped)
+
+Getting into Braze is four screens, not one, all verified by reading real DOM
+(no password ever submitted): (1) dashboard-03.braze.com/sign_in, email +
+Continue, `input[name=email]`; (2) /auth?cluster_name=…, "Sign In to US Cluster
+03" with a **"WBD Okta"** provider button — client-rendered, blank on direct
+GET, so its selector is from a screenshot not the DOM; (3) wmbiz.okta.com OIE
+widget; (4) back to Braze. Braze does NOT redirect to Okta by itself, which the
+original flow wrongly assumed.
+Works: login flow covers all four + the Okta-portal-tile alternative. New
+BRAZE_SSO_BUTTON config (default "Okta"). 16 node tests + 5 e2e green.
+Note: .env.local has BRAZE_EMAIL=roger@rogerjunior.com but the IdP is wmbiz —
+check that is the right identity, the WBD one may differ.
+Next: `npm run braze login` and watch it — it should now reach the Okta password
+screen. That is the first step needing a real credential, so run it yourself.
+
+## 2026-08-23 — main (Phase 3b, Okta identified)
+
+Okta org is wmbiz.okta.com on **Identity Engine**, identifier-first (username ->
+Next -> password -> factor), and the URL Roger uses is the /enduser/ app-tile
+portal, not a Braze-initiated redirect.
+Works: identifier screen verified for real by loading the public page and
+reading the DOM (nothing submitted) — `input[name="identifier"]`, submit is an
+`<input type=submit>`, ids are per-render so never select on them. Login flow
+rewritten for OIE + both entry routes (Braze-first, or portal tile then new
+tab). Handles the OIE trap where password and OTP share name credentials.
+passcode (told apart by type). New `npm run braze:probe -- <url>` dumps any
+page's real inputs/buttons/labels/iframes — that is the selector-fixing tool.
+Not done: password + factor screens unverified; a push-only Okta factor would
+need a different approach. All Braze selectors still guesses.
+Next: still the recording session — but sign-in should now get further on its
+own. Try `npm run braze login` first and see which screen it stops on.
+
 ## 2026-08-23 — main (Phase 3, infrastructure)
 
 Braze robot scaffolding in `web/braze/`. Everything that does not depend on

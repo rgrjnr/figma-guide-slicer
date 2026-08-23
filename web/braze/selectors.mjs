@@ -14,28 +14,90 @@
  */
 
 export const VERIFIED = {
+  /** Identifier screen read off the real wmbiz.okta.com widget. The screens
+   *  behind it (password, factor) still need a recording session. */
+  oktaIdentifier: true,
+  brazeSignIn: true,
   login: false,
   createEmailDraft: false,
   importAudience: false,
   scheduleCampaign: false,
 };
 
+/**
+ * Okta Identity Engine, identifier-first: username -> Next -> password -> factor.
+ *
+ * Verified against https://wmbiz.okta.com: the username field is
+ * `input[name="identifier"]` labelled "Username", and the submit is an
+ * `<input type="submit" value="Next">`, not a <button>. Element ids are
+ * generated per render (`input28`, `form20`) — never select on them.
+ */
 export const okta = {
-  // Okta usually splits identity and password across two screens.
-  username: p => p.getByLabel(/username|email/i).first(),
-  usernameNext: p => p.getByRole("button", { name: /next|sign in/i }).first(),
-  password: p => p.getByLabel(/password/i).first(),
-  passwordSubmit: p => p.getByRole("button", { name: /verify|sign in|next/i }).first(),
-  // The factor list only appears when more than one factor is enrolled.
-  chooseTotpFactor: p => p.getByRole("link", { name: /google authenticator|okta verify|enter a code/i }).first(),
-  totpCode: p => p.getByLabel(/code|passcode/i).first(),
-  totpSubmit: p => p.getByRole("button", { name: /verify|sign in/i }).first(),
-  // Ticking this is what makes storageState worth keeping.
-  trustDevice: p => p.getByLabel(/do not challenge me|trust this device|remember/i).first(),
+  identifier: p => p.locator('input[name="identifier"]'),
+  identifierSubmit: p => p.locator('input[type="submit"], button[type="submit"]').first(),
+
+  // OIE reuses the name `credentials.passcode` for BOTH the password field and
+  // the one-time code field, on different screens. They are told apart by input
+  // type: the password is type=password, the code is not.
+  password: p => p.locator('input[name="credentials.passcode"][type="password"]'),
+  passwordSubmit: p => p.locator('input[type="submit"], button[type="submit"]').first(),
+
+  totpCode: p => p.locator('input[name="credentials.passcode"]:not([type="password"])'),
+  totpSubmit: p => p.locator('input[type="submit"], button[type="submit"]').first(),
+
+  /**
+   * The factor chooser only appears when more than one authenticator is
+   * enrolled. Each option is a row with its own "Select" button, so the button
+   * has to be scoped to the row naming the authenticator — a bare "Select"
+   * would pick whichever happens to be first, which may be a push factor.
+   */
+  chooseTotpFactor: p =>
+    p.locator(".authenticator-row, .authenticator-list li, li")
+      .filter({ hasText: /google authenticator|okta verify|security key|enter a code/i })
+      .filter({ hasText: /google authenticator|enter a code/i })
+      .first()
+      .getByRole("button", { name: /select|choose/i }),
+
+  /** Okta Verify offers push and code separately; we want the code. */
+  useCodeInstead: p => p.getByRole("link", { name: /enter a code|use a different/i }).first(),
+
+  /** Ticking this is what makes the stored session worth keeping. */
+  trustDevice: p => p.locator('input[name="rememberDevice"], input[type="checkbox"]').first(),
+
+  /** Shown when a code or password is rejected. */
+  error: p => p.locator('[role="alert"], .infobox-error, .okta-form-infobox-error').first(),
+
+  /** The end-user dashboard, when sign-in lands on the portal instead of an app. */
+  appTile: (p, name) => p.getByRole("link", { name }).first(),
 };
 
 export const braze = {
-  // A reliable "we are signed in and on the dashboard" signal.
+  /**
+   * Braze's own sign-in is identifier-first too: you enter the email address,
+   * it recognises the SSO domain, and only then hands off to Okta. Verified
+   * against dashboard-03.braze.com/sign_in — `input[name="email"]` and an
+   * `<input type="submit" value="Continue">`.
+   */
+  signIn: {
+    email: p => p.locator('input[name="email"]'),
+    submit: p => p.locator('input[type="submit"], button[type="submit"]').first(),
+    /** Present exactly when we are NOT signed in. */
+    isShowing: p => p.locator('input[name="email"]'),
+
+    /**
+     * A third screen sits between the email and Okta: "Sign In to US Cluster 03"
+     * with one button per configured identity provider — here, "WBD Okta".
+     * Read off a screenshot rather than the DOM: the page is client-rendered
+     * from the previous step's state and comes back blank on a direct GET, so
+     * it cannot be probed in isolation. Override the name with
+     * BRAZE_SSO_BUTTON if it does not match.
+     */
+    ssoProvider: (p, name) =>
+      p.getByRole("button", { name }).or(p.getByRole("link", { name })).first(),
+  },
+
+  // Signed-in is judged by URL first — the sign-in path is unambiguous, whereas
+  // the dashboard's own chrome is not verified yet.
   signedIn: p => p.getByRole("navigation").first(),
 
   campaigns: {

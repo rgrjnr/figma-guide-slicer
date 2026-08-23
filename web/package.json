@@ -11,7 +11,8 @@
     "braze:record": "node braze/record.mjs",
     "braze:totp": "node braze/totp.mjs",
     "braze": "node braze/run.mjs",
-    "test": "node --test braze/"
+    "test": "node --test braze/",
+    "braze:probe": "node braze/probe.mjs"
   },
   "dependencies": {
     "jszip": "^3.10.1",
