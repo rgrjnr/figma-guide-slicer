@@ -2,16 +2,30 @@ import { config } from "../config.mjs";
 import { freshTotp } from "../auth.mjs";
 import { braze, okta, warnIfUnverified } from "../selectors.mjs";
 
-const OKTA_HOST = /\.okta(preview)?\.com|\.okta-emea\.com/;
+/**
+ * Okta orgs run on custom domains: WBD's Braze IdP is ssobiz.wbd.com (confirmed
+ * by the SAML AuthnRequest's Destination) and the end-user portal is
+ * wmbiz.okta.com. Neither is reliably ".okta.com", so Okta is recognised by its
+ * widget rather than its hostname. This regex is only a hint for URL waits.
+ */
+const OKTA_HOST_HINT = /\.okta(preview)?\.com|\.okta-emea\.com|ssobiz\.wbd\.com/;
 /** The Okta end-user portal, as opposed to an app's own sign-in redirect. */
 const OKTA_PORTAL = /\/enduser\/|\/app\/UserHome/;
-const BRAZE_SIGN_IN = /\/sign_in/;
+const BRAZE_SIGN_IN = /\/sign_in|\/auth\b/;
 
-const onOkta = page => OKTA_HOST.test(page.url());
+/** Which Okta screen is showing, or null if this is not the Okta widget. */
+async function currentScreen(page, timeout = 1_000) {
+  for (const [name, locator] of Object.entries(okta.screens)) {
+    if (await locator(page).isVisible({ timeout }).catch(() => false)) return name;
+  }
+  return null;
+}
+
+const onOkta = async page => (await currentScreen(page)) !== null;
 
 /** True when the browser is sitting inside an authenticated Braze dashboard. */
 export async function isSignedIn(page) {
-  if (onOkta(page) || BRAZE_SIGN_IN.test(page.url())) return false;
+  if (BRAZE_SIGN_IN.test(page.url()) || (await onOkta(page))) return false;
   return braze.signedIn(page).isVisible({ timeout: 5_000 }).catch(() => false);
 }
 
@@ -48,31 +62,35 @@ export async function login(ctx) {
     await ctx.step("hand off to SSO from the Braze sign-in page", async p => {
       await braze.signIn.email(p).fill(config.email);
       await braze.signIn.submit(p).click();
-      await p.waitForURL(u => OKTA_HOST.test(String(u)) || !BRAZE_SIGN_IN.test(String(u)), {
-        timeout: 30_000,
-      });
+      await p.waitForURL(u => !/\/sign_in/.test(String(u)), { timeout: 30_000 });
     });
 
     // Braze then offers the configured identity providers by name rather than
     // redirecting on its own.
-    if (!onOkta(page)) {
+    if (!(await onOkta(page))) {
       await ctx.step(`choose the "${config.ssoButton}" identity provider`, async p => {
         const provider = braze.signIn.ssoProvider(p, new RegExp(config.ssoButton, "i"));
         await provider.waitFor({ state: "visible", timeout: 15_000 });
         await provider.click();
-        await p.waitForURL(u => OKTA_HOST.test(String(u)), { timeout: 30_000 });
+        // The SAML hand-off lands on the org's own domain, which is not
+        // necessarily an okta.com one — wait for the widget, not the URL.
+        await p.waitForFunction(
+          () => !!document.querySelector('input[name="identifier"], input[name="credentials.passcode"]'),
+          null,
+          { timeout: 30_000 }
+        ).catch(() => {});
       });
     }
   }
 
-  if (onOkta(page)) {
+  if (await onOkta(page)) {
     await authenticate(ctx);
   } else {
-    ctx.log(`no Okta redirect from ${page.url()} — continuing`);
+    ctx.log(`no Okta widget at ${page.url()} — continuing`);
   }
 
   // Signing in through the portal lands on the app tiles, not inside Braze.
-  if (OKTA_PORTAL.test(page.url()) || onOkta(page)) {
+  if (OKTA_PORTAL.test(ctx.page.url()) || (await onOkta(ctx.page))) {
     await ctx.step(`click the "${config.appTile}" tile`, async p => {
       await okta.appTile(p, config.appTile).click();
       // Tiles usually open the app in a new tab.
@@ -89,60 +107,105 @@ export async function login(ctx) {
   });
 }
 
-/** The Okta widget itself: username -> password -> second factor. */
+/**
+ * The Okta widget, driven by whichever screen is actually showing rather than
+ * by an assumed order. Orgs differ — some ask for the factor before the
+ * password, some skip the password entirely, some show the code field straight
+ * away — and a fixed sequence breaks on all of those. Each pass looks at the
+ * DOM, handles that one screen, and waits for the page to change.
+ */
 async function authenticate(ctx) {
-  const { page } = ctx;
+  const MAX_SCREENS = 8;
 
-  await ctx.step("enter username", async p => {
-    const field = okta.identifier(p);
-    await field.waitFor({ state: "visible", timeout: 30_000 });
-    await field.fill(config.email);
-    await okta.identifierSubmit(p).click();
-  });
-
-  await ctx.step("enter password", async p => {
-    const field = okta.password(p);
-    await field.waitFor({ state: "visible", timeout: 20_000 });
-    await field.fill(config.password);
-    await okta.passwordSubmit(p).click();
-    await assertNoError(ctx, "password rejected");
-  });
-
-  await ctx.step("select the code authenticator if offered", async p => {
-    // The chooser is skipped entirely when only one factor is enrolled, and the
-    // code field may already be on screen.
-    if (await okta.totpCode(p).isVisible({ timeout: 3_000 }).catch(() => false)) {
-      ctx.log("code field already showing — no factor chooser");
+  for (let i = 0; i < MAX_SCREENS; i++) {
+    const screen = await currentScreen(ctx.page, 2_000);
+    if (!screen) {
+      ctx.log("Okta widget is gone — authenticated");
       return;
     }
-    const chooser = okta.chooseTotpFactor(p);
-    if (await chooser.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      await chooser.click();
-    }
-    // Okta Verify defaults to a push; we want the code we can generate.
-    const useCode = okta.useCodeInstead(p);
-    if (await useCode.isVisible({ timeout: 3_000 }).catch(() => false)) await useCode.click();
-  });
 
-  await ctx.step("enter the one-time code", async p => {
-    const field = okta.totpCode(p);
-    await field.waitFor({ state: "visible", timeout: 20_000 });
+    const before = ctx.page.url();
+    await handle[screen](ctx);
+    await assertNoError(ctx, `${screen} rejected`);
+    await waitForNextScreen(ctx, screen, before);
+  }
 
-    // Trusting the device is what lets the stored session skip all of this
-    // next time, so it is worth ticking even though it is optional.
-    const trust = okta.trustDevice(p);
-    if (await trust.isVisible().catch(() => false)) await trust.check().catch(() => {});
+  throw new Error(
+    `Still on the Okta widget after ${MAX_SCREENS} screens — see the screenshots in the run directory.`
+  );
+}
 
-    // Generated only once the field is ready, so the code is as young as
-    // possible when it is submitted.
-    await field.fill(await freshTotp());
-    await okta.totpSubmit(p).click();
-    await assertNoError(ctx, "one-time code rejected");
-  });
+const handle = {
+  identifier: ctx =>
+    ctx.step("enter username", async p => {
+      await okta.identifier(p).fill(config.email);
+      await okta.identifierSubmit(p).click();
+    }),
 
-  await ctx.step("wait for Okta to hand off", async p => {
-    await p.waitForURL(url => !/\/(signin|authorize)/.test(String(url)), { timeout: 60_000 });
-  });
+  password: ctx =>
+    ctx.step("enter password", async p => {
+      await okta.password(p).fill(config.password);
+      await okta.passwordSubmit(p).click();
+    }),
+
+  factor: ctx =>
+    ctx.step("choose the code authenticator", async p => {
+      // Each row has its own Select button, so the button must be scoped to the
+      // row naming the authenticator — a bare "Select" would take whichever is
+      // listed first, which is usually a push factor we cannot answer.
+      const chooser = okta.chooseTotpFactor(p);
+      if (await chooser.isVisible({ timeout: 5_000 }).catch(() => false)) {
+        await chooser.click();
+      } else {
+        throw new Error(
+          "Okta is asking for a factor, but none of them is a code we can generate. " +
+            "If this org only offers a push notification, approve it on your phone " +
+            "and the run will carry on."
+        );
+      }
+      const useCode = okta.useCodeInstead(p);
+      if (await useCode.isVisible({ timeout: 3_000 }).catch(() => false)) await useCode.click();
+    }),
+
+  code: ctx =>
+    ctx.step("enter the one-time code", async p => {
+      // Trusting the device is what lets the stored session skip all of this
+      // next time, so it is worth ticking even though it is optional.
+      const trust = okta.trustDevice(p);
+      if (await trust.isVisible().catch(() => false)) await trust.check().catch(() => {});
+
+      // Generated only once the field is in hand, so the code is as young as
+      // possible when it is submitted.
+      await okta.totpCode(p).fill(await freshTotp());
+      await okta.totpSubmit(p).click();
+    }),
+};
+
+/**
+ * Wait for the widget to move on. A screen that is still showing its own field
+ * after this means the input was rejected without an error banner, which would
+ * otherwise spin until the loop guard trips.
+ */
+async function waitForNextScreen(ctx, previous, previousUrl) {
+  const gone = await ctx.page
+    .waitForFunction(
+      ([name, url]) => {
+        const q = {
+          identifier: 'input[name="identifier"]',
+          password: 'input[name="credentials.passcode"][type="password"]',
+          code: 'input[name="credentials.passcode"]:not([type="password"])',
+          factor: '[data-se="authenticator-list"], .authenticator-list, .authenticator-verify-list',
+        }[name];
+        return location.href !== url || !document.querySelector(q);
+      },
+      [previous, previousUrl],
+      { timeout: 30_000 }
+    )
+    .then(() => true)
+    .catch(() => false);
+
+  if (!gone) throw new Error(`Okta did not move past the ${previous} screen.`);
+  await ctx.page.waitForLoadState("domcontentloaded").catch(() => {});
 }
 
 /**

@@ -1,5 +1,22 @@
 # WIP
 
+## 2026-08-23 — main (Phase 3e, custom Okta domains)
+
+Braze's IdP is **ssobiz.wbd.com**, not wmbiz.okta.com — confirmed by decoding
+the SAML AuthnRequest (issuer braze_dashboard, callback dashboard-03.braze.com/
+auth/saml/callback). It does not end in okta.com, so hostname-based detection
+was simply broken. Okta is now recognised by its sign-in widget instead; both
+WBD domains serve an identical OIE widget, verified live.
+Works: authenticate() rewritten screen-driven (looks at which field is present,
+handles it, waits for the page to change) rather than assuming username ->
+password -> factor, since orgs vary. 29 node tests inc. offline fixtures for all
+four screens, the credentials.passcode password-vs-code collision, and that the
+factor picker takes Google Authenticator not the push-only Okta Verify above it.
+Not done: password/factor screens still unexercised. Push-only would need a
+human tap — the flow says so rather than hanging.
+Next: `npm run braze login`, headed. Should now clear Braze email -> WBD Okta ->
+ssobiz identifier -> password -> code.
+
 ## 2026-08-23 — main (Phase 3d, TOTP working on the real secret)
 
 `npm run braze:totp` now generates real codes. Two bugs: otplib v13 enforces the

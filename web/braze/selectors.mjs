@@ -33,6 +33,20 @@ export const VERIFIED = {
  * generated per render (`input28`, `form20`) — never select on them.
  */
 export const okta = {
+  /**
+   * Which screen is showing, decided by the DOM rather than the URL. Okta orgs
+   * use custom domains — WBD's Braze IdP is ssobiz.wbd.com, and the end-user
+   * portal is wmbiz.okta.com — so nothing may key off the hostname. The widget
+   * is identical on both.
+   */
+  screens: {
+    identifier: p => p.locator('input[name="identifier"]'),
+    password: p => p.locator('input[name="credentials.passcode"][type="password"]'),
+    code: p => p.locator('input[name="credentials.passcode"]:not([type="password"])'),
+    factor: p =>
+      p.locator('[data-se="authenticator-list"], .authenticator-list, .authenticator-verify-list'),
+  },
+
   identifier: p => p.locator('input[name="identifier"]'),
   identifierSubmit: p => p.locator('input[type="submit"], button[type="submit"]').first(),
 

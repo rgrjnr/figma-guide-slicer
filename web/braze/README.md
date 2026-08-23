@@ -40,8 +40,17 @@ submitted. Getting into Braze takes four screens, not one:
    name. This screen is client-rendered from the previous step's state and comes
    back blank on a direct GET, so its selector is read off a screenshot rather
    than the DOM — the one part of the chain still worth confirming.
-3. `wmbiz.okta.com` — the Okta widget (below).
+3. `ssobiz.wbd.com` — the Okta widget (below). Braze SAML-redirects here, per
+   the AuthnRequest it sends: issuer `braze_dashboard`, destination
+   `ssobiz.wbd.com/app/braze/…/sso/saml`, callback
+   `dashboard-03.braze.com/auth/saml/callback`.
 4. Back to the Braze dashboard.
+
+**WBD has two Okta domains and neither can be detected by hostname.**
+`ssobiz.wbd.com` is the IdP Braze uses; `wmbiz.okta.com` is the end-user app
+portal. The first does not end in `okta.com` at all. So the flow recognises Okta
+by its sign-in widget rather than its URL, which also means it keeps working if
+the vanity domain changes.
 
 Braze does **not** redirect to Okta on its own, which is what the flow originally
 assumed. Steps 1 and 2 are Braze's, not Okta's.
@@ -68,8 +77,17 @@ it starts at `BRAZE_URL`, and if it ends up on the Okta portal rather than in
 Braze it clicks the tile named by `BRAZE_APP_TILE` (default "Braze") and follows
 it into the new tab.
 
-Still unverified: the password and factor screens (a push-only factor would need
-a different approach), and all of Braze itself.
+The widget on both domains is byte-for-byte the same, so one set of selectors
+covers them.
+
+The flow is **screen-driven, not order-driven**: each pass looks at which field
+is actually on the page and handles that one. Orgs vary — some ask for the
+factor before the password, some skip the password, some open straight on the
+code field — and a fixed sequence breaks on all of them.
+
+Still unverified: the password and factor screens. If this org only offers a
+push notification rather than a code, the flow says so explicitly and you can
+approve it on your phone while it waits.
 
 ## Record before you script
 
