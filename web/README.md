@@ -45,6 +45,10 @@ record only; nothing in Braze is touched.
    `Find social row` locates the icon bar, splits it into one cell per icon, and
    names the platforms it recognises. Links you enter are remembered per platform
    and pre-filled next time.
+   ⌘Z / Ctrl+Z undoes, ⇧⌘Z redoes. A gesture is one step: dropping a guide and
+   dragging it into place undoes together, and accepting a whole round of
+   detected cuts undoes as one. Typing in a link or alt field coalesces per
+   field, and text inputs keep the browser's own undo.
 3. **Slice**, optionally run OCR to fill alt text, then **Download ZIP**.
 4. **Braze** — create the draft, import the audience, schedule it. When a design
    changes later, *Replace artwork* swaps the message on the existing campaign

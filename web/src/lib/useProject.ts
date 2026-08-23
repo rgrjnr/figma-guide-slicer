@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
   computeSliceRegions,
   detectSectionOffsets,
@@ -25,7 +25,43 @@ import {
 import { decodeImage, toRasterImage, type LoadedImage } from "./raster";
 import { loadLinkCache, loadSettings, rememberLink, saveSettings } from "./storage";
 
+/**
+ * The part of a project that undo restores. The image is excluded: loading a
+ * different one starts a new piece of work rather than being a step within one.
+ */
+type Snapshot = Pick<
+  Project,
+  "guides" | "workArea" | "rows" | "proposedGuides" | "designWidth" | "emailWidth" | "addFooter"
+>;
+
+const HISTORY_LIMIT = 60;
+/**
+ * Fallback window for collapsing consecutive edits of the same kind. Gestures
+ * signal their own end through endGesture(), which is authoritative — this only
+ * catches things with no natural boundary, like typing into a field.
+ */
+const COALESCE_MS = 1500;
+
+function snapshot(p: Project): Snapshot {
+  return {
+    guides: p.guides,
+    workArea: p.workArea,
+    rows: p.rows,
+    proposedGuides: p.proposedGuides,
+    designWidth: p.designWidth,
+    emailWidth: p.emailWidth,
+    addFooter: p.addFooter,
+  };
+}
+
 export interface ProjectApi {
+  undo: () => void;
+  redo: () => void;
+  /** Close the current gesture so the next edit starts a new undo step. */
+  endGesture: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+
   project: Project;
   image: LoadedImage | null;
   raster: RasterImage | null;
@@ -57,6 +93,77 @@ export function useProject(): ProjectApi {
   const [project, setProject] = useState<Project>(emptyProject);
   const [image, setImage] = useState<LoadedImage | null>(null);
   const [status, setStatus] = useState("");
+
+  // History lives in refs so an undo can be applied without scheduling state
+  // updates from inside another updater; `bump` re-renders for canUndo/canRedo.
+  const projectRef = useRef<Project>(project);
+  projectRef.current = project;
+  const historyRef = useRef<{ past: Snapshot[]; future: Snapshot[] }>({ past: [], future: [] });
+  const lastEdit = useRef<{ tag: string; at: number } | null>(null);
+  const [, bump] = useReducer((n: number) => n + 1, 0);
+
+  /**
+   * Apply an undoable edit. `tag` groups rapid edits of the same kind — a guide
+   * drag fires on every pointer move, and without coalescing a single drag
+   * would bury everything before it under a hundred history entries.
+   */
+  const commit = useCallback((tag: string | null, updater: (p: Project) => Project) => {
+    const previous = projectRef.current;
+    const next = updater(previous);
+    if (next === previous) return;
+
+    const now = Date.now();
+    const history = historyRef.current;
+    const sameRun =
+      tag !== null && lastEdit.current?.tag === tag && now - lastEdit.current.at < COALESCE_MS;
+
+    if (!sameRun) {
+      history.past = [...history.past, snapshot(previous)].slice(-HISTORY_LIMIT);
+    }
+    history.future = [];
+    lastEdit.current = tag ? { tag, at: now } : null;
+
+    projectRef.current = next;
+    setProject(next);
+    bump();
+  }, []);
+
+  /**
+   * Marks the end of a continuous gesture. Without it, coalescing would have to
+   * guess from timing alone — and three deliberate clicks half a second apart
+   * would collapse into one undo step, which is not what anyone means.
+   */
+  const endGesture = useCallback(() => {
+    lastEdit.current = null;
+  }, []);
+
+  const applySnapshot = useCallback((snap: Snapshot) => {
+    const next = { ...projectRef.current, ...snap };
+    projectRef.current = next;
+    setProject(next);
+  }, []);
+
+  const undo = useCallback(() => {
+    const history = historyRef.current;
+    if (history.past.length === 0) return;
+    const previous = history.past[history.past.length - 1];
+    history.future = [snapshot(projectRef.current), ...history.future].slice(0, HISTORY_LIMIT);
+    history.past = history.past.slice(0, -1);
+    lastEdit.current = null;
+    applySnapshot(previous);
+    bump();
+  }, [applySnapshot]);
+
+  const redo = useCallback(() => {
+    const history = historyRef.current;
+    if (history.future.length === 0) return;
+    const next = history.future[0];
+    history.past = [...history.past, snapshot(projectRef.current)].slice(-HISTORY_LIMIT);
+    history.future = history.future.slice(1);
+    lastEdit.current = null;
+    applySnapshot(next);
+    bump();
+  }, [applySnapshot]);
   // The full-frame pixels are needed by both detectors and cost ~100ms to
   // produce for a tall email, so they are computed once per upload.
   const rasterRef = useRef<RasterImage | null>(null);
@@ -81,6 +188,7 @@ export function useProject(): ProjectApi {
     const loaded = await decodeImage(file);
     rasterRef.current = toRasterImage(loaded);
     setImage(loaded);
+    historyRef.current = { past: [], future: [] };
     setProject(p => ({
       ...emptyProject(),
       minGutter: p.minGutter,
@@ -104,6 +212,7 @@ export function useProject(): ProjectApi {
   const reset = useCallback(() => {
     setImage(null);
     rasterRef.current = null;
+    historyRef.current = { past: [], future: [] };
     setProject(p => ({ ...emptyProject(), minGutter: p.minGutter, minSection: p.minSection }));
     setStatus("");
   }, []);
@@ -111,30 +220,32 @@ export function useProject(): ProjectApi {
   // --- Guides ---
 
   const addGuide = useCallback((y: number) => {
-    setProject(p => ({ ...p, guides: normalizeGuides([...p.guides, y], designHeight(p)) }));
-  }, []);
+    commit("guide-gesture", p => ({ ...p, guides: normalizeGuides([...p.guides, y], designHeight(p)) }));
+  }, [commit]);
 
+  // Shares the add tag: dropping a guide and dragging it into place is one
+  // gesture, so it is one undo step. The boundary is endGesture, not a timer.
   const moveGuide = useCallback((from: number, to: number) => {
-    setProject(p => ({
+    commit("guide-gesture", p => ({
       ...p,
       guides: normalizeGuides([...p.guides.filter(g => g !== from), to], designHeight(p)),
     }));
-  }, []);
+  }, [commit]);
 
   const removeGuide = useCallback((y: number) => {
-    setProject(p => ({ ...p, guides: p.guides.filter(g => g !== y) }));
-  }, []);
+    commit(null, p => ({ ...p, guides: p.guides.filter(g => g !== y) }));
+  }, [commit]);
 
   const setWorkArea = useCallback((workArea: { y0: number; y1: number } | null) => {
-    setProject(p => ({ ...p, workArea }));
-  }, []);
+    commit(null, p => ({ ...p, workArea }));
+  }, [commit]);
 
   // --- Detection ---
 
   const detectSections = useCallback(() => {
     const raster = rasterRef.current;
     if (!raster) return;
-    setProject(p => {
+    commit(null, p => {
       const found = detectSectionOffsets(
         raster,
         scaleOf(p),
@@ -157,10 +268,10 @@ export function useProject(): ProjectApi {
       );
       return { ...p, proposedGuides: fresh };
     });
-  }, []);
+  }, [commit]);
 
   const acceptProposed = useCallback((y?: number) => {
-    setProject(p => {
+    commit(null, p => {
       const taking = y === undefined ? p.proposedGuides : [y];
       return {
         ...p,
@@ -169,17 +280,17 @@ export function useProject(): ProjectApi {
       };
     });
     setStatus("");
-  }, []);
+  }, [commit]);
 
   const clearProposed = useCallback(() => {
-    setProject(p => ({ ...p, proposedGuides: [] }));
+    commit(null, p => ({ ...p, proposedGuides: [] }));
     setStatus("");
-  }, []);
+  }, [commit]);
 
   const detectSocial = useCallback(() => {
     const raster = rasterRef.current;
     if (!raster) return;
-    setProject(p => {
+    commit(null, p => {
       const band = detectSocialBand(raster, scaleOf(p), p.designWidth, designHeight(p), p.workArea);
       if (!band || !band.found) {
         setStatus("No social icon row found.");
@@ -204,14 +315,14 @@ export function useProject(): ProjectApi {
         },
       };
     });
-  }, []);
+  }, [commit]);
 
   /**
    * A drawn rectangle only contributes its vertical extent: the button becomes a
    * full-width row the height of what you drew, snapped onto nearby guides.
    */
   const addButton = useCallback((rawY0: number, rawY1: number) => {
-    setProject(p => {
+    commit(null, p => {
       const h = designHeight(p);
       const y0 = Math.max(0, Math.min(h, Math.round(Math.min(rawY0, rawY1))));
       const y1 = Math.max(0, Math.min(h, Math.round(Math.max(rawY0, rawY1))));
@@ -232,7 +343,7 @@ export function useProject(): ProjectApi {
         },
       };
     });
-  }, []);
+  }, [commit]);
 
   // --- Row edits ---
 
@@ -241,8 +352,10 @@ export function useProject(): ProjectApi {
     [project.rows, project.designWidth]
   );
 
+  // Typing in a link or alt field coalesces per field, so undo steps back a
+  // whole edit rather than one character.
   const updateCell = useCallback((rowY0: number, cellIndex: number, patch: Partial<Cell>) => {
-    setProject(p => {
+    commit(`cell-${rowY0}-${cellIndex}-${Object.keys(patch).join()}`, p => {
       const existing = p.rows[rowY0];
       const base: Row = existing ?? { ...defaultRow(p.designWidth) };
       const cells = base.cells.length ? [...base.cells] : [fullWidthCell(p.designWidth)];
@@ -251,14 +364,14 @@ export function useProject(): ProjectApi {
       if (patch.link !== undefined && merged.platform) rememberLink(merged.platform, patch.link);
       return { ...p, rows: { ...p.rows, [rowY0]: { ...base, cells } } };
     });
-  }, []);
+  }, [commit]);
 
   const setRowKind = useCallback((rowY0: number, kind: Row["kind"]) => {
-    setProject(p => {
+    commit(null, p => {
       const base = p.rows[rowY0] ?? defaultRow(p.designWidth);
       return { ...p, rows: { ...p.rows, [rowY0]: { ...base, kind } } };
     });
-  }, []);
+  }, [commit]);
 
   const regions = useMemo(
     () => (image ? computeSliceRegions(project.guides, designHeight(project)) : []),
@@ -287,5 +400,10 @@ export function useProject(): ProjectApi {
     updateCell,
     setRowKind,
     patchProject,
+    undo,
+    redo,
+    endGesture,
+    canUndo: historyRef.current.past.length > 0,
+    canRedo: historyRef.current.future.length > 0,
   };
 }

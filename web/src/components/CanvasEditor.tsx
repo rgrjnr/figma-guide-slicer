@@ -103,6 +103,9 @@ export function CanvasEditor({ api, tool, regions, selectedY0, onSelectRow }: Pr
   };
 
   const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Closes the undo step even if nothing was dragged, so the next edit is
+    // recorded separately.
+    api.endGesture();
     if (!drag) return;
     e.currentTarget.releasePointerCapture(e.pointerId);
     if (drag.kind === "rect") {

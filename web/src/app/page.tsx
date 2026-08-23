@@ -33,6 +33,27 @@ export default function Page() {
 
   const step: Step = !image ? "upload" : cells ? "export" : "markup";
 
+  // Cmd/Ctrl+Z and Cmd+Shift+Z (or Ctrl+Y). Skipped while a text field has
+  // focus so the browser's own undo keeps working where you would expect it.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      const target = e.target as HTMLElement | null;
+      if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+      const key = e.key.toLowerCase();
+      if (key === "z") {
+        e.preventDefault();
+        if (e.shiftKey) api.redo();
+        else api.undo();
+      } else if (key === "y") {
+        e.preventDefault();
+        api.redo();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [api]);
+
   // Slice previews hold object URLs; drop them when the export is replaced.
   const previous = useRef<ExportedCell[] | null>(null);
   useEffect(() => {
@@ -207,6 +228,12 @@ export default function Page() {
           ))}
         </nav>
         <span className="spacer" />
+        {image && (
+          <span className="undo-group">
+            <button className="ghost" onClick={api.undo} disabled={!api.canUndo} title="Undo (⌘Z)">↶</button>
+            <button className="ghost" onClick={api.redo} disabled={!api.canRedo} title="Redo (⇧⌘Z)">↷</button>
+          </span>
+        )}
         {busy && <span className="busy">{busy}</span>}
         {!busy && api.status && <span className="status">{api.status}</span>}
         {image && (
