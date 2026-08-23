@@ -1,5 +1,20 @@
 # WIP
 
+## 2026-08-23 — main (uncommitted)
+
+Phase 1 of the web-app port: algorithms extracted to `packages/slicer-core`
+(pure TS, no DOM/Figma) and both consumers retargeted onto it. src/ui.html lost
+810 lines; esbuild now inlines a minified core bundle into dist/ui.html at build
+time (manifest `ui` points there). Detectors gained an optional `bounds` arg for
+the coming work-area feature.
+Works: 27 vitest tests green, incl. regression fixtures locking today's output
+(HBO Max 7 cuts + fb/li/ig; WBD 18 cuts + 4 icons). typecheck + build clean.
+Not done: plugin still never run inside Figma — dist/ui.html is new and
+unverified there. Web app (`web/`) not started.
+Next: Phase 2 — scaffold Next.js in web/, canvas editor with guides + work area.
+Note: WBD's 4th icon misclassifies as linkedin (no X/YT/TikTok template); the
+test locks that in deliberately, the web app will let you retype a cell.
+
 ## 2026-08-13 — main (uncommitted)
 
 Fixed both detectors against decorative background art (HBO Max "Moments" email:

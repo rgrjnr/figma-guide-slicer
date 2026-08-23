@@ -2,14 +2,17 @@
 // Guide-Based Email Slicer — Plugin Sandbox (code.ts)
 // ============================================================
 
-// --- Types ---
+import {
+  computeSliceRegions as coreComputeSliceRegions,
+  reconcileRowBounds as coreReconcileRowBounds,
+  parseLinkFromName,
+  sanitizeFileName,
+  dedupeFileNames,
+  type SliceRegion,
+  type DetectedBand as CoreDetectedBand,
+} from "../packages/slicer-core/src/index";
 
-interface SliceRegion {
-  index: number;
-  y0: number;
-  y1: number;
-  name: string;
-}
+// --- Types ---
 
 interface ExportedSlice {
   nodeId: string;
@@ -60,35 +63,14 @@ updateSelectionState();
 
 // --- Guide Parsing → Slice Regions ---
 
-// With no horizontal guides the frame is simply one region — detection can then
-// add the guides an icon row needs, and a guide-less frame still exports.
+// The frame's horizontal guides are the only Figma-specific part; the maths
+// lives in @slicer/core so the web app produces identical regions.
+function frameGuideOffsets(frame: FrameNode): number[] {
+  return frame.guides.filter(g => g.axis === "Y").map(g => g.offset);
+}
+
 function computeSliceRegions(frame: FrameNode): SliceRegion[] {
-  const horizontalGuides = frame.guides.filter(g => g.axis === "Y");
-
-  let positions = horizontalGuides
-    .map(g => Math.round(g.offset))
-    .filter(y => y > 0 && y < Math.round(frame.height));
-
-  positions = [...new Set(positions)];
-  positions.sort((a, b) => a - b);
-
-  const frameH = Math.round(frame.height);
-  const boundaries = [0, ...positions, frameH];
-  const regions: SliceRegion[] = [];
-
-  for (let i = 0; i < boundaries.length - 1; i++) {
-    const y0 = boundaries[i];
-    const y1 = boundaries[i + 1];
-    if (y1 <= y0) continue;
-    regions.push({
-      index: i,
-      y0,
-      y1,
-      name: `slice-${String(i + 1).padStart(3, "0")}`,
-    });
-  }
-
-  return regions;
+  return coreComputeSliceRegions(frameGuideOffsets(frame), frame.height);
 }
 
 // --- Slice Group Helpers ---
@@ -105,29 +87,6 @@ function findSliceGroup(): GroupNode | null {
 function removeSliceGroup(): void {
   const group = findSliceGroup();
   if (group) group.remove();
-}
-
-// --- Name & Link Parsing ---
-
-function parseLinkFromName(name: string): { cleanName: string; linkUrl: string | null } {
-  const match = name.match(/\(([^)]+)\)\s*$/);
-  if (match) {
-    const url = match[1].trim();
-    if (url.startsWith("http://") || url.startsWith("https://")) {
-      const cleanName = name.replace(/\s*\([^)]+\)\s*$/, "").trim();
-      return { cleanName, linkUrl: url };
-    }
-  }
-  return { cleanName: name, linkUrl: null };
-}
-
-function sanitizeFileName(name: string): string {
-  return (
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "") || "slice"
-  );
 }
 
 // --- Read export entries from slice group ---
@@ -164,17 +123,7 @@ function readExportEntries(sliceGroup: GroupNode): ExportEntry[] {
     });
   }
 
-  // Deduplicate file names
-  const seenNames = new Map<string, number>();
-  for (const entry of entries) {
-    const count = seenNames.get(entry.fileName) || 0;
-    seenNames.set(entry.fileName, count + 1);
-    if (count > 0) {
-      entry.fileName = entry.fileName.replace(".jpg", `-${count}.jpg`);
-    }
-  }
-
-  return entries;
+  return dedupeFileNames(entries);
 }
 
 // --- Generate Slices ---
@@ -386,7 +335,6 @@ async function handleGenerateSlices(): Promise<void> {
 // user already placed guides close to the band, theirs win.
 
 const DETECT_SCALE = 1;
-const GUIDE_SNAP_PX = 10;
 
 interface DetectedCell {
   x0: number;
@@ -497,52 +445,13 @@ async function applyFrameAnalysis(
   updateSelectionState();
 }
 
-function snapToGuide(y: number, guides: number[]): number {
-  for (const g of guides) {
-    if (Math.abs(g - y) <= GUIDE_SNAP_PX) return g;
-  }
-  return y;
-}
-
-// Decide the row bounds for a detected icon band: prefer a row the user already
-// defined with guides, fall back to the band's own padded bounds.
+// Decide the row bounds for a detected icon band. Reads the frame's guides;
+// the decision itself lives in @slicer/core.
 function reconcileRowBounds(
   frame: FrameNode,
   band: DetectedBand
 ): { y0: number; y1: number; usedExistingGuides: boolean } {
-  const frameH = Math.round(frame.height);
-  const guides = frame.guides
-    .filter(g => g.axis === "Y")
-    .map(g => Math.round(g.offset))
-    .filter(y => y > 0 && y < frameH)
-    .sort((a, b) => a - b);
-
-  const bandH = band.bottom - band.top;
-  const center = (band.top + band.bottom) / 2;
-  const bounds = [0, ...guides, frameH];
-
-  let lo = 0;
-  let hi = frameH;
-  for (let i = 0; i < bounds.length - 1; i++) {
-    if (center >= bounds[i] && center < bounds[i + 1]) {
-      lo = bounds[i];
-      hi = bounds[i + 1];
-      break;
-    }
-  }
-
-  // The user's row counts as "close enough" when it contains the icons and is
-  // not so tall that it has clearly swallowed unrelated content.
-  const tightEnough = hi - lo <= Math.max(bandH * 3, bandH + 80);
-  if (guides.length > 0 && lo <= band.top && hi >= band.bottom && tightEnough) {
-    return { y0: lo, y1: hi, usedExistingGuides: true };
-  }
-
-  return {
-    y0: Math.max(0, snapToGuide(band.padTop, guides)),
-    y1: Math.min(frameH, snapToGuide(band.padBottom, guides)),
-    usedExistingGuides: false,
-  };
+  return coreReconcileRowBounds(frameGuideOffsets(frame), frame.height, band as CoreDetectedBand);
 }
 
 async function applyDetectedBand(band: DetectedBand): Promise<void> {
