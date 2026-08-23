@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CanvasEditor, type Tool } from "@/components/CanvasEditor";
 import { RowList } from "@/components/RowList";
 import { AudiencePanel } from "@/components/AudiencePanel";
+import { BrazePanel } from "@/components/BrazePanel";
 import { sanitizeFileName } from "@slicer/core";
 import { buildHtml, downloadBlob, packageZip, sliceProject, type ExportedCell } from "@/lib/export";
 import { readAltText } from "@/lib/ocr";
@@ -19,7 +20,7 @@ export default function Page() {
   const [cells, setCells] = useState<ExportedCell[] | null>(null);
   const [busy, setBusy] = useState("");
   const [audience, setAudience] = useState({ csv: "", count: 0 });
-  const [tab, setTab] = useState<"rows" | "audience">("rows");
+  const [tab, setTab] = useState<"rows" | "audience" | "braze">("rows");
   const fileInput = useRef<HTMLInputElement>(null);
 
   const step: Step = !image ? "upload" : cells ? "export" : "markup";
@@ -88,6 +89,12 @@ export default function Page() {
       setBusy("");
     }
   }, [cells, api]);
+
+  // The Braze step builds from current markup rather than a stale download.
+  const getZip = useCallback(async () => {
+    if (!cells) return null;
+    return packageZip(buildHtml(project, cells), cells);
+  }, [cells, project]);
 
   const downloadZip = useCallback(async () => {
     if (!cells || !project.image) return;
@@ -250,16 +257,23 @@ export default function Page() {
                 <button className={tab === "audience" ? "active" : ""} onClick={() => setTab("audience")}>
                   Audience{audience.count > 0 ? ` (${audience.count})` : ""}
                 </button>
+                <button className={tab === "braze" ? "active" : ""} onClick={() => setTab("braze")}>
+                  Braze
+                </button>
               </div>
-              {tab === "rows" ? (
+              {tab === "rows" && (
                 <RowList
                   api={api}
                   regions={regions}
                   selectedY0={selectedY0}
                   onSelectRow={setSelectedY0}
                 />
-              ) : (
+              )}
+              {tab === "audience" && (
                 <AudiencePanel onCsvReady={(csv, count) => setAudience({ csv, count })} />
+              )}
+              {tab === "braze" && (
+                <BrazePanel getZip={getZip} csv={audience.csv} audienceCount={audience.count} />
               )}
             </section>
           </aside>

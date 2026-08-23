@@ -1,5 +1,22 @@
 # WIP
 
+## 2026-08-23 — main (Phase 3, infrastructure)
+
+Braze robot scaffolding in `web/braze/`. Everything that does not depend on
+Braze's DOM is built and tested; the flows are structured with every selector in
+one file (`selectors.mjs`, all marked VERIFIED:false).
+Works: TOTP verified against the RFC 6238 vectors; timezone scheduling math
+(wall-clock + IANA zone, refuses past times and non-IANA zones, flags DST gaps);
+run harness with per-step screenshots + HTML dump on failure, tested against a
+local fake page; `/api/braze/run` SSE route + Braze tab, wiring proven by e2e.
+16 node tests + 5 Playwright suites green.
+Not done: **the selectors are guesses.** Nothing has touched real Braze.
+Next: `cd web && npm run braze:record` — drive Braze once by hand (Okta+TOTP,
+new email campaign, upload ZIP, save draft), then rewrite selectors.mjs against
+the real DOM and flip VERIFIED per flow. Watch for iframes in the email editor.
+Also unverified: whether Braze accepts our ZIP shape (index.html at root,
+relative images/) — worth uploading one by hand first, it is a 10-minute check.
+
 ## 2026-08-23 — main (Phase 2)
 
 Email Studio web app in `web/` (Next 15 + React 19). Upload a flat PNG, mark it

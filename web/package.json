@@ -7,16 +7,23 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "e2e": "node e2e/run-all.mjs"
+    "e2e": "node e2e/run-all.mjs",
+    "braze:record": "node braze/record.mjs",
+    "braze:totp": "node braze/totp.mjs",
+    "braze": "node braze/run.mjs",
+    "test": "node --test braze/"
   },
   "dependencies": {
     "jszip": "^3.10.1",
+    "luxon": "^3.7.2",
     "next": "^15.1.0",
+    "otplib": "^13.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tesseract.js": "^5.1.1"
   },
   "devDependencies": {
+    "@types/luxon": "^3.7.5",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

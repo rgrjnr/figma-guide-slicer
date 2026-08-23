@@ -164,3 +164,19 @@ input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accen
 .audience .hint { margin: 8px 0; }
 .warn { color: var(--proposed); }
 .invalid-list { word-break: break-all; opacity: .8; }
+
+/* --- Braze panel --- */
+
+.braze { display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow: auto; }
+.braze .hint { margin: 0 0 4px; }
+.stack { display: flex; flex-direction: column; gap: 3px; color: var(--dim); font-size: 11px; }
+.stack input { width: 100%; }
+.braze-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
+.braze-actions button { margin: 0; }
+.braze-log {
+  margin: 4px 0 0; padding: 8px; max-height: 260px; overflow: auto;
+  background: #12141a; border: 1px solid var(--line); border-radius: 6px;
+  font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre-wrap; word-break: break-word;
+}
+.braze-log .err { color: #ff7a90; }
