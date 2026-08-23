@@ -1,6 +1,22 @@
 # WIP
 
-## 2026-08-23 — main (uncommitted)
+## 2026-08-23 — main (Phase 2)
+
+Email Studio web app in `web/` (Next 15 + React 19). Upload a flat PNG, mark it
+up on a canvas, slice, OCR, download a Braze-ready ZIP. Three tools: guides
+(click/drag/double-click), work area (limits detection only), button (drag a CTA
+-> full-width row of that height). Rows keyed by y0, not index, so links and alt
+survive guide edits. Audience tab dedupes a pasted list into email,external_id.
+Works: `npm run e2e` — 4 Playwright suites, all green, incl. a render diff that
+reassembles the ZIP at 600px and matches the source to 0.098% of pixels. OCR
+verified in a real browser (reads the Portuguese copy correctly) — the CSP risk
+flagged for the Figma iframe does not exist here.
+Not done: Phase 3, the Braze robot. Nothing in `web/braze/` yet.
+Next: `npm run braze:record` — drive Braze once by hand with playwright codegen
+(Okta+TOTP, new email campaign, upload ZIP, save draft) and capture selectors
+before writing any flow code.
+
+## 2026-08-23 — main (Phase 1)
 
 Phase 1 of the web-app port: algorithms extracted to `packages/slicer-core`
 (pure TS, no DOM/Figma) and both consumers retargeted onto it. src/ui.html lost
