@@ -5,7 +5,7 @@
       "value": "en",
       "domain": "dashboard-03.braze.com",
       "path": "/",
-      "expires": 1790116660.25041,
+      "expires": 1790117147.331234,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -85,7 +85,7 @@
       "value": "60106fe73d519f17d1749fd6",
       "domain": "dashboard-03.braze.com",
       "path": "/",
-      "expires": 1790203060.250275,
+      "expires": 1790203547.331063,
       "httpOnly": true,
       "secure": true,
       "sameSite": "Lax"
@@ -95,7 +95,7 @@
       "value": "60106fe73d519f17d1749fd6",
       "domain": "dashboard-03.braze.com",
       "path": "/",
-      "expires": 1790203060.250326,
+      "expires": 1790203547.331122,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -115,7 +115,7 @@
       "value": "g%3A6654ea119dc7430058c1dc94%7Ce%3Aundefined%7Cc%3A1787520315244%7Cl%3A1787520315262",
       "domain": ".braze.com",
       "path": "/",
-      "expires": 1822084658,
+      "expires": 1822085146,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -125,7 +125,7 @@
       "value": "g%3Ade22e3a5-afda-467d-bb72-b9d54ad96ee6%7Ce%3Aundefined%7Cc%3A1787520315265%7Cl%3A1787520315265",
       "domain": ".braze.com",
       "path": "/",
-      "expires": 1822084658,
+      "expires": 1822085146,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -152,30 +152,30 @@
     },
     {
       "name": "__cf_bm",
-      "value": "ugSPF6m1J9eiTmCM22ckhFChBJ9XPQpEqDtXvkpZfzw-1787524658.9402425-1.0.1.1-Q_LXUyormskLfdwDC7j0Fa6KsJFWTqLCYfvhq0v7aFZ5J5HgPYcb6JEBH5.rOBNnb05kiSpBZL894KWPS__bVoPMlx8RHYGecoiQKK.4mEpFbXkX_.Y7VoZvSkp3XiPF",
+      "value": "SwyVS7_ObsAzNYW5JyL4t_yupNA0yycXUm.B_8k0zoA-1787525146.214326-1.0.1.1-xDgud4htLOjiWJW3.z3J.bDCaLTlBAq5gbQKUyty5zX8a1N_acIeaiRdFOpQAFjV84Zfu5BOZnYy7J6pEC0JR63pWw_29xSc9O5SN14BVTG1wcZLNBzngf.ry8mT41c0",
       "domain": ".braze.com",
       "path": "/",
-      "expires": 1787526458.92886,
+      "expires": 1787526946.20346,
       "httpOnly": true,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "_dd_s",
-      "value": "logs=1&id=c7700cab-700b-4388-8431-41ad61a6471e&created=1787520313230&expire=1787525557223&rum=2",
+      "value": "logs=1&id=c7700cab-700b-4388-8431-41ad61a6471e&created=1787520313230&expire=1787526044714&rum=2",
       "domain": "dashboard-03.braze.com",
       "path": "/",
-      "expires": 1787525559,
+      "expires": 1787526046,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Strict"
     },
     {
       "name": "ab.storage.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
-      "value": "g%3Ac37197f8-1238-46c0-99bb-faa244edaa65%7Ce%3A1787524960148%7Cc%3A1787523934696%7Cl%3A1787524660148",
+      "value": "g%3A7e0384e8-bd68-457f-a734-c2bebcdce1b0%7Ce%3A1787525447246%7Cc%3A1787525111105%7Cl%3A1787525147246",
       "domain": ".braze.com",
       "path": "/",
-      "expires": 1822084660,
+      "expires": 1822085147,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -203,7 +203,7 @@
         },
         {
           "name": "ab.storage.lastSdkReq.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":1787524659224}"
+          "value": "{\"v\":1787525146539}"
         },
         {
           "name": "chmln:l.C.d",
@@ -215,7 +215,7 @@
         },
         {
           "name": "ab.storage.globalRateLimitCurrentTokenCount.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":0}"
+          "value": "{\"v\":4}"
         },
         {
           "name": "ab.storage.ccDismissals.invalid_api_key",
@@ -235,15 +235,15 @@
         },
         {
           "name": "ab.storage.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":\"g:c37197f8-1238-46c0-99bb-faa244edaa65|e:1787524960148|c:1787523934696|l:1787524660148\"}"
+          "value": "{\"v\":\"g:7e0384e8-bd68-457f-a734-c2bebcdce1b0|e:1787525447246|c:1787525111105|l:1787525147246\"}"
         },
         {
           "name": "pusherTransportTLS",
-          "value": "{\"timestamp\":1787524659446,\"transport\":\"ws\",\"latency\":666,\"cacheSkipCount\":0}"
+          "value": "{\"timestamp\":1787525146825,\"transport\":\"ws\",\"latency\":661,\"cacheSkipCount\":0}"
         },
         {
           "name": "ab.storage.events.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":[{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524508765,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"ca05c5af-379b-49de-9759-68bb336bef04\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524510149,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/6a8b6712e8ab2a0086d51749?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524510226,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"Began editing any campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaignId\":\"6a8b6712e8ab2a0086d51749\",\"campaignType\":\"email\",\"postLaunchDraft\":false}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787524658804,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"key\":\"feature_flags\",\"value\":[\"featureflags.prospect_overview\",\"product_announcement_banner\",\"chameleon_sdk\"]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524660147,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524660148,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"7397cf05-79f4-487a-adde-530e803a5c1c\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}}]}"
+          "value": "{\"v\":[{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524508765,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"ca05c5af-379b-49de-9759-68bb336bef04\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524510149,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/6a8b6712e8ab2a0086d51749?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524510226,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"Began editing any campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaignId\":\"6a8b6712e8ab2a0086d51749\",\"campaignType\":\"email\",\"postLaunchDraft\":false}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787524658804,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"key\":\"feature_flags\",\"value\":[\"featureflags.prospect_overview\",\"product_announcement_banner\",\"chameleon_sdk\"]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524660147,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524660148,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"7397cf05-79f4-487a-adde-530e803a5c1c\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"se\",\"ts\":1787524660148,\"s\":\"c37197f8-1238-46c0-99bb-faa244edaa65\",\"d\":{\"d\":725.452}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ss\",\"ts\":1787525111104,\"s\":\"7e0384e8-bd68-457f-a734-c2bebcdce1b0\",\"d\":{}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787525112051,\"s\":\"7e0384e8-bd68-457f-a734-c2bebcdce1b0\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787525146645,\"s\":\"7e0384e8-bd68-457f-a734-c2bebcdce1b0\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787525147230,\"s\":\"7e0384e8-bd68-457f-a734-c2bebcdce1b0\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787525147239,\"s\":\"7e0384e8-bd68-457f-a734-c2bebcdce1b0\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"844d111a-1680-4afc-9f71-6279e37f1c78\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787525147246,\"s\":\"7e0384e8-bd68-457f-a734-c2bebcdce1b0\",\"d\":{\"n\":\"pm.pick_up_where_you_left_off_impression\",\"p\":{\"count\":15,\"type\":\"success\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}}]}"
         },
         {
           "name": "_fs_uid",
@@ -255,7 +255,7 @@
         },
         {
           "name": "ab.storage.requestAttempts.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"content_cards/sync\":3,\"data\":3,\"feature_flags/sync\":1,\"banners/sync\":2}}"
+          "value": "{\"v\":{\"content_cards/sync\":4,\"data\":5,\"feature_flags/sync\":3,\"banners/sync\":4}}"
         },
         {
           "name": "ab.storage.ffImpressions.bef30adf-6179-4b26-a3b5-42268996ad95",
@@ -311,15 +311,15 @@
         },
         {
           "name": "ab.storage.dynamicRateLimitCurrentTokenCount.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"content_cards/sync\":3,\"banners/sync\":0}}"
+          "value": "{\"v\":{\"content_cards/sync\":2,\"banners/sync\":0}}"
         },
         {
           "name": "ab.storage.lastReqToEndpoint.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"data\":1787524658806,\"content_cards/sync\":1787524658937,\"feature_flags/sync\":1787523935377,\"banners/sync\":1787524659224}}"
+          "value": "{\"v\":{\"data\":1787525146186,\"content_cards/sync\":1787525146325,\"feature_flags/sync\":1787525146539,\"banners/sync\":1787525112124}}"
         },
         {
           "name": "ab.storage.banners.lastRequestedTime.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"product_announcements_banner_2\":1787524659224,\"product_announcements_banner_3\":1787524659224}}"
+          "value": "{\"v\":{\"product_announcements_banner_2\":1787525112124,\"product_announcements_banner_3\":1787525112124}}"
         },
         {
           "name": "ab.storage.ccImpressions.invalid_api_key",
@@ -361,68 +361,20 @@
       "origin": "https://us03.bz-rndr.com",
       "localStorage": [
         {
-          "name": "ab.storage.triggers.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":[{\"i\":\"632c98e474c14225d2832d04\",\"c\":[{\"t\":\"custom_event\",\"d\":\"pm.shopify_install_successful\"}],\"s\":\"2022-09-26T04:00:00.000Z\",\"e\":null,\"p\":2000510000,\"t\":\"templated_iam\",\"da\":{\"prefetch_file_urls\":[\"https://braze-images.com/appboy/communication/assets/image_assets/images/67d1e4e12e846e0067efeffe/original.gif?1741808865\"],\"trigger_id\":\"NjMyYzk4ZTQ3NGMxNDIyNWQyODMyZDA0XyRfbXY9NjdkMWU4NjJlNzdlZGUwMDY0MDI5YTJlJnBpPWNtcA==\"},\"d\":1,\"r\":0,\"tm\":31000,\"ld\":null}]}"
-        },
-        {
-          "name": "ab.storage.banners.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":\"b3eb02b5-0d6f-42e4-a613-97f589ab1dc3\"}"
-        },
-        {
-          "name": "ab.storage.ccLastFullSync.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":1787524262}"
-        },
-        {
-          "name": "ab.storage.lastSdkReq.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":1787524660050}"
-        },
-        {
-          "name": "chmln:l.C.d",
-          "value": "{\"profile\":{\"M\":\"Profile\",\"attributes\":{\"id\":\"6655a7cd3a5d160036066c9e\",\"uid\":\"6654ea119dc7430058c1dc94\"}},\"elements:observed\":{\"6969368520b0eb1ad75a334b\":{\"at\":\"2026-08-23T21:34:36.865Z\"},\"696ff93c2a733d00244f73c6\":{\"at\":\"2026-08-23T21:35:35.235Z\"},\"6967da2493c055002921fdf8\":{\"at\":\"2026-08-23T21:35:35.252Z\"},\"6968e21da205e10025d8f0f0\":{\"at\":\"2026-08-23T21:36:26.633Z\"},\"679296f340f77f69fcd4f890\":{\"at\":\"2026-08-23T21:36:26.665Z\"},\"6968dda4a205e1002dd5025a\":{\"at\":\"2026-08-23T21:41:47.840Z\"},\"67d307316a36e6001b419cba\":{\"at\":\"2026-08-23T21:45:12.139Z\"},\"6967da2493c055002921fdea\":{\"at\":\"2026-08-23T21:51:08.374Z\"},\"67929870bec912001fcdc2ef\":{\"at\":\"2026-08-23T21:51:33.808Z\"},\"6792979140f77f69fcd4f893\":{\"at\":\"2026-08-23T21:51:33.824Z\"},\"684b4aa4b9eeb5a0a0675d9d\":{\"at\":\"2026-08-23T21:56:42.985Z\"},\"67d307316a36e6001b419cbb\":{\"at\":\"2026-08-23T22:12:48.462Z\"}}}"
-        },
-        {
-          "name": "ab.storage.ff.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":\"b3eb02b5-0d6f-42e4-a613-97f589ab1dc3\"}"
-        },
-        {
-          "name": "ab.storage.globalRateLimitCurrentTokenCount.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":17}"
-        },
-        {
-          "name": "ab.storage.ccDismissals.invalid_api_key",
-          "value": "{\"v\":{}}"
-        },
-        {
-          "name": "ab.storage.ffLastRefreshAt.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":1787523935815}"
-        },
-        {
-          "name": "ab.storage.ccDismissals.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{}}"
-        },
-        {
-          "name": "ab.storage.attributes.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"6654ea119dc7430058c1dc94\":{\"user_id\":\"6654ea119dc7430058c1dc94\",\"email\":\"roger@rogerjunior.com\",\"first_name\":\"Roger\",\"last_name\":\"Junior\",\"custom\":{\"is admin\":false,\"department\":\"agency\",\"company timezone\":\"America/New_York\",\"company id\":\"5a12fb5ea12f7457f92c5c91\",\"company name\":\"Turner\",\"company created\":\"2017-11-20T15:57:18\",\"company has sessions\":true,\"Dashboard Domain\":\"https://us03.bz-rndr.com\",\"selected locale\":\"en\",\"localstorage is available\":true}}}}"
-        },
-        {
-          "name": "ab.storage.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":\"g:b3eb02b5-0d6f-42e4-a613-97f589ab1dc3|e:1787524960786|c:1787523935178|l:1787524660786\"}"
-        },
-        {
-          "name": "ab.storage.events.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":[{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524506686,\"s\":\"b3eb02b5-0d6f-42e4-a613-97f589ab1dc3\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787524660050,\"s\":\"b3eb02b5-0d6f-42e4-a613-97f589ab1dc3\",\"d\":{\"key\":\"feature_flags\",\"value\":[\"featureflags.prospect_overview\",\"product_announcement_banner\",\"chameleon_sdk\"]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787524660786,\"s\":\"b3eb02b5-0d6f-42e4-a613-97f589ab1dc3\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}}]}"
-        },
-        {
           "name": "ab.storage.device.bef30adf-6179-4b26-a3b5-42268996ad95",
           "value": "{\"v\":{\"browser\":\"Chrome\",\"browser_version\":\"151\",\"os_version\":\"Mac\",\"locale\":\"en-us\",\"time_zone\":\"Europe/Lisbon\",\"user_agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36\"}}"
         },
         {
           "name": "ab.storage.requestAttempts.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"content_cards/sync\":1,\"data\":3,\"feature_flags/sync\":1,\"banners/sync\":1}}"
+          "value": "{\"v\":{\"content_cards/sync\":1,\"data\":4,\"feature_flags/sync\":2,\"banners/sync\":1}}"
         },
         {
           "name": "ab.storage.ffImpressions.bef30adf-6179-4b26-a3b5-42268996ad95",
           "value": "{\"v\":{\"NjgxMGY0YzA4MTA2NjIwMDY0MmMwN2I2XyRfbXY9NjgxMGY1YWU0NjEwMWQwMDY0ZTYyYTc3JnBpPWNtcA==\":true}}"
+        },
+        {
+          "name": "ab.storage.triggers.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":[{\"i\":\"632c98e474c14225d2832d04\",\"c\":[{\"t\":\"custom_event\",\"d\":\"pm.shopify_install_successful\"}],\"s\":\"2022-09-26T04:00:00.000Z\",\"e\":null,\"p\":2000510000,\"t\":\"templated_iam\",\"da\":{\"prefetch_file_urls\":[\"https://braze-images.com/appboy/communication/assets/image_assets/images/67d1e4e12e846e0067efeffe/original.gif?1741808865\"],\"trigger_id\":\"NjMyYzk4ZTQ3NGMxNDIyNWQyODMyZDA0XyRfbXY9NjdkMWU4NjJlNzdlZGUwMDY0MDI5YTJlJnBpPWNtcA==\"},\"d\":1,\"r\":0,\"tm\":31000,\"ld\":null}]}"
         },
         {
           "name": "ab.storage.banners.bef30adf-6179-4b26-a3b5-42268996ad95",
@@ -441,20 +393,56 @@
           "value": "{\"v\":\"g:6654ea119dc7430058c1dc94|e:undefined|c:1787520316441|l:1787520316443\"}"
         },
         {
+          "name": "ab.storage.banners.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":\"b3eb02b5-0d6f-42e4-a613-97f589ab1dc3\"}"
+        },
+        {
           "name": "ab.storage.messagingSessionStart.bef30adf-6179-4b26-a3b5-42268996ad95",
           "value": "{\"v\":1787520316442}"
+        },
+        {
+          "name": "ab.storage.ccLastFullSync.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":1787524262}"
+        },
+        {
+          "name": "ab.storage.lastSdkReq.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":1787525147820}"
+        },
+        {
+          "name": "chmln:l.C.d",
+          "value": "{\"profile\":{\"M\":\"Profile\",\"attributes\":{\"id\":\"6655a7cd3a5d160036066c9e\",\"uid\":\"6654ea119dc7430058c1dc94\"}},\"elements:observed\":{\"6969368520b0eb1ad75a334b\":{\"at\":\"2026-08-23T21:34:36.865Z\"},\"696ff93c2a733d00244f73c6\":{\"at\":\"2026-08-23T21:35:35.235Z\"},\"6967da2493c055002921fdf8\":{\"at\":\"2026-08-23T21:35:35.252Z\"},\"6968e21da205e10025d8f0f0\":{\"at\":\"2026-08-23T21:36:26.633Z\"},\"679296f340f77f69fcd4f890\":{\"at\":\"2026-08-23T21:36:26.665Z\"},\"6968dda4a205e1002dd5025a\":{\"at\":\"2026-08-23T21:41:47.840Z\"},\"67d307316a36e6001b419cba\":{\"at\":\"2026-08-23T21:45:12.139Z\"},\"6967da2493c055002921fdea\":{\"at\":\"2026-08-23T21:51:08.374Z\"},\"67929870bec912001fcdc2ef\":{\"at\":\"2026-08-23T21:51:33.808Z\"},\"6792979140f77f69fcd4f893\":{\"at\":\"2026-08-23T21:51:33.824Z\"},\"684b4aa4b9eeb5a0a0675d9d\":{\"at\":\"2026-08-23T21:56:42.985Z\"},\"67d307316a36e6001b419cbb\":{\"at\":\"2026-08-23T22:12:48.462Z\"}}}"
         },
         {
           "name": "ab.storage.sdkVersion.bef30adf-6179-4b26-a3b5-42268996ad95",
           "value": "{\"v\":\"6.11.0\"}"
         },
         {
+          "name": "ab.storage.ff.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":\"b3eb02b5-0d6f-42e4-a613-97f589ab1dc3\"}"
+        },
+        {
           "name": "i18nextLng",
           "value": "en"
         },
         {
+          "name": "ab.storage.globalRateLimitCurrentTokenCount.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":24}"
+        },
+        {
           "name": "ab.storage.triggers.ts.bef30adf-6179-4b26-a3b5-42268996ad95",
           "value": "{\"v\":1787523935603}"
+        },
+        {
+          "name": "ab.storage.ccDismissals.invalid_api_key",
+          "value": "{\"v\":{}}"
+        },
+        {
+          "name": "ab.storage.ffLastRefreshAt.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":1787523935815}"
+        },
+        {
+          "name": "ab.storage.ccDismissals.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":{}}"
         },
         {
           "name": "ab.storage.ff.bef30adf-6179-4b26-a3b5-42268996ad95",
@@ -466,11 +454,11 @@
         },
         {
           "name": "ab.storage.dynamicRateLimitCurrentTokenCount.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"content_cards/sync\":3,\"banners/sync\":0}}"
+          "value": "{\"v\":{\"content_cards/sync\":4,\"banners/sync\":0}}"
         },
         {
           "name": "ab.storage.lastReqToEndpoint.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"data\":1787524660050,\"content_cards/sync\":1787524507127,\"feature_flags/sync\":1787523935457,\"banners/sync\":1787524262308}}"
+          "value": "{\"v\":{\"data\":1787525147818,\"content_cards/sync\":1787525147820,\"feature_flags/sync\":1787525113083,\"banners/sync\":1787524262308}}"
         },
         {
           "name": "ab.storage.banners.lastRequestedTime.bef30adf-6179-4b26-a3b5-42268996ad95",
@@ -487,6 +475,10 @@
         {
           "name": "ab.storage.serverConfig.bef30adf-6179-4b26-a3b5-42268996ad95",
           "value": "{\"v\":{\"s\":\"6.11.0\",\"l\":1786729667,\"e\":[\"Test event\",\"pm.homepagebanner.button1.click\"],\"a\":[\"SEGA XD Gamification WS Attend\",\"SEGA_XD_Gamification_WS_Attend\",\"irt_affected_keys\"],\"p\":[],\"m\":21600,\"v\":\"BK264h2HOM_IExXTO5F6OR80SeBcDMCMy9Ep45xyls93PswX5KEqAesHxmjcGY3da_dn7ihx6jh8lvME6U0Uhqo=\",\"c\":{\"enabled\":true},\"f\":{\"enabled\":true,\"refresh_rate_limit\":300},\"grl\":{\"capacity\":30,\"enabled\":true,\"endpoint_overrides\":{\"banners/sync\":{\"capacity\":5,\"refill_rate\":180},\"content_cards/sync\":{\"capacity\":5,\"refill_rate\":10},\"push/redeliver\":{\"capacity\":1,\"refill_rate\":180}},\"refill_rate\":30},\"b\":{\"dismissals_cache_size\":200,\"enabled\":true,\"max_placements\":10},\"d\":{\"enabled\":true},\"rb\":{\"max_sleep_duration_ms\":300000,\"min_sleep_duration_ms\":10000,\"scale_factor\":3},\"mst\":null,\"ch\":null}}"
+        },
+        {
+          "name": "ab.storage.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
+          "value": "{\"v\":\"g:f2504a0c-a726-4754-8359-2cdad8ffb66d|e:1787525447820|c:1787525112779|l:1787525147820\"}"
         },
         {
           "name": "ab.storage.ccClicks.bef30adf-6179-4b26-a3b5-42268996ad95",

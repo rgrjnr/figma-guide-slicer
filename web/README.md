@@ -15,6 +15,21 @@ npm run e2e          # browser checks, starts its own server on :3737
 npm run typecheck
 ```
 
+## Projects
+
+Work is saved to `data/projects.json` — a plain JSON file, diffable and
+hand-editable, which is worth more than a database for a local tool driving one
+dashboard. The campaign name in the top bar doubles as the project name.
+
+**The artwork itself is not stored**, only the markup. Reopening a project
+restores guides, rows, links and alt text, and asks you to re-upload the image.
+That is deliberate: the design is the thing that changes, and it lives in Figma.
+
+Every Braze object is recorded with its id and dashboard URL, so a project can
+always be traced back — and **refresh from Braze** re-reads the live campaign
+rather than trusting what was stored. Deleting a project removes the local
+record only; nothing in Braze is touched.
+
 ## The workflow
 
 1. **Upload** a flat PNG/JPG of the email, exported at 1x.
@@ -31,6 +46,9 @@ npm run typecheck
    names the platforms it recognises. Links you enter are remembered per platform
    and pre-filled next time.
 3. **Slice**, optionally run OCR to fill alt text, then **Download ZIP**.
+4. **Braze** — create the draft, import the audience, schedule it. When a design
+   changes later, *Replace artwork* swaps the message on the existing campaign
+   instead of making a new one. See [braze/README.md](braze/README.md).
 
 `Design width` is the width the artwork was drawn at. It defaults to the image's
 own width — scale 1, which is what the detector thresholds are tuned for. Set it

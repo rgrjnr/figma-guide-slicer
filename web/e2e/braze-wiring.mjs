@@ -18,13 +18,17 @@ const check = (l, ok, d = "") => results.push([l, ok, d]);
 
 check("Create draft is disabled without a campaign name",
   await page.getByRole("button", { name: "Create draft" }).isDisabled());
+check("a project must be saved before Braze links can be recorded",
+  await page.locator(".braze .warn").first().isVisible());
 check("Import audience is disabled with an empty list",
   await page.getByRole("button", { name: /Import audience/ }).isDisabled());
-check("Schedule is disabled without a time",
+check("Schedule is disabled with no campaign yet",
   await page.getByRole("button", { name: "Schedule" }).isDisabled());
 
-// Without a ZIP, Create draft must refuse before spawning anything.
-await page.getByLabel("Campaign name").fill("TEST-wiring");
+// The campaign name now lives in the project bar, and doubles as the project
+// name. Without a ZIP, Create draft must refuse before spawning anything.
+await page.locator(".campaign-name").fill("TEST-wiring");
+await page.getByRole("button", { name: "Braze" }).click();
 await page.getByRole("button", { name: "Create draft" }).click();
 await page.waitForFunction(() => document.querySelector(".braze-log .err"), null, { timeout: 20000 });
 const zipError = await page.locator(".braze-log .err").first().innerText();

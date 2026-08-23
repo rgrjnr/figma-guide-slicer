@@ -5,6 +5,9 @@ import { CanvasEditor, type Tool } from "@/components/CanvasEditor";
 import { RowList } from "@/components/RowList";
 import { AudiencePanel } from "@/components/AudiencePanel";
 import { BrazePanel } from "@/components/BrazePanel";
+import { ProjectBar } from "@/components/ProjectBar";
+import { createProject, loadProject, saveProject } from "@/lib/projects";
+import type { ProjectRecord } from "@/lib/types";
 import { sanitizeFileName } from "@slicer/core";
 import { buildHtml, downloadBlob, packageZip, sliceProject, type ExportedCell } from "@/lib/export";
 import { readAltText } from "@/lib/ocr";
@@ -21,6 +24,11 @@ export default function Page() {
   const [busy, setBusy] = useState("");
   const [audience, setAudience] = useState({ csv: "", count: 0 });
   const [tab, setTab] = useState<"rows" | "audience" | "braze">("rows");
+  const [record, setRecord] = useState<ProjectRecord | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [campaignName, setCampaignName] = useState("");
+  const [subject, setSubject] = useState("");
+  const [preheader, setPreheader] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
 
   const step: Step = !image ? "upload" : cells ? "export" : "markup";
@@ -34,9 +42,11 @@ export default function Page() {
     previous.current = cells;
   }, [cells]);
 
-  // Any markup change invalidates a previous export.
+  // Any markup change invalidates a previous export, and means there is
+  // something worth saving.
   useEffect(() => {
     setCells(null);
+    setDirty(true);
   }, [project.guides, project.rows, project.designWidth, project.emailWidth, project.addFooter]);
 
   const onFile = useCallback(
@@ -108,10 +118,89 @@ export default function Page() {
     }
   }, [cells, project, api]);
 
+  const snapshot = useCallback((): Partial<ProjectRecord> => ({
+    name: campaignName || project.image?.name || "Untitled",
+    markup: {
+      imageName: project.image?.name,
+      imageWidth: project.image?.width,
+      imageHeight: project.image?.height,
+      designWidth: project.designWidth,
+      emailWidth: project.emailWidth,
+      guides: project.guides,
+      workArea: project.workArea,
+      rows: project.rows as unknown as Record<string, unknown>,
+      addFooter: project.addFooter,
+      minGutter: project.minGutter,
+      minSection: project.minSection,
+    },
+    email: { subject, preheader },
+    audience: { csv: audience.csv, count: audience.count, fileName: campaignName ? `${campaignName}.csv` : undefined },
+  }), [campaignName, project, subject, preheader, audience]);
+
+  const handleSave = useCallback(async () => {
+    try {
+      const saved = record
+        ? await saveProject(record.id, snapshot())
+        : await createProject(snapshot());
+      setRecord(saved);
+      setDirty(false);
+      api.setStatus(`Saved "${saved.name}".`);
+    } catch (err) {
+      api.setStatus(err instanceof Error ? err.message : "Could not save.");
+    }
+  }, [record, snapshot, api]);
+
+  const handleOpen = useCallback(async (id: string) => {
+    try {
+      const loaded = await loadProject(id);
+      setRecord(loaded);
+      setCampaignName(loaded.name);
+      setSubject(loaded.email.subject ?? "");
+      setPreheader(loaded.email.preheader ?? "");
+      // The artwork itself is not stored, so markup is restored but the image
+      // has to be re-uploaded; say so rather than showing an empty canvas.
+      api.patchProject({
+        designWidth: loaded.markup.designWidth,
+        emailWidth: loaded.markup.emailWidth,
+        guides: loaded.markup.guides,
+        workArea: loaded.markup.workArea,
+        rows: loaded.markup.rows as never,
+        addFooter: loaded.markup.addFooter,
+        minGutter: loaded.markup.minGutter,
+        minSection: loaded.markup.minSection,
+      });
+      setDirty(false);
+      api.setStatus(
+        image ? `Opened "${loaded.name}".`
+              : `Opened "${loaded.name}" — re-upload ${loaded.markup.imageName ?? "the artwork"} to see it.`
+      );
+    } catch (err) {
+      api.setStatus(err instanceof Error ? err.message : "Could not open that project.");
+    }
+  }, [api, image]);
+
+  const refreshRecord = useCallback(async () => {
+    if (!record) return;
+    try {
+      setRecord(await loadProject(record.id));
+    } catch {
+      /* the panel keeps showing what it had */
+    }
+  }, [record]);
+
   return (
     <main>
       <header className="app-bar">
         <h1>Email Studio</h1>
+        <ProjectBar
+          project={record}
+          dirty={dirty}
+          onOpen={handleOpen}
+          onSave={handleSave}
+          onNew={() => { setRecord(null); setCampaignName(""); setSubject(""); setPreheader(""); setCells(null); api.reset(); }}
+          campaignName={campaignName}
+          onCampaignName={v => { setCampaignName(v); setDirty(true); }}
+        />
         <nav className="steps">
           {(["upload", "markup", "export"] as Step[]).map(s => (
             <span key={s} className={`step${step === s ? " active" : ""}`}>{s}</span>
@@ -236,6 +325,14 @@ export default function Page() {
                 />
                 Add footer merge tag
               </label>
+              <label className="stack">
+                Subject
+                <input value={subject} onChange={e => { setSubject(e.target.value); setDirty(true); }} />
+              </label>
+              <label className="stack">
+                Preheader
+                <input value={preheader} onChange={e => { setPreheader(e.target.value); setDirty(true); }} />
+              </label>
               <button className="primary" onClick={runExport} disabled={!!busy}>
                 {cells ? "Re-slice" : "Slice"} {regions.length} row{regions.length === 1 ? "" : "s"}
               </button>
@@ -273,7 +370,16 @@ export default function Page() {
                 <AudiencePanel onCsvReady={(csv, count) => setAudience({ csv, count })} />
               )}
               {tab === "braze" && (
-                <BrazePanel getZip={getZip} csv={audience.csv} audienceCount={audience.count} />
+                <BrazePanel
+                  getZip={getZip}
+                  csv={audience.csv}
+                  audienceCount={audience.count}
+                  project={record}
+                  onProjectChanged={refreshRecord}
+                  campaignName={campaignName}
+                  subject={subject}
+                  preheader={preheader}
+                />
               )}
             </section>
           </aside>
