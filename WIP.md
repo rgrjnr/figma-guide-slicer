@@ -1,5 +1,28 @@
 # WIP
 
+## 2026-08-24 — main (UI rebuilt around the request)
+
+Rebuilt the Studio as four steps (Arte / Detalhes / Público / Enviar ao Braze),
+in **pt-BR**, light theme, mirroring how the work arrives: a design, a title,
+a spreadsheet, a date.
+Works: one "Detectar linhas automaticamente" replaces the two technical
+buttons; links moved off the canvas into a side list where focusing a field
+highlights and scrolls the canvas to that row; hover circle marks a row social;
+clicking the art still splits it. Zoom is a dropdown (fit/100/75/50/25) plus
+Computador/Celular — mobile is a zoom (375/designWidth), not a narrower
+surface, or the overlays would drift from the art. OCR is no longer a button:
+it runs during the build and also seeds the preview text. Audience takes paste
+or .xlsx/.xls/.csv (any column that looks like an address). Defaults: campaign
+and segment = YYYYMMDD, tomorrow 09:30, America/Sao_Paulo, native date/time
+inputs, timezone dropdown. Downloading is now only an escape hatch under
+"Algo não funcionou?".
+Gotchas: date-derived defaults must be set in an effect, not in useState — SSR
+and hydration can compute them differently. Retired e2e/tools.mjs (the manual
+tools it drove are gone; work-area bounds stay covered in slicer-core), and
+ocr.mjs now asserts the automatic behaviour instead of a button.
+Not done: nothing reads the request email itself yet.
+Next: the two TEST campaigns and TEST-claude-20260823.csv are still in Braze.
+
 ## 2026-08-23 — main (Phase 4, Braze flows driven for real)
 
 Drove a real campaign end to end in Braze and encoded every step. No campaign

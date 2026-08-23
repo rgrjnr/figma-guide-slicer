@@ -30,6 +30,8 @@ interface RunRequest {
   /** base64 ZIP built by the app, written to a temp file for Playwright. */
   zipBase64?: string;
   csv?: string;
+  /** Braze names the segment after the file, so the name matters. */
+  csvName?: string;
 }
 
 function argsFor(body: RunRequest, dir: string): string[] {
@@ -77,7 +79,9 @@ function argsFor(body: RunRequest, dir: string): string[] {
     }
     case "audience": {
       if (!body.csv) throw new Error("No audience CSV — add addresses first.");
-      const csvPath = join(dir, "audience.csv");
+      // The file name becomes the segment name in Braze, so it is not incidental.
+      const safe = (body.csvName || "audience.csv").replace(/[^\w.@ -]+/g, "-");
+      const csvPath = join(dir, safe.endsWith(".csv") ? safe : `${safe}.csv`);
       writeFileSync(csvPath, body.csv, "utf8");
       return ["audience", "--csv", csvPath];
     }

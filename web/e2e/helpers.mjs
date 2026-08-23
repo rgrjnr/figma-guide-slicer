@@ -1,0 +1,34 @@
+/** Shared driving of the step UI, so a wording change lands in one place. */
+export const FIXTURE = "../packages/slicer-core/test/fixtures/hbomax-moments-emkt.jpg";
+
+export async function upload(page, fixture = FIXTURE) {
+  await page.setInputFiles('input[type="file"]', fixture);
+  await page.waitForSelector(".surface img");
+}
+
+/** The single button that runs both detection passes. */
+export async function autoDetect(page) {
+  await page.getByRole("button", { name: /Detectar linhas automaticamente/i }).click();
+  await page.waitForFunction(() => !document.querySelector("button.primary.big-btn[disabled]"), null, { timeout: 60_000 });
+  await page.waitForTimeout(800);
+}
+
+export const step = (page, name) =>
+  page.locator(".steps .step").filter({ hasText: new RegExp(name, "i") }).first();
+
+export async function goToStep(page, name) {
+  await step(page, name).click();
+  await page.waitForTimeout(500);
+}
+
+export const guides = page => page.locator(".guide:not(.proposed)").count();
+export const regions = page => page.locator(".region").count();
+
+/** Type a URL into a row's field in the links panel beside the design. */
+export async function setRowLink(page, index, url) {
+  const field = page.locator(".link-row").nth(index).locator("input.url").first();
+  await field.waitFor({ state: "visible" });
+  await field.fill(url);
+  await field.blur();
+  await page.waitForTimeout(300);
+}

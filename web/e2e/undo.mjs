@@ -54,9 +54,8 @@ check("a click-and-drag is exactly one undo step", afterUndo === afterDrag - 1,
   `${afterDrag} -> ${afterUndo}; ${JSON.stringify(draggedTo)} -> ${JSON.stringify(afterTops)}`);
 
 // Detection is one step too.
-await page.getByRole("button", { name: "Find sections" }).click();
-await page.waitForSelector(".guide.proposed");
-await page.getByRole("button", { name: "accept all" }).click();
+await page.getByRole("button", { name: /Detectar linhas automaticamente/i }).click();
+await page.waitForTimeout(4000);
 await page.waitForTimeout(600);
 const many = await guides();
 await undo();

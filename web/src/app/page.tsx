@@ -1,146 +1,220 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { CanvasEditor, type Tool } from "@/components/CanvasEditor";
-import { RowList } from "@/components/RowList";
-import { AudiencePanel } from "@/components/AudiencePanel";
-import { BrazePanel } from "@/components/BrazePanel";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DesignStep } from "@/components/steps/DesignStep";
+import { DetailsStep } from "@/components/steps/DetailsStep";
+import { AudienceStep } from "@/components/steps/AudienceStep";
+import { SendStep, type SendSettings } from "@/components/steps/SendStep";
 import { ProjectBar } from "@/components/ProjectBar";
+import { buildHtml, downloadBlob, packageZip, sliceProject, type ExportedCell } from "@/lib/export";
+import { processEmailContent } from "@/lib/emails";
+import { readAltText } from "@/lib/ocr";
+import { DEFAULT_SEND_TIME, DEFAULT_TIME_ZONE, combineSendAt, defaultSendDate, stamp } from "@/lib/defaults";
 import { createProject, loadProject, saveProject } from "@/lib/projects";
 import type { ProjectRecord } from "@/lib/types";
-import { sanitizeFileName } from "@slicer/core";
-import { buildHtml, downloadBlob, packageZip, sliceProject, type ExportedCell } from "@/lib/export";
-import { readAltText } from "@/lib/ocr";
 import { useProject } from "@/lib/useProject";
 
-type Step = "upload" | "markup" | "export";
+/** The opening line of the email, for use as preview text. */
+function firstSentence(alts: string[]): string {
+  for (const alt of alts) {
+    const text = (alt ?? "").trim();
+    // Skip logos and icon rows: a handful of characters is not a sentence.
+    if (text.replace(/[^a-zA-ZÀ-ÿ]/g, "").length < 12) continue;
+    return text.length > 120 ? `${text.slice(0, 119).trimEnd()}…` : text;
+  }
+  return "";
+}
+
+const STEPS = [
+  { key: "design", label: "Arte" },
+  { key: "details", label: "Detalhes" },
+  { key: "audience", label: "Público" },
+  { key: "send", label: "Enviar ao Braze" },
+] as const;
+type StepKey = (typeof STEPS)[number]["key"];
 
 export default function Page() {
   const api = useProject();
   const { project, image, regions } = api;
-  const [tool, setTool] = useState<Tool>("guide");
-  const [selectedY0, setSelectedY0] = useState<number | null>(null);
-  const [cells, setCells] = useState<ExportedCell[] | null>(null);
-  const [busy, setBusy] = useState("");
-  const [audience, setAudience] = useState({ csv: "", count: 0 });
-  const [tab, setTab] = useState<"rows" | "audience" | "braze">("rows");
+
+  const [step, setStep] = useState<StepKey>("design");
   const [record, setRecord] = useState<ProjectRecord | null>(null);
   const [dirty, setDirty] = useState(false);
+
+  // Date-derived defaults are filled in after mount, not during render: the
+  // server and the browser can compute them a moment (or a day) apart, and a
+  // value that differs between the two is a hydration mismatch.
   const [campaignName, setCampaignName] = useState("");
   const [subject, setSubject] = useState("");
   const [preheader, setPreheader] = useState("");
-  const fileInput = useRef<HTMLInputElement>(null);
+  const [testEmails, setTestEmails] = useState("");
+  const [audienceRaw, setAudienceRaw] = useState("");
+  const [segmentName, setSegmentName] = useState("");
+  const [settings, setSettings] = useState<SendSettings>({
+    sendDate: "",
+    sendTime: DEFAULT_SEND_TIME,
+    timeZone: DEFAULT_TIME_ZONE,
+  });
 
-  const step: Step = !image ? "upload" : cells ? "export" : "markup";
+  useEffect(() => {
+    const today = stamp();
+    setCampaignName(name => name || today);
+    setSegmentName(name => name || today);
+    setSettings(s => (s.sendDate ? s : { ...s, sendDate: defaultSendDate() }));
+  }, []);
 
-  // Cmd/Ctrl+Z and Cmd+Shift+Z (or Ctrl+Y). Skipped while a text field has
-  // focus so the browser's own undo keeps working where you would expect it.
+  const [busy, setBusy] = useState<string | null>(null);
+  const [log, setLog] = useState<{ level: "info" | "error"; message: string }[]>([]);
+  const cellsRef = useRef<ExportedCell[] | null>(null);
+
+  const audience = useMemo(() => processEmailContent(audienceRaw), [audienceRaw]);
+
+  // Undo. Text fields keep the browser's own, which is what you expect there.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey)) return;
       const target = e.target as HTMLElement | null;
       if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
       const key = e.key.toLowerCase();
-      if (key === "z") {
-        e.preventDefault();
-        if (e.shiftKey) api.redo();
-        else api.undo();
-      } else if (key === "y") {
-        e.preventDefault();
-        api.redo();
-      }
+      if (key === "z") { e.preventDefault(); e.shiftKey ? api.redo() : api.undo(); }
+      else if (key === "y") { e.preventDefault(); api.redo(); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [api]);
 
-  // Slice previews hold object URLs; drop them when the export is replaced.
-  const previous = useRef<ExportedCell[] | null>(null);
-  useEffect(() => {
-    if (previous.current && previous.current !== cells) {
-      for (const c of previous.current) URL.revokeObjectURL(c.previewUrl);
-    }
-    previous.current = cells;
-  }, [cells]);
+  useEffect(() => { setDirty(true); }, [project.guides, project.rows, project.designWidth]);
 
-  // Any markup change invalidates a previous export, and means there is
-  // something worth saving.
-  useEffect(() => {
-    setCells(null);
-    setDirty(true);
-  }, [project.guides, project.rows, project.designWidth, project.emailWidth, project.addFooter]);
+  const onFile = useCallback(async (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { api.setStatus("Esse arquivo não é uma imagem."); return; }
+    cellsRef.current = null;
+    await api.loadFile(file);
+  }, [api]);
 
-  const onFile = useCallback(
-    async (file: File | undefined) => {
-      if (!file) return;
-      if (!file.type.startsWith("image/")) {
-        api.setStatus("That file is not an image.");
-        return;
+  /**
+   * Slice and package on demand. Alt text is filled in by reading the artwork
+   * first — it is required for accessibility and there is nothing useful for a
+   * person to decide about it, so it is not worth a button of its own.
+   */
+  const buildZip = useCallback(async (): Promise<Blob | null> => {
+    if (!image) return null;
+    setBusy("draft");
+    setLog(l => [...l, { level: "info", message: "recortando a arte…" }]);
+    const cells = await sliceProject(project, image);
+
+    const blank = cells.filter(c => !c.alt);
+    if (blank.length) {
+      setLog(l => [...l, { level: "info", message: `lendo o texto de ${blank.length} recortes…` }]);
+      try {
+        const found = await readAltText(blank);
+        for (const cell of blank) {
+          const text = found.get(cell.fileName);
+          if (text) {
+            cell.alt = text;
+            api.updateCell(cell.rowY0, cell.cellIndex, { alt: text });
+          }
+        }
+      } catch {
+        setLog(l => [...l, { level: "info", message: "não foi possível ler o texto; seguindo sem alt" }]);
       }
-      setCells(null);
-      await api.loadFile(file);
-    },
-    [api]
-  );
-
-  const runExport = useCallback(async () => {
-    if (!image) return;
-    setBusy("Slicing…");
-    try {
-      const out = await sliceProject(project, image, (d, t) => setBusy(`Slicing ${d}/${t}…`));
-      setCells(out);
-      api.setStatus(`${out.length} image${out.length === 1 ? "" : "s"} ready.`);
-    } catch (err) {
-      api.setStatus(err instanceof Error ? err.message : "Slicing failed.");
-    } finally {
-      setBusy("");
     }
+
+    cellsRef.current = cells;
+    // The preview line is the first thing the artwork says, unless someone has
+    // written one — there is rarely a better default and it is easy to correct.
+    setPreheader(current => current || firstSentence(cells.map(c => c.alt ?? "")));
+    return packageZip(buildHtml(project, cells), cells);
   }, [image, project, api]);
 
-  const runOcr = useCallback(async () => {
-    if (!cells) return;
-    // OCR fills blanks; it never overwrites alt text you wrote yourself or that
-    // came from platform detection (which is right where OCR does worst).
-    const blank = cells.filter(c => !c.alt);
-    if (blank.length === 0) {
-      api.setStatus("Every slice already has alt text.");
-      return;
-    }
-    setBusy("Loading OCR…");
-    try {
-      const found = await readAltText(blank, (d, t) => setBusy(`Reading text ${d}/${t}…`));
-      for (const cell of blank) {
-        const text = found.get(cell.fileName);
-        if (text) api.updateCell(cell.rowY0, cell.cellIndex, { alt: text });
+  const runFlow = useCallback(
+    async (flow: string, extra: Record<string, unknown> = {}) => {
+      setLog([{ level: "info", message: `iniciando ${flow}…` }]);
+      try {
+        // The manual fallback: build the ZIP and hand it over, no Braze at all.
+        if (flow === "download") {
+          const zip = await buildZip();
+          if (!zip) throw new Error("Adicione a arte primeiro.");
+          downloadBlob(zip, `${campaignName || "email"}.zip`);
+          setLog(l => [...l, { level: "info", message: "baixado" }]);
+          return;
+        }
+
+        // Everything is recorded against a project, so one is made on demand.
+        let current = record;
+        if (!current) {
+          current = await createProject({ name: campaignName });
+          setRecord(current);
+        }
+
+        let zipBase64: string | undefined;
+        if (flow === "draft" || flow === "replace") {
+          const zip = await buildZip();
+          if (!zip) throw new Error("Adicione a arte primeiro.");
+          const bytes = new Uint8Array(await zip.arrayBuffer());
+          let binary = "";
+          for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+          zipBase64 = btoa(binary);
+        }
+        setBusy(flow);
+
+        const response = await fetch("/api/braze/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            flow,
+            projectId: current.id,
+            campaignId: current.braze.campaign?.id,
+            campaignName, subject, preheader,
+            sendAt: combineSendAt(settings.sendDate, settings.sendTime),
+            timeZone: settings.timeZone,
+            segment: segmentName,
+            zipBase64,
+            csv: flow === "audience" ? audience.csv : undefined,
+            csvName: `${segmentName}.csv`,
+            ...extra,
+          }),
+        });
+        if (!response.ok || !response.body) {
+          const detail = await response.json().catch(() => ({ error: response.statusText }));
+          throw new Error(detail.error || "Não foi possível iniciar.");
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const chunks = buffer.split("\n\n");
+          buffer = chunks.pop() ?? "";
+          for (const chunk of chunks) {
+            const event = /^event: (.+)$/m.exec(chunk)?.[1];
+            const data = /^data: (.+)$/m.exec(chunk)?.[1];
+            if (!event || !data) continue;
+            const payload = JSON.parse(data);
+            if (event === "log") setLog(l => [...l, payload]);
+            if (event === "done") {
+              setLog(l => [...l, {
+                level: payload.ok ? "info" : "error",
+                message: payload.ok ? "concluído" : `falhou${payload.error ? `: ${payload.error}` : ""}`,
+              }]);
+              if (current) setRecord(await loadProject(current.id).catch(() => current!));
+            }
+          }
+        }
+      } catch (err) {
+        setLog(l => [...l, { level: "error", message: err instanceof Error ? err.message : String(err) }]);
+      } finally {
+        setBusy(null);
       }
-      api.setStatus(`Read text from ${found.size} of ${blank.length} slices.`);
-    } catch (err) {
-      api.setStatus(err instanceof Error ? err.message : "OCR failed.");
-    } finally {
-      setBusy("");
-    }
-  }, [cells, api]);
-
-  // The Braze step builds from current markup rather than a stale download.
-  const getZip = useCallback(async () => {
-    if (!cells) return null;
-    return packageZip(buildHtml(project, cells), cells);
-  }, [cells, project]);
-
-  const downloadZip = useCallback(async () => {
-    if (!cells || !project.image) return;
-    setBusy("Packaging…");
-    try {
-      const zip = await packageZip(buildHtml(project, cells), cells);
-      downloadBlob(zip, `${sanitizeFileName(project.image.name.replace(/\.[^.]+$/, ""))}.zip`);
-      api.setStatus("ZIP downloaded.");
-    } finally {
-      setBusy("");
-    }
-  }, [cells, project, api]);
+    },
+    [record, campaignName, subject, preheader, settings, segmentName, audience.csv, buildZip]
+  );
 
   const snapshot = useCallback((): Partial<ProjectRecord> => ({
-    name: campaignName || project.image?.name || "Untitled",
+    name: campaignName,
     markup: {
       imageName: project.image?.name,
       imageWidth: project.image?.width,
@@ -155,19 +229,17 @@ export default function Page() {
       minSection: project.minSection,
     },
     email: { subject, preheader },
-    audience: { csv: audience.csv, count: audience.count, fileName: campaignName ? `${campaignName}.csv` : undefined },
-  }), [campaignName, project, subject, preheader, audience]);
+    audience: { csv: audience.csv, count: audience.valid.length, fileName: `${segmentName}.csv` },
+  }), [campaignName, project, subject, preheader, audience, segmentName]);
 
   const handleSave = useCallback(async () => {
     try {
-      const saved = record
-        ? await saveProject(record.id, snapshot())
-        : await createProject(snapshot());
+      const saved = record ? await saveProject(record.id, snapshot()) : await createProject(snapshot());
       setRecord(saved);
       setDirty(false);
-      api.setStatus(`Saved "${saved.name}".`);
+      api.setStatus("Salvo.");
     } catch (err) {
-      api.setStatus(err instanceof Error ? err.message : "Could not save.");
+      api.setStatus(err instanceof Error ? err.message : "Não foi possível salvar.");
     }
   }, [record, snapshot, api]);
 
@@ -178,8 +250,8 @@ export default function Page() {
       setCampaignName(loaded.name);
       setSubject(loaded.email.subject ?? "");
       setPreheader(loaded.email.preheader ?? "");
-      // The artwork itself is not stored, so markup is restored but the image
-      // has to be re-uploaded; say so rather than showing an empty canvas.
+      setAudienceRaw(loaded.audience.csv ?? "");
+      if (loaded.audience.fileName) setSegmentName(loaded.audience.fileName.replace(/\.csv$/i, ""));
       api.patchProject({
         designWidth: loaded.markup.designWidth,
         emailWidth: loaded.markup.emailWidth,
@@ -187,27 +259,17 @@ export default function Page() {
         workArea: loaded.markup.workArea,
         rows: loaded.markup.rows as never,
         addFooter: loaded.markup.addFooter,
-        minGutter: loaded.markup.minGutter,
-        minSection: loaded.markup.minSection,
       });
       setDirty(false);
-      api.setStatus(
-        image ? `Opened "${loaded.name}".`
-              : `Opened "${loaded.name}" — re-upload ${loaded.markup.imageName ?? "the artwork"} to see it.`
-      );
+      setStep("design");
+      api.setStatus(image ? "Aberto." : `Aberto — adicione ${loaded.markup.imageName ?? "a arte"} novamente para ver.`);
     } catch (err) {
-      api.setStatus(err instanceof Error ? err.message : "Could not open that project.");
+      api.setStatus(err instanceof Error ? err.message : "Não foi possível abrir.");
     }
   }, [api, image]);
 
-  const refreshRecord = useCallback(async () => {
-    if (!record) return;
-    try {
-      setRecord(await loadProject(record.id));
-    } catch {
-      /* the panel keeps showing what it had */
-    }
-  }, [record]);
+  const index = STEPS.findIndex(s => s.key === step);
+  const canAdvance = step === "design" ? !!image : true;
 
   return (
     <main>
@@ -218,200 +280,97 @@ export default function Page() {
           dirty={dirty}
           onOpen={handleOpen}
           onSave={handleSave}
-          onNew={() => { setRecord(null); setCampaignName(""); setSubject(""); setPreheader(""); setCells(null); api.reset(); }}
+          onNew={() => {
+            setRecord(null);
+            setCampaignName(stamp());
+            setSegmentName(stamp());
+            setSubject(""); setPreheader(""); setTestEmails(""); setAudienceRaw("");
+            cellsRef.current = null;
+            setStep("design");
+            api.reset();
+          }}
           campaignName={campaignName}
           onCampaignName={v => { setCampaignName(v); setDirty(true); }}
         />
-        <nav className="steps">
-          {(["upload", "markup", "export"] as Step[]).map(s => (
-            <span key={s} className={`step${step === s ? " active" : ""}`}>{s}</span>
-          ))}
-        </nav>
         <span className="spacer" />
-        {image && (
+        {image && step === "design" && (
           <span className="undo-group">
-            <button className="ghost" onClick={api.undo} disabled={!api.canUndo} title="Undo (⌘Z)">↶</button>
-            <button className="ghost" onClick={api.redo} disabled={!api.canRedo} title="Redo (⇧⌘Z)">↷</button>
+            <button className="ghost" onClick={api.undo} disabled={!api.canUndo} title="Desfazer (⌘Z)">↶</button>
+            <button className="ghost" onClick={api.redo} disabled={!api.canRedo} title="Refazer (⇧⌘Z)">↷</button>
           </span>
         )}
-        {busy && <span className="busy">{busy}</span>}
-        {!busy && api.status && <span className="status">{api.status}</span>}
-        {image && (
-          <button className="ghost" onClick={() => { setCells(null); api.reset(); }}>
-            Start over
-          </button>
-        )}
+        {busy ? <span className="busy">processando…</span> : <span className="status">{api.status}</span>}
       </header>
 
-      {!image ? (
-        <div
-          className="dropzone"
-          onClick={() => fileInput.current?.click()}
-          onDragOver={e => e.preventDefault()}
-          onDrop={e => { e.preventDefault(); void onFile(e.dataTransfer.files[0]); }}
-        >
-          <p><strong>Drop a flat email design here</strong></p>
-          <p className="dim">PNG or JPG, exported from Figma at 1x. Or click to choose a file.</p>
-          <input
-            ref={fileInput}
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={e => void onFile(e.target.files?.[0])}
-          />
-        </div>
-      ) : (
-        <div className="workspace">
-          <CanvasEditor
-            api={api}
-            tool={tool}
-            regions={regions}
-            selectedY0={selectedY0}
-            onSelectRow={setSelectedY0}
-          />
+      <nav className="steps">
+        {STEPS.map((s, i) => (
+          <button
+            key={s.key}
+            className={`step${step === s.key ? " active" : ""}${i < index ? " done" : ""}`}
+            onClick={() => setStep(s.key)}
+            disabled={i > 0 && !image}
+          >
+            <span className="step-n">{i + 1}</span>
+            {s.label}
+          </button>
+        ))}
+      </nav>
 
-          <aside className="panel">
-            <section>
-              <h2>Tool</h2>
-              <div className="tools">
-                {([
-                  ["guide", "Guides", "Click to add, drag to move, double-click to remove"],
-                  ["work", "Work area", "Drag a range to limit where detection looks"],
-                  ["button", "Button", "Drag over a CTA to make it its own linked row"],
-                ] as [Tool, string, string][]).map(([t, label, hint]) => (
-                  <button
-                    key={t}
-                    className={tool === t ? "active" : ""}
-                    onClick={() => setTool(t)}
-                    title={hint}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              {project.workArea && (
-                <p className="hint">
-                  Work area y {project.workArea.y0}–{project.workArea.y1}{" "}
-                  <button className="link-btn" onClick={() => api.setWorkArea(null)}>clear</button>
-                </p>
-              )}
-            </section>
-
-            <section>
-              <h2>Detect</h2>
-              <div className="field-row">
-                <label>
-                  Min gap
-                  <input
-                    type="number" min={2} max={400} value={project.minGutter}
-                    onChange={e => api.patchProject({ minGutter: Number(e.target.value) })}
-                  />
-                </label>
-                <label>
-                  Min section
-                  <input
-                    type="number" min={4} max={2000} value={project.minSection}
-                    onChange={e => api.patchProject({ minSection: Number(e.target.value) })}
-                  />
-                </label>
-              </div>
-              <button onClick={api.detectSections}>Find sections</button>
-              <button onClick={api.detectSocial}>Find social row</button>
-              {project.proposedGuides.length > 0 && (
-                <p className="hint">
-                  {project.proposedGuides.length} proposed —{" "}
-                  <button className="link-btn" onClick={() => api.acceptProposed()}>accept all</button>
-                  {" · "}
-                  <button className="link-btn" onClick={api.clearProposed}>discard</button>
-                </p>
-              )}
-            </section>
-
-            <section>
-              <h2>Output</h2>
-              <div className="field-row">
-                <label>
-                  Design width
-                  <input
-                    type="number" min={1} value={project.designWidth}
-                    onChange={e => api.patchProject({ designWidth: Math.max(1, Number(e.target.value)) })}
-                  />
-                </label>
-                <label>
-                  Email width
-                  <input
-                    type="number" min={1} value={project.emailWidth}
-                    onChange={e => api.patchProject({ emailWidth: Math.max(1, Number(e.target.value)) })}
-                  />
-                </label>
-              </div>
-              <label className="check">
-                <input
-                  type="checkbox" checked={project.addFooter}
-                  onChange={e => api.patchProject({ addFooter: e.target.checked })}
-                />
-                Add footer merge tag
-              </label>
-              <label className="stack">
-                Subject
-                <input value={subject} onChange={e => { setSubject(e.target.value); setDirty(true); }} />
-              </label>
-              <label className="stack">
-                Preheader
-                <input value={preheader} onChange={e => { setPreheader(e.target.value); setDirty(true); }} />
-              </label>
-              <button className="primary" onClick={runExport} disabled={!!busy}>
-                {cells ? "Re-slice" : "Slice"} {regions.length} row{regions.length === 1 ? "" : "s"}
-              </button>
-              {cells && (
-                <>
-                  <button onClick={runOcr} disabled={!!busy}>Read text (OCR)</button>
-                  <button className="primary" onClick={downloadZip} disabled={!!busy}>
-                    Download ZIP
-                  </button>
-                </>
-              )}
-            </section>
-
-            <section className="grow">
-              <div className="tabs">
-                <button className={tab === "rows" ? "active" : ""} onClick={() => setTab("rows")}>
-                  Rows ({regions.length})
-                </button>
-                <button className={tab === "audience" ? "active" : ""} onClick={() => setTab("audience")}>
-                  Audience{audience.count > 0 ? ` (${audience.count})` : ""}
-                </button>
-                <button className={tab === "braze" ? "active" : ""} onClick={() => setTab("braze")}>
-                  Braze
-                </button>
-              </div>
-              {tab === "rows" && (
-                <RowList
-                  api={api}
-                  regions={regions}
-                  selectedY0={selectedY0}
-                  onSelectRow={setSelectedY0}
-                />
-              )}
-              {tab === "audience" && (
-                <AudiencePanel onCsvReady={(csv, count) => setAudience({ csv, count })} />
-              )}
-              {tab === "braze" && (
-                <BrazePanel
-                  getZip={getZip}
-                  csv={audience.csv}
-                  audienceCount={audience.count}
-                  project={record}
-                  onProjectChanged={refreshRecord}
-                  campaignName={campaignName}
-                  subject={subject}
-                  preheader={preheader}
-                />
-              )}
-            </section>
-          </aside>
-        </div>
+      {step === "design" && <DesignStep api={api} onFile={onFile} />}
+      {step === "details" && (
+        <DetailsStep
+          campaignName={campaignName}
+          subject={subject}
+          preheader={preheader}
+          testEmails={testEmails}
+          onChange={patch => {
+            if (patch.campaignName !== undefined) setCampaignName(patch.campaignName);
+            if (patch.subject !== undefined) setSubject(patch.subject);
+            if (patch.preheader !== undefined) setPreheader(patch.preheader);
+            if (patch.testEmails !== undefined) setTestEmails(patch.testEmails);
+            setDirty(true);
+          }}
+        />
       )}
+      {step === "audience" && (
+        <AudienceStep
+          raw={audienceRaw}
+          segmentName={segmentName}
+          onChange={patch => {
+            if (patch.raw !== undefined) setAudienceRaw(patch.raw);
+            if (patch.segmentName !== undefined) setSegmentName(patch.segmentName);
+            setDirty(true);
+          }}
+        />
+      )}
+      {step === "send" && (
+        <SendStep
+          record={record}
+          campaignName={campaignName}
+          subject={subject}
+          rowCount={regions.length}
+          audienceCount={audience.valid.length}
+          segmentName={segmentName}
+          testEmails={testEmails}
+          settings={settings}
+          onSettings={patch => setSettings(s => ({ ...s, ...patch }))}
+          busy={busy}
+          onRun={runFlow}
+          log={log}
+        />
+      )}
+
+      <footer className="step-nav">
+        <button className="ghost" onClick={() => setStep(STEPS[Math.max(0, index - 1)].key)} disabled={index === 0}>
+          Voltar
+        </button>
+        <span className="spacer" />
+        {index < STEPS.length - 1 && (
+          <button className="primary" onClick={() => setStep(STEPS[index + 1].key)} disabled={!canAdvance}>
+            Avançar: {STEPS[index + 1].label}
+          </button>
+        )}
+      </footer>
     </main>
   );
 }

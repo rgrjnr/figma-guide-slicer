@@ -11,41 +11,41 @@ page.on("pageerror", e => errors.push(String(e)));
 await page.goto(process.env.BASE_URL || "http://localhost:3737");
 await page.setInputFiles('input[type="file"]', "../packages/slicer-core/test/fixtures/hbomax-moments-emkt.jpg");
 await page.waitForSelector(".surface img");
-await page.getByRole("button", { name: "Braze" }).click();
+await page.locator(".steps .step").last().click();
+await page.waitForTimeout(600);
+
+const draftBtn = page.getByRole("button", { name: /Criar o rascunho no Braze/i });
+const scheduleBtn = page.getByRole("button", { name: /Definir o agendamento/i });
+const importBtn = page.getByRole("button", { name: /Importar o público/i });
 
 const results = [];
 const check = (l, ok, d = "") => results.push([l, ok, d]);
 
-check("Create draft is disabled without a campaign name",
-  await page.getByRole("button", { name: "Create draft" }).isDisabled());
-check("a project must be saved before Braze links can be recorded",
-  await page.locator(".braze .warn").first().isVisible());
-check("Import audience is disabled with an empty list",
-  await page.getByRole("button", { name: /Import audience/ }).isDisabled());
-check("Schedule is disabled with no campaign yet",
-  await page.getByRole("button", { name: "Schedule" }).isDisabled());
+// The review panel is what says why a button is off, so it is checked instead
+// of a warning banner that no longer exists.
+check("the review flags the missing subject",
+  await page.locator(".review-row.bad").first().isVisible());
+check("creating the draft is blocked without a subject", await draftBtn.isDisabled());
+check("importing is blocked with an empty list", await importBtn.isDisabled());
+check("scheduling is blocked with no campaign yet", await scheduleBtn.isDisabled());
 
-// The campaign name now lives in the project bar, and doubles as the project
-// name. Without a ZIP, Create draft must refuse before spawning anything.
-await page.locator(".campaign-name").fill("TEST-wiring");
-await page.getByRole("button", { name: "Braze" }).click();
-await page.getByRole("button", { name: "Create draft" }).click();
-await page.waitForFunction(() => document.querySelector(".braze-log .err"), null, { timeout: 20000 });
-const zipError = await page.locator(".braze-log .err").first().innerText();
-check("refuses to build a draft before the email is sliced", /[Ss]lice the email/.test(zipError), zipError);
+// With a subject filled in the draft becomes possible, which is what actually
+// exercises the wiring: build the ZIP, spawn the flow, stream its log back.
+await page.locator(".steps .step").filter({ hasText: /Detalhes/i }).click();
+await page.getByPlaceholder(/assunto que veio no pedido/i).fill("TEST subject");
+await page.locator(".steps .step").last().click();
+await page.waitForTimeout(400);
+check("filling the subject unblocks the draft", !(await draftBtn.isDisabled()));
 
-// Test sign-in reaches the real flow. What it then does depends on whether
-// .env.local is filled in, so the assertions below hold either way: what is
-// being tested here is the wiring, not Braze.
-await page.getByRole("button", { name: "Test sign-in" }).click();
+await draftBtn.click();
 await page.waitForFunction(
-  () => [...document.querySelectorAll(".braze-log div")].some(d => /finished|failed/.test(d.textContent)),
+  () => [...document.querySelectorAll(".braze-log div")].some(d => /^done$|failed/.test(d.textContent.trim())),
   null,
-  { timeout: 60000 }
+  { timeout: 240000 }
 );
 const log = await page.locator(".braze-log").innerText();
 check("the flow actually spawned and streamed back", /run \d{4}-|BRAZE_/.test(log), log.slice(0, 200));
-check("the run reported a terminal result", /finished|failed/.test(log), log.slice(-200));
+check("the run reported a terminal result", /done|failed/.test(log), log.slice(-200));
 check("an unconfigured setup names the variable it needs",
   !/BRAZE_/.test(log) || /BRAZE_(URL|EMAIL|TOTP_SECRET)/.test(log), log.slice(0, 200));
 check("no page errors", errors.length === 0, errors.join("; "));

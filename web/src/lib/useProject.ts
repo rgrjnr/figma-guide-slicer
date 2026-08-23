@@ -79,6 +79,10 @@ export interface ProjectApi {
   setWorkArea: (area: { y0: number; y1: number } | null) => void;
 
   detectSections: () => void;
+  /** Drop every split and detected row, back to a single full-height row. */
+  clearMarks: () => void;
+  /** Turn one existing row into a social bar, splitting it at the icons. */
+  makeSocialRow: (y0: number) => void;
   acceptProposed: (y?: number) => void;
   clearProposed: () => void;
   detectSocial: () => void;
@@ -242,6 +246,11 @@ export function useProject(): ProjectApi {
 
   // --- Detection ---
 
+  const clearMarks = useCallback(() => {
+    commit(null, p => ({ ...p, guides: [], rows: {}, proposedGuides: [], workArea: null }));
+    setStatus("");
+  }, [commit]);
+
   const detectSections = useCallback(() => {
     const raster = rasterRef.current;
     if (!raster) return;
@@ -257,14 +266,14 @@ export function useProject(): ProjectApi {
       // Runaway detection is worse than none: a proposal of 60+ cuts means the
       // thresholds are wrong for this artwork, not that it has 60 sections.
       if (found.length > SECTION_TUNING.MAX_SECTION_CUTS) {
-        setStatus(`Detection found ${found.length} cuts — raise Min section and try again.`);
+        setStatus(`Foram encontradas ${found.length} divisões — algo está errado com a arte.`);
         return { ...p, proposedGuides: [] };
       }
       const fresh = found.filter(y => !p.guides.some(g => Math.abs(g - y) <= 2));
       setStatus(
         fresh.length
-          ? `Proposed ${fresh.length} cut${fresh.length === 1 ? "" : "s"}.`
-          : "No new section boundaries found."
+          ? `${fresh.length} divisão${fresh.length === 1 ? "" : "ões"} encontrada${fresh.length === 1 ? "" : "s"}.`
+          : "Nenhuma divisão nova encontrada."
       );
       return { ...p, proposedGuides: fresh };
     });
@@ -287,13 +296,40 @@ export function useProject(): ProjectApi {
     setStatus("");
   }, [commit]);
 
+  /**
+   * Make one row a social bar. Icons are looked for inside that row only, so
+   * pointing at the right row is enough. If none are found the row is still
+   * marked, with a single cell — the user saying "this is the social row" is
+   * better information than the detector's opinion.
+   */
+  const makeSocialRow = useCallback((y0: number) => {
+    const raster = rasterRef.current;
+    commit(null, p => {
+      const height = designHeight(p);
+      const region = computeSliceRegions(p.guides, height).find(r => r.y0 === y0);
+      if (!region) return p;
+
+      const band = raster
+        ? detectSocialBand(raster, scaleOf(p), p.designWidth, height, { y0: region.y0, y1: region.y1 })
+        : null;
+      const cells = band?.found ? cellsFromBand(band, loadLinkCache()) : [fullWidthCell(p.designWidth)];
+
+      setStatus(
+        band?.found
+          ? `Redes sociais: ${cells.filter(c => c.platform).length} de ${cells.length} ícones reconhecidos.`
+          : "Marcada como barra de redes sociais — informe os links."
+      );
+      return { ...p, rows: { ...p.rows, [y0]: { kind: "social", cells } } };
+    });
+  }, [commit]);
+
   const detectSocial = useCallback(() => {
     const raster = rasterRef.current;
     if (!raster) return;
     commit(null, p => {
       const band = detectSocialBand(raster, scaleOf(p), p.designWidth, designHeight(p), p.workArea);
       if (!band || !band.found) {
-        setStatus("No social icon row found.");
+        setStatus("Nenhuma barra de redes sociais encontrada.");
         return p;
       }
       // Prefer a row the user already bracketed with guides; otherwise add the
@@ -304,7 +340,7 @@ export function useProject(): ProjectApi {
       const cells = cellsFromBand(band, loadLinkCache());
       const named = cells.filter(c => c.platform).length;
       setStatus(
-        `Social row: ${cells.filter((_, i) => band.cells[i].isIcon).length} icons, ${named} identified.`
+        `Redes sociais: ${cells.filter((_, i) => band.cells[i].isIcon).length} ícones, ${named} reconhecidos.`
       );
       return {
         ...p,
@@ -327,13 +363,13 @@ export function useProject(): ProjectApi {
       const y0 = Math.max(0, Math.min(h, Math.round(Math.min(rawY0, rawY1))));
       const y1 = Math.max(0, Math.min(h, Math.round(Math.max(rawY0, rawY1))));
       if (y1 - y0 < 4) {
-        setStatus("That selection is too short to be a button row.");
+        setStatus("Essa seleção é curta demais.");
         return p;
       }
       const snapped0 = snapToGuide(y0, p.guides);
       const snapped1 = snapToGuide(y1, p.guides);
       const guides = normalizeGuides([...p.guides, snapped0, snapped1], h);
-      setStatus("Button row added — add its link below.");
+      setStatus("Área clicável criada — informe o link.");
       return {
         ...p,
         guides,
@@ -393,6 +429,8 @@ export function useProject(): ProjectApi {
     removeGuide,
     setWorkArea,
     detectSections,
+    clearMarks,
+    makeSocialRow,
     acceptProposed,
     clearProposed,
     detectSocial,

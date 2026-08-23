@@ -6,6 +6,7 @@ import { readFileSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import JSZip from "jszip";
+import { autoDetect, goToStep, setRowLink, upload } from "./helpers.mjs";
 
 const URL_BASE = process.env.BASE_URL || "http://localhost:3737";
 const FIXTURE = process.argv[2] || "../packages/slicer-core/test/fixtures/hbomax-moments-emkt.jpg";
@@ -17,41 +18,29 @@ page.on("pageerror", e => errors.push(String(e)));
 page.on("console", m => m.type() === "error" && errors.push(m.text()));
 
 await page.goto(URL_BASE);
-await page.setInputFiles('input[type="file"]', FIXTURE);
-await page.waitForSelector(".surface img");
+await upload(page, FIXTURE);
 console.log("upload: ok —", await page.locator(".editor-bar .dim").first().innerText());
 
-const guides = () => page.locator(".guide:not(.proposed)").count();
-const regions = () => page.locator(".region").count();
+await autoDetect(page);
+console.log("auto-detect:", await page.locator(".app-bar .status").innerText());
+console.log("after detect:", await page.locator(".guide:not(.proposed)").count(), "splits,",
+  await page.locator(".region").count(), "rows");
 
-await page.getByRole("button", { name: "Find sections" }).click();
-await page.waitForSelector(".guide.proposed");
-console.log("detect sections:", await page.locator(".guide.proposed").count(), "proposed");
-await page.getByRole("button", { name: "accept all" }).click();
-console.log("after accept:", await guides(), "guides,", await regions(), "regions");
-
-await page.getByRole("button", { name: "Find social row" }).click();
-await page.waitForTimeout(400);
-console.log("detect social:", await page.locator(".app-bar .status").innerText());
-console.log("after social:", await guides(), "guides,", await regions(), "regions");
-
-const socialCard = page.locator(".row-card", { has: page.locator('select option[value="social"]:checked') });
-const socialCells = await socialCard.locator(".cell").count();
+// The social row is the one that ended up with more than one field.
+const socialCells = await page.evaluate(() =>
+  Math.max(1, ...[...document.querySelectorAll(".link-row")].map(r => r.querySelectorAll(".link-field").length))
+);
 console.log("social row cells:", socialCells);
 
 // Give the first row a link, to prove <a> wrapping survives to the HTML.
-const firstLink = page.locator(".row-card").first().locator("input.link");
-await firstLink.fill("example.com/hero");
-await firstLink.blur();
+await setRowLink(page, 0, "example.com/hero");
 
-await page.getByRole("button", { name: /^Slice \d+ rows?$/ }).click();
-await page.waitForSelector('button:has-text("Download ZIP")');
-console.log("slice:", await page.locator(".app-bar .status").innerText());
-
+await goToStep(page, "Enviar ao Braze");
+await page.locator(".escape-hatch summary").click();
 const dir = mkdtempSync(join(tmpdir(), "studio-"));
 const [download] = await Promise.all([
-  page.waitForEvent("download"),
-  page.getByRole("button", { name: "Download ZIP" }).click(),
+  page.waitForEvent("download", { timeout: 180_000 }),
+  page.getByRole("button", { name: /Baixar o arquivo/i }).click(),
 ]);
 const zipPath = join(dir, download.suggestedFilename());
 await download.saveAs(zipPath);

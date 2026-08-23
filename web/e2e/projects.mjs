@@ -14,21 +14,20 @@ const results = [];
 const check = (l, ok, d = "") => results.push([l, ok, d]);
 
 await page.locator(".campaign-name").fill("TEST-project-20260823");
-await page.getByRole("button", { name: "Find sections" }).click();
-await page.waitForSelector(".guide.proposed");
-await page.getByRole("button", { name: "accept all" }).click();
+await page.getByRole("button", { name: /Detectar linhas automaticamente/i }).click();
+await page.waitForTimeout(4000);
 await page.waitForTimeout(500);
 const guides = await page.locator(".guide:not(.proposed)").count();
 const regions = await page.locator(".region").count();
 
-await page.locator(".project-bar").getByRole("button", { name: /^Save/ }).click();
+await page.locator(".project-bar").getByRole("button", { name: /^Salvar/ }).click();
 await page.waitForTimeout(1500);
-check("save reports success", /Saved/.test(await page.locator(".app-bar .status").innerText()));
+check("save reports success", /Salvo/.test(await page.locator(".app-bar .status").innerText()));
 
 // Reload the page entirely: this must come from the server, not from memory.
 await page.reload();
 await page.waitForTimeout(1500);
-await page.locator(".project-bar").getByRole("button", { name: "Open", exact: true }).click();
+await page.locator(".project-bar").getByRole("button", { name: "Abrir", exact: true }).click();
 await page.waitForTimeout(800);
 const listed = await page.locator(".project-row").count();
 check("the saved project is listed", listed >= 1, `${listed} rows`);
@@ -36,12 +35,12 @@ check("the saved project is listed", listed >= 1, `${listed} rows`);
 await page.locator(".project-row .link-btn").first().click();
 await page.waitForTimeout(1500);
 const status = await page.locator(".app-bar .status").innerText();
-check("opening explains the artwork must be re-uploaded", /re-upload/i.test(status), status);
+check("opening says the design has to be added again", /novamente/i.test(status), status);
 
 // Re-upload and confirm the guides came back from the store.
 await page.setInputFiles('input[type="file"]', "../packages/slicer-core/test/fixtures/hbomax-moments-emkt.jpg");
 await page.waitForSelector(".surface img");
-await page.locator(".project-bar").getByRole("button", { name: "Open", exact: true }).click();
+await page.locator(".project-bar").getByRole("button", { name: "Abrir", exact: true }).click();
 await page.waitForTimeout(600);
 await page.locator(".project-row .link-btn").first().click();
 await page.waitForTimeout(1500);

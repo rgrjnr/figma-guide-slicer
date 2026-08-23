@@ -8,34 +8,27 @@ page.on("pageerror", e => errors.push(String(e)));
 await page.goto(process.env.BASE_URL || "http://localhost:3737");
 await page.setInputFiles('input[type="file"]', "../packages/slicer-core/test/fixtures/hbomax-moments-emkt.jpg");
 await page.waitForSelector(".surface img");
-await page.getByRole("button", { name: /^Audience/ }).click();
+await page.locator(".steps .step").filter({ hasText: /Público/i }).first().click();
+await page.waitForTimeout(400);
 
-await page.locator(".audience textarea").fill(
+await page.locator(".field textarea").first().fill(
   "Ana@Example.com, bruno@example.com; ana@example.com\n<carla@example.com>\nnot-an-email\ndaniel@example.co.uk"
 );
 await page.waitForTimeout(150);
 
-const hint = await page.locator(".audience .hint").first().innerText();
+const hint = await page.locator(".summary").first().innerText();
 console.log("summary:", hint.replace(/\s+/g, " "));
 
-const [download] = await Promise.all([
-  page.waitForEvent("download"),
-  page.getByRole("button", { name: /^Download CSV/ }).click(),
-]);
-const stream = await download.createReadStream();
-let csv = "";
-for await (const chunk of stream) csv += chunk;
-console.log("csv:\n" + csv.split("\n").map(l => "   " + l).join("\n"));
-
-const lines = csv.split("\n");
+// Nothing is downloaded any more — the CSV goes straight to the import flow —
+// so what is checked here is the summary the user actually sees. The CSV shape
+// itself is covered by the unit tests in packages/slicer-core.
 const checks = [
-  ["header is email,external_id", lines[0] === "email,external_id"],
-  ["4 unique addresses kept", lines.length === 5],
-  ["lowercased", csv.includes("ana@example.com,ana@example.com")],
-  ["duplicate dropped", (csv.match(/ana@example\.com/g) || []).length === 2],
-  ["angle brackets stripped", csv.includes("carla@example.com")],
-  ["invalid rejected", !csv.includes("not-an-email")],
-  ["counted 1 duplicate and 1 invalid", /1 duplicate/.test(hint) && /1 invalid/.test(hint)],
+  ["4 unique addresses counted", /\b4\b/.test(hint)],
+  ["the duplicate is reported", /1 repetido/i.test(hint)],
+  ["the invalid one is reported", /1 ignorado/i.test(hint)],
+  ["the invalid address is named", /not-an-email/.test(await page.locator(".hint.mono").first().innerText().catch(() => ""))],
+  ["the audience name defaults to the date", /^\d{8}$/.test(
+    await page.locator(".field input").last().inputValue())],
   ["no page errors", errors.length === 0],
 ];
 console.log("");
