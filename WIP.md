@@ -1,5 +1,18 @@
 # WIP
 
+## 2026-08-13 — main (uncommitted)
+
+Fixed both detectors against decorative background art (HBO Max "Moments" email:
+concentric rings). Sections: rows with only faint deviants (≤45, ≤2%) now count
+as background. Social: oversized ink bands re-split with a strong mask (60),
+bands must be vertically isolated (kills mid-paragraph false chains), and glyph
+extraction returns both polarities so knockout-on-disc icons classify right.
+Works: harness (rebuilt, scratchpad/harness.js + jpeg-js/pngjs, --no-save) —
+HBO Max: 7 good cuts + fb/li/ig; fandoms unchanged. typecheck+build clean.
+Not done: still never run inside Figma (OCR/clientStorage checks still pending).
+Next: npm run watch, run Generate Slices on the HBO Max frame in Figma.
+Parked idea: derive glyph templates by rasterizing SVG logos (easy X/YT/TikTok).
+
 ## 2026-07-28 — main (uncommitted, stacked on the social-icon work below)
 
 Auto section guides + OCR alt text. Generate Slices on a guide-less frame now
