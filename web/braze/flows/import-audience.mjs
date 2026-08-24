@@ -58,15 +58,35 @@ export async function importAudience(ctx, { csvPath, createSegment = true, timeo
   });
 
   // Braze processes imports asynchronously, so finishing the upload is not the
-  // same as the users existing. The history table is the source of truth.
-  return ctx.step("wait for the import to finish", async p => {
+  // same as the users existing. The history table is the source of truth — and
+  // what the campaign actually needs from it is the segment. The moment the row
+  // offers "Go to Segment", targeting can proceed, so that is what counts as
+  // done. Waiting for a literal "Complete" never ends on real lists: a big
+  // mailing always has a few malformed rows and lands on "Partial success",
+  // which is a normal outcome here, not a failure.
+  return ctx.step("wait for the segment to be ready", async p => {
     const deadline = Date.now() + timeoutMs;
     for (;;) {
       const row = braze.userImport.rowFor(p, fileName);
       const text = (await row.innerText().catch(() => "")).replace(/\s+/g, " ");
-      if (/complete/i.test(text)) {
-        ctx.log(text.slice(0, 140));
-        return { fileName, status: /partial/i.test(text) ? "partial" : "complete", row: text.slice(0, 200) };
+      const segmentReady = /go to segment/i.test(text);
+
+      if (segmentReady || /\bcomplete\b/i.test(text)) {
+        const status = /partial/i.test(text) ? "partial" : "complete";
+        const records = text.match(/([\d,]+ ?\/ ?[\d,]+)/)?.[1] ?? "";
+        // The segment link is worth keeping: it is the object the campaign
+        // will target, and the store records Braze objects by URL.
+        const segmentHref = await row
+          .getByRole("link", { name: /go to segment/i })
+          .getAttribute("href")
+          .catch(() => null);
+        const segmentUrl = segmentHref ? new URL(segmentHref, p.url()).href : null;
+
+        if (status === "partial") {
+          ctx.log(`partial success (${records}) — a few rows were rejected, the rest imported; normal for a real list`, "warn");
+        }
+        ctx.log(`segment "${fileName}" is ready${segmentUrl ? ` — ${segmentUrl}` : ""}`);
+        return { fileName, status, records, segmentUrl, segmentReady, row: text.slice(0, 200) };
       }
       if (/failed|error/i.test(text)) throw new Error(`Braze reported the import failed: ${text.slice(0, 200)}`);
       if (Date.now() > deadline) throw new Error(`Import of ${fileName} did not finish within ${Math.round(timeoutMs / 1000)}s`);

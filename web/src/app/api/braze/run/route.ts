@@ -208,6 +208,18 @@ function recordRun(body: RunRequest, ok: boolean, output: string): void {
     };
   }
 
+  // The audience flow reports the segment it produced; that link is what the
+  // campaign targets, so it is worth keeping on the record.
+  const segment = output.match(/segment "([^"]+)" is ready(?: — (\S+))?/);
+  if (segment) {
+    braze.segment = {
+      id: segment[2]?.match(/[0-9a-f]{24}/)?.[0] ?? segment[1],
+      name: segment[1],
+      url: segment[2] ?? "",
+      checkedAt: new Date().toISOString(),
+    };
+  }
+
   const reachable = output.match(/Reachable users: ([\d,]+)/)?.[1];
   if (reachable) braze.reachableUsers = Number(reachable.replace(/,/g, ""));
   if (/control group removed/i.test(output)) braze.controlGroupRemoved = true;

@@ -1,5 +1,16 @@
 # WIP
 
+## 2026-08-24 — main (import done = segment ready)
+
+Roger's real import (11,974 rows) sat in "wait for the import to finish"
+forever: a real mailing list always has a few bad rows, so Braze lands on
+"Partial success" — the wait only accepted "Complete". Done is now "Go to
+Segment appears" (segment targetable = what the campaign needs), with partial
+logged as a warn, records count + segment URL harvested, and the segment
+recorded on the project (braze.segment) via the run route.
+Verified read-only against the live row from his run: segment 20260824.csv
+ready at segmenter/6a8c8f6588076b005bbd9c4c. His import had in fact succeeded.
+
 ## 2026-08-24 — main (spreadsheet drop fixed)
 
 Roger's real mailing list "could not be imported": the file was fine (11,974
