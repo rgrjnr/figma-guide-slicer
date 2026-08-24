@@ -1,152 +1,151 @@
 "use client";
 
+import { EmailChips } from "@/components/EmailChips";
 import type { ProjectRecord } from "@/lib/types";
 import { timeZones } from "@/lib/defaults";
 
 export interface SendSettings {
-  /** Kept apart so each gets its native picker. */
   sendDate: string;
   sendTime: string;
   timeZone: string;
 }
 
-const ZONES = timeZones();
+export type FlowStatus = "idle" | "running" | "done" | "failed";
 
 interface Props {
   record: ProjectRecord | null;
   campaignName: string;
   subject: string;
   rowCount: number;
+  hasImage: boolean;
   audienceCount: number;
   segmentName: string;
-  testEmails: string;
+  testEmails: string[];
+  onTestEmails: (emails: string[]) => void;
   settings: SendSettings;
   onSettings: (patch: Partial<SendSettings>) => void;
-  busy: string | null;
-  onRun: (
-    flow: "audience" | "draft" | "replace" | "schedule" | "test" | "refresh" | "download",
-    extra?: Record<string, unknown>
-  ) => void;
-  log: { level: "info" | "error"; message: string }[];
+  flowState: Record<string, FlowStatus>;
+  onRun: (flow: "test" | "schedule" | "download", extra?: Record<string, unknown>) => void;
+  log: { level: string; message: string }[];
 }
 
-/** What will happen, then the buttons that make it happen. Nothing sends. */
+const ZONES = timeZones();
+
+/**
+ * The last step is a checkpoint, not a workbench: the pipeline behind the
+ * earlier steps has been importing the audience and building the draft while
+ * the person worked, so what is left is the two decisions a human should make
+ * — send a proof, and put it on the calendar. Everything else here is status.
+ */
 export function SendStep({
-  record, campaignName, subject, rowCount, audienceCount, segmentName,
-  testEmails, settings, onSettings, busy, onRun, log,
+  record, campaignName, subject, rowCount, hasImage, audienceCount, segmentName,
+  testEmails, onTestEmails, settings, onSettings, flowState, onRun, log,
 }: Props) {
   const campaign = record?.braze.campaign;
-  const ready = Boolean(campaignName && subject && rowCount > 0);
+  const segment = record?.braze.segment;
+  const anyRunning = Object.values(flowState).some(s => s === "running");
 
   return (
     <div className="step-body form wide">
       <div className="form-inner">
         <div className="review">
-          <Row label="Campanha" value={campaignName || <em>sem nome ainda</em>} />
-          <Row label="Assunto" value={subject || <em>obrigatório para o Braze enviar</em>} bad={!subject} />
-          <Row label="Arte" value={`${rowCount} linha${rowCount === 1 ? "" : "s"}`} bad={rowCount === 0} />
-          <Row
+          <StatusRow
             label="Público"
-            value={audienceCount ? `${audienceCount.toLocaleString()} endereços como “${segmentName}”` : <em>nenhum ainda</em>}
+            status={flowState.audience}
+            value={
+              audienceCount === 0 ? <em>nenhum endereço ainda</em> : (
+                <>
+                  {audienceCount.toLocaleString()} endereços como “{segmentName}”
+                  {segment?.url && <> · <a href={segment.url} target="_blank" rel="noreferrer">ver no Braze</a></>}
+                </>
+              )
+            }
           />
-          {campaign && (
-            <Row
-              label="No Braze"
-              value={
+          <StatusRow
+            label="Campanha"
+            status={flowState.prepare}
+            value={
+              !hasImage ? <em>a arte ainda não foi adicionada</em>
+              : !subject ? <em>falta o assunto (etapa Detalhes)</em>
+              : campaign ? (
                 <>
                   {campaign.url
-                    ? <a href={campaign.url} target="_blank" rel="noreferrer">{campaign.name || campaign.id}</a>
-                    : campaign.id}
-                  {record?.braze.reachableUsers !== undefined && (
-                    <> · {record.braze.reachableUsers.toLocaleString()} alcançáveis</>
-                  )}
-                  {" · "}
-                  <button className="link-btn" disabled={!!busy} onClick={() => onRun("refresh")}>atualizar</button>
+                    ? <a href={campaign.url} target="_blank" rel="noreferrer">{campaign.name || campaignName}</a>
+                    : campaignName}
+                  {record?.braze.reachableUsers !== undefined &&
+                    <> · {record.braze.reachableUsers.toLocaleString()} alcançáveis</>}
                 </>
-              }
-            />
-          )}
+              ) : <>{campaignName} · {rowCount} linha{rowCount === 1 ? "" : "s"}</>
+            }
+          />
         </div>
 
-        <div className="field-row">
-          <label className="field">
-            <span>Enviar em</span>
-            <input
-              type="date"
-              value={settings.sendDate}
-              onChange={e => onSettings({ sendDate: e.target.value })}
-            />
-          </label>
-          <label className="field">
-            <span>Às</span>
-            <input
-              type="time"
-              value={settings.sendTime}
-              onChange={e => onSettings({ sendTime: e.target.value })}
-            />
-          </label>
-          <label className="field">
-            <span>Fuso horário</span>
-            <select value={settings.timeZone} onChange={e => onSettings({ timeZone: e.target.value })}>
-              {ZONES.common.map(z => <option key={z} value={z}>{z.replace(/_/g, " ")}</option>)}
-              {ZONES.all.length > 0 && (
-                <optgroup label="All time zones">
-                  {ZONES.all.map(z => <option key={z} value={z}>{z.replace(/_/g, " ")}</option>)}
-                </optgroup>
-              )}
-            </select>
-          </label>
-        </div>
-
-        <div className="send-actions">
-          <button
-            disabled={!!busy || audienceCount === 0}
-            onClick={() => onRun("audience")}
-          >
-            {busy === "audience" ? "Importando…" : "1. Importar o público"}
-          </button>
+        <section className="send-block">
+          <h3>E-mail de teste</h3>
+          <p className="hint">Separado por vírgula ou quebra de linha; clique no × para remover.</p>
+          <EmailChips
+            emails={testEmails}
+            onChange={onTestEmails}
+            placeholder="voce@wbd.com, alguem@wbd.com…"
+          />
           <button
             className="primary"
-            disabled={!!busy || !ready}
-            onClick={() => onRun(campaign ? "replace" : "draft")}
-          >
-            {busy === "draft" || busy === "replace"
-              ? "Montando…"
-              : campaign ? "2. Atualizar a arte no Braze" : "2. Criar o rascunho no Braze"}
-          </button>
-          <button disabled={!!busy || !campaign || !settings.sendDate} onClick={() => onRun("schedule")}>
-            {busy === "schedule" ? "Agendando…" : "3. Definir o agendamento"}
-          </button>
-          <button
-            className="ghost"
-            disabled={!!busy || !campaign || !testEmails.trim()}
+            disabled={anyRunning || !campaign || testEmails.length === 0}
             onClick={() => {
-              const list = testEmails.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
-              if (confirm(`Enviar um teste real para ${list.length} endereço(s)?\n\n${list.join("\n")}`)) {
-                onRun("test", { recipients: testEmails, confirmSend: true });
+              if (confirm(`Enviar um teste real para ${testEmails.length} endereço(s)?\n\n${testEmails.join("\n")}`)) {
+                onRun("test", { recipients: testEmails.join("\n"), confirmSend: true });
               }
             }}
           >
-            {busy === "test" ? "Enviando…" : "Enviar um teste"}
+            {flowState.test === "running" ? "Enviando…" : "Enviar e-mail de teste"}
           </button>
-        </div>
+        </section>
 
-        <p className="hint">
-          Tudo aqui para no rascunho. A campanha é disparada à mão no Braze,
-          depois que você conferir.
-        </p>
+        <section className="send-block">
+          <h3>Agendamento</h3>
+          <div className="field-row">
+            <label className="field">
+              <span>Enviar em</span>
+              <input type="date" value={settings.sendDate} onChange={e => onSettings({ sendDate: e.target.value })} />
+            </label>
+            <label className="field">
+              <span>Às</span>
+              <input type="time" value={settings.sendTime} onChange={e => onSettings({ sendTime: e.target.value })} />
+            </label>
+            <label className="field">
+              <span>Fuso horário</span>
+              <select value={settings.timeZone} onChange={e => onSettings({ timeZone: e.target.value })}>
+                {ZONES.common.map(z => <option key={z} value={z}>{z.replace(/_/g, " ")}</option>)}
+                {ZONES.all.length > 0 && (
+                  <optgroup label="Todos os fusos">
+                    {ZONES.all.map(z => <option key={z} value={z}>{z.replace(/_/g, " ")}</option>)}
+                  </optgroup>
+                )}
+              </select>
+            </label>
+          </div>
+          <button
+            className="primary"
+            disabled={anyRunning || !campaign || !settings.sendDate}
+            onClick={() => onRun("schedule")}
+          >
+            {flowState.schedule === "running" ? "Agendando…" : "Agendar envio"}
+          </button>
+          <p className="hint">
+            O agendamento salva como rascunho. O disparo continua sendo feito à
+            mão no Braze, depois de conferir.
+          </p>
+        </section>
 
-        {/* Not part of the normal path — but if Braze is down or the dashboard
-            has changed under us, this is the difference between a manual upload
-            and a blocked send. */}
         <details className="escape-hatch">
           <summary>Algo não funcionou?</summary>
           <p className="hint">
             Baixe o e-mail montado e suba no Braze à mão. É o mesmo ZIP que o robô
-            enviaria: <span className="mono">index.html</span> mais a pasta <span className="mono">images</span>.
+            enviaria: <span className="mono">index.html</span> mais a pasta{" "}
+            <span className="mono">images</span>.
           </p>
-          <button className="ghost" disabled={!!busy} onClick={() => onRun("download")}>
-            {busy === "download" ? "Montando…" : "Baixar o arquivo"}
+          <button className="ghost" disabled={anyRunning} onClick={() => onRun("download")}>
+            {flowState.download === "running" ? "Montando…" : "Baixar o arquivo"}
           </button>
         </details>
 
@@ -162,11 +161,24 @@ export function SendStep({
   );
 }
 
-function Row({ label, value, bad }: { label: string; value: React.ReactNode; bad?: boolean }) {
+const STATUS_LABEL: Record<FlowStatus, string> = {
+  idle: "",
+  running: "processando…",
+  done: "pronto",
+  failed: "falhou",
+};
+
+function StatusRow({ label, value, status = "idle" }: {
+  label: string;
+  value: React.ReactNode;
+  status?: FlowStatus;
+}) {
   return (
-    <div className={`review-row${bad ? " bad" : ""}`}>
+    <div className={`review-row status-${status}`}>
       <span className="review-label">{label}</span>
       <span className="review-value">{value}</span>
+      <span className="spacer" />
+      {status !== "idle" && <span className={`status-pill ${status}`}>{STATUS_LABEL[status]}</span>}
     </div>
   );
 }

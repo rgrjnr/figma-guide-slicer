@@ -6,10 +6,6 @@ const errors = [];
 page.on("pageerror", e => errors.push(String(e)));
 
 await page.goto(process.env.BASE_URL || "http://localhost:3737");
-await page.setInputFiles('input[type="file"]', "../packages/slicer-core/test/fixtures/hbomax-moments-emkt.jpg");
-await page.waitForSelector(".surface img");
-await page.locator(".steps .step").filter({ hasText: /Público/i }).first().click();
-await page.waitForTimeout(400);
 
 await page.locator(".field textarea").first().fill(
   "Ana@Example.com, bruno@example.com; ana@example.com\n<carla@example.com>\nnot-an-email\ndaniel@example.co.uk"

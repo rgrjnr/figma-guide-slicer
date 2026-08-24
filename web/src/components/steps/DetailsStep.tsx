@@ -4,12 +4,11 @@ interface Props {
   campaignName: string;
   subject: string;
   preheader: string;
-  testEmails: string;
-  onChange: (patch: Partial<Record<"campaignName" | "subject" | "preheader" | "testEmails", string>>) => void;
+  onChange: (patch: Partial<Record<"campaignName" | "subject" | "preheader", string>>) => void;
 }
 
-/** The wording that comes with the request: the title, and who proofs it. */
-export function DetailsStep({ campaignName, subject, preheader, testEmails, onChange }: Props) {
+/** The wording that comes with the request. Proof recipients live on the last step. */
+export function DetailsStep({ campaignName, subject, preheader, onChange }: Props) {
   return (
     <div className="step-body form">
       <div className="form-inner">
@@ -42,16 +41,6 @@ export function DetailsStep({ campaignName, subject, preheader, testEmails, onCh
           />
         </label>
 
-        <label className="field">
-          <span>Enviar teste para <em>opcional</em></span>
-          <textarea
-            value={testEmails}
-            onChange={e => onChange({ testEmails: e.target.value })}
-            placeholder={"you@wbd.com\nsomeone-else@wbd.com"}
-            rows={3}
-          />
-          <small>Um por linha. O envio do teste fica na última etapa.</small>
-        </label>
       </div>
     </div>
   );

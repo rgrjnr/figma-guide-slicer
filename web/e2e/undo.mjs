@@ -1,14 +1,14 @@
 // Undo has to step back whole gestures, not individual pointer events — a guide
 // drag fires continuously, and one undo per pixel would be useless.
 import { chromium } from "playwright";
+import { upload } from "./helpers.mjs";
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
 const errors = [];
 page.on("pageerror", e => errors.push(String(e)));
 await page.goto(process.env.BASE_URL || "http://localhost:3737");
-await page.setInputFiles('input[type="file"]', "../packages/slicer-core/test/fixtures/hbomax-moments-emkt.jpg");
-await page.waitForSelector(".surface img");
+await upload(page);
 
 const results = [];
 const check = (l, ok, d = "") => results.push([l, ok, d]);

@@ -1,5 +1,23 @@
 # WIP
 
+## 2026-08-24 — main (pipelined steps, no waiting on Braze)
+
+Reordered to Público → Detalhes → Arte → Enviar, with Braze work started in
+the background as steps are left: leaving Público ships the audience import
+(signature-guarded — revisiting and advancing again only re-runs if the list,
+name or count changed); leaving Arte builds the draft (replace if the campaign
+exists) then chains schedule targeting the segment. Runs share one browser
+session so everything goes through a promise queue; per-flow status pills on
+the last step. Enviar is now just: status, test-email chips (Braze-style, ×
+to remove, invalid marked), Enviar teste + Agendar envio, escape-hatch
+download. Test emails moved out of Detalhes.
+IMPORTANT bug owned: braze-wiring.mjs was clicking the real draft button with
+real creds — every full e2e run since the login fix created a stray draft
+("20260824", subject "TEST subject", up to 3). Told Roger to delete them.
+The suite is now gating-only and aborts (fails) if anything touches
+/api/braze/run.
+39 unit + 7 e2e green.
+
 ## 2026-08-24 — main (import done = segment ready)
 
 Roger's real import (11,974 rows) sat in "wait for the import to finish"

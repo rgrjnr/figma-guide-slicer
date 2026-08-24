@@ -1,14 +1,14 @@
 // Markup must survive a save and a reopen, because that is the whole point of
 // the store: a design gets revised days after the campaign was created.
 import { chromium } from "playwright";
+import { goToStep, upload } from "./helpers.mjs";
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
 const errors = [];
 page.on("pageerror", e => errors.push(String(e)));
 await page.goto(process.env.BASE_URL || "http://localhost:3737");
-await page.setInputFiles('input[type="file"]', "../packages/slicer-core/test/fixtures/hbomax-moments-emkt.jpg");
-await page.waitForSelector(".surface img");
+await upload(page);
 
 const results = [];
 const check = (l, ok, d = "") => results.push([l, ok, d]);
@@ -38,12 +38,13 @@ const status = await page.locator(".app-bar .status").innerText();
 check("opening says the design has to be added again", /novamente/i.test(status), status);
 
 // Re-upload and confirm the guides came back from the store.
-await page.setInputFiles('input[type="file"]', "../packages/slicer-core/test/fixtures/hbomax-moments-emkt.jpg");
-await page.waitForSelector(".surface img");
+await upload(page);
 await page.locator(".project-bar").getByRole("button", { name: "Abrir", exact: true }).click();
 await page.waitForTimeout(600);
 await page.locator(".project-row .link-btn").first().click();
 await page.waitForTimeout(1500);
+// Reopening lands on Público; the guides are only rendered on the Arte canvas.
+await goToStep(page, "Arte");
 const guidesAfter = await page.locator(".guide:not(.proposed)").count();
 const regionsAfter = await page.locator(".region").count();
 check("guides survived the round trip", guidesAfter === guides, `${guides} -> ${guidesAfter}`);

@@ -2,7 +2,9 @@
 export const FIXTURE = "../packages/slicer-core/test/fixtures/hbomax-moments-emkt.jpg";
 
 export async function upload(page, fixture = FIXTURE) {
-  await page.setInputFiles('input[type="file"]', fixture);
+  // The app opens on Público; the design lands on the Arte step.
+  await goToStep(page, "Arte");
+  await page.setInputFiles('.step-body input[type="file"]', fixture);
   await page.waitForSelector(".surface img");
 }
 

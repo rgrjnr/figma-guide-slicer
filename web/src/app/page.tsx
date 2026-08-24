@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DesignStep } from "@/components/steps/DesignStep";
 import { DetailsStep } from "@/components/steps/DetailsStep";
 import { AudienceStep } from "@/components/steps/AudienceStep";
-import { SendStep, type SendSettings } from "@/components/steps/SendStep";
+import { SendStep, type FlowStatus, type SendSettings } from "@/components/steps/SendStep";
 import { ProjectBar } from "@/components/ProjectBar";
 import { buildHtml, downloadBlob, packageZip, sliceProject, type ExportedCell } from "@/lib/export";
 import { processEmailContent } from "@/lib/emails";
@@ -18,17 +18,22 @@ import { useProject } from "@/lib/useProject";
 function firstSentence(alts: string[]): string {
   for (const alt of alts) {
     const text = (alt ?? "").trim();
-    // Skip logos and icon rows: a handful of characters is not a sentence.
     if (text.replace(/[^a-zA-ZÀ-ÿ]/g, "").length < 12) continue;
     return text.length > 120 ? `${text.slice(0, 119).trimEnd()}…` : text;
   }
   return "";
 }
 
+/**
+ * The steps follow the request, and the order is chosen so Braze never has to
+ * be waited on: the audience arrives first and starts importing the moment the
+ * person moves on to write the details; the draft is built while they review
+ * the last step. By the end, the slow work is already done.
+ */
 const STEPS = [
-  { key: "design", label: "Arte" },
-  { key: "details", label: "Detalhes" },
   { key: "audience", label: "Público" },
+  { key: "details", label: "Detalhes" },
+  { key: "design", label: "Arte" },
   { key: "send", label: "Enviar ao Braze" },
 ] as const;
 type StepKey = (typeof STEPS)[number]["key"];
@@ -37,17 +42,16 @@ export default function Page() {
   const api = useProject();
   const { project, image, regions } = api;
 
-  const [step, setStep] = useState<StepKey>("design");
+  const [step, setStep] = useState<StepKey>("audience");
   const [record, setRecord] = useState<ProjectRecord | null>(null);
+  const recordRef = useRef<ProjectRecord | null>(null);
+  recordRef.current = record;
   const [dirty, setDirty] = useState(false);
 
-  // Date-derived defaults are filled in after mount, not during render: the
-  // server and the browser can compute them a moment (or a day) apart, and a
-  // value that differs between the two is a hydration mismatch.
   const [campaignName, setCampaignName] = useState("");
   const [subject, setSubject] = useState("");
   const [preheader, setPreheader] = useState("");
-  const [testEmails, setTestEmails] = useState("");
+  const [testEmails, setTestEmails] = useState<string[]>([]);
   const [audienceRaw, setAudienceRaw] = useState("");
   const [segmentName, setSegmentName] = useState("");
   const [settings, setSettings] = useState<SendSettings>({
@@ -56,6 +60,21 @@ export default function Page() {
     timeZone: DEFAULT_TIME_ZONE,
   });
 
+  const [flowState, setFlowState] = useState<Record<string, FlowStatus>>({});
+  const [log, setLog] = useState<{ level: "info" | "error"; message: string }[]>([]);
+  const cellsRef = useRef<ExportedCell[] | null>(null);
+  // Braze runs share one browser session, so they must not overlap; everything
+  // the pipeline starts goes through this queue.
+  const queueRef = useRef<Promise<unknown>>(Promise.resolve());
+  // What was last shipped, so revisiting a step and moving on again only
+  // re-runs Braze when something actually changed.
+  const importedSig = useRef("");
+  const preparedSig = useRef("");
+
+  const audience = useMemo(() => processEmailContent(audienceRaw), [audienceRaw]);
+
+  // Date-derived defaults are filled after mount: the server and the browser
+  // can compute "today" differently, and that is a hydration mismatch.
   useEffect(() => {
     const today = stamp();
     setCampaignName(name => name || today);
@@ -63,13 +82,6 @@ export default function Page() {
     setSettings(s => (s.sendDate ? s : { ...s, sendDate: defaultSendDate() }));
   }, []);
 
-  const [busy, setBusy] = useState<string | null>(null);
-  const [log, setLog] = useState<{ level: "info" | "error"; message: string }[]>([]);
-  const cellsRef = useRef<ExportedCell[] | null>(null);
-
-  const audience = useMemo(() => processEmailContent(audienceRaw), [audienceRaw]);
-
-  // Undo. Text fields keep the browser's own, which is what you expect there.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey)) return;
@@ -92,14 +104,12 @@ export default function Page() {
     await api.loadFile(file);
   }, [api]);
 
-  /**
-   * Slice and package on demand. Alt text is filled in by reading the artwork
-   * first — it is required for accessibility and there is nothing useful for a
-   * person to decide about it, so it is not worth a button of its own.
-   */
+  const setFlow = useCallback((flow: string, status: FlowStatus) => {
+    setFlowState(s => ({ ...s, [flow]: status }));
+  }, []);
+
   const buildZip = useCallback(async (): Promise<Blob | null> => {
     if (!image) return null;
-    setBusy("draft");
     setLog(l => [...l, { level: "info", message: "recortando a arte…" }]);
     const cells = await sliceProject(project, image);
 
@@ -121,30 +131,30 @@ export default function Page() {
     }
 
     cellsRef.current = cells;
-    // The preview line is the first thing the artwork says, unless someone has
-    // written one — there is rarely a better default and it is easy to correct.
     setPreheader(current => current || firstSentence(cells.map(c => c.alt ?? "")));
     return packageZip(buildHtml(project, cells), cells);
   }, [image, project, api]);
 
+  /** One Braze flow, streamed. Status lands in flowState under `statusKey`. */
   const runFlow = useCallback(
-    async (flow: string, extra: Record<string, unknown> = {}) => {
-      setLog([{ level: "info", message: `iniciando ${flow}…` }]);
+    async (flow: string, extra: Record<string, unknown> = {}, statusKey = flow) => {
+      setFlow(statusKey, "running");
+      setLog(l => [...l, { level: "info", message: `iniciando ${flow}…` }]);
       try {
-        // The manual fallback: build the ZIP and hand it over, no Braze at all.
         if (flow === "download") {
           const zip = await buildZip();
           if (!zip) throw new Error("Adicione a arte primeiro.");
           downloadBlob(zip, `${campaignName || "email"}.zip`);
+          setFlow(statusKey, "done");
           setLog(l => [...l, { level: "info", message: "baixado" }]);
           return;
         }
 
-        // Everything is recorded against a project, so one is made on demand.
-        let current = record;
+        let current = recordRef.current;
         if (!current) {
           current = await createProject({ name: campaignName });
           setRecord(current);
+          recordRef.current = current;
         }
 
         let zipBase64: string | undefined;
@@ -156,7 +166,6 @@ export default function Page() {
           for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
           zipBase64 = btoa(binary);
         }
-        setBusy(flow);
 
         const response = await fetch("/api/braze/run", {
           method: "POST",
@@ -168,7 +177,7 @@ export default function Page() {
             campaignName, subject, preheader,
             sendAt: combineSendAt(settings.sendDate, settings.sendTime),
             timeZone: settings.timeZone,
-            segment: segmentName,
+            segment: segmentName ? `${segmentName}.csv` : undefined,
             zipBase64,
             csv: flow === "audience" ? audience.csv : undefined,
             csvName: `${segmentName}.csv`,
@@ -183,6 +192,7 @@ export default function Page() {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
+        let ok = false;
         for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -196,22 +206,72 @@ export default function Page() {
             const payload = JSON.parse(data);
             if (event === "log") setLog(l => [...l, payload]);
             if (event === "done") {
+              ok = payload.ok;
               setLog(l => [...l, {
                 level: payload.ok ? "info" : "error",
-                message: payload.ok ? "concluído" : `falhou${payload.error ? `: ${payload.error}` : ""}`,
+                message: payload.ok ? `${flow}: concluído` : `${flow}: falhou${payload.error ? ` — ${payload.error}` : ""}`,
               }]);
-              if (current) setRecord(await loadProject(current.id).catch(() => current!));
+              const fresh = await loadProject(current.id).catch(() => current);
+              setRecord(fresh);
+              recordRef.current = fresh;
             }
           }
         }
+        setFlow(statusKey, ok ? "done" : "failed");
+        if (!ok) throw new Error(`${flow} falhou`);
       } catch (err) {
+        setFlow(statusKey, "failed");
         setLog(l => [...l, { level: "error", message: err instanceof Error ? err.message : String(err) }]);
-      } finally {
-        setBusy(null);
+        throw err;
       }
     },
-    [record, campaignName, subject, preheader, settings, segmentName, audience.csv, buildZip]
+    [campaignName, subject, preheader, settings, segmentName, audience.csv, buildZip, setFlow]
   );
+
+  /** Queue a piece of pipeline work; failures stay in the log, not the queue. */
+  const enqueue = useCallback((work: () => Promise<unknown>) => {
+    queueRef.current = queueRef.current.then(work).catch(() => {});
+  }, []);
+
+  /** Leaving Público: ship the list, unless the same list already went. */
+  const startImportIfNeeded = useCallback(() => {
+    if (audience.valid.length === 0) return;
+    const sig = `${segmentName}:${audience.valid.length}:${audience.csv.length}`;
+    if (importedSig.current === sig) return;
+    importedSig.current = sig;
+    enqueue(() => runFlow("audience"));
+  }, [audience, segmentName, enqueue, runFlow]);
+
+  /** Leaving Arte: build the draft and hook it to the audience, in the background. */
+  const startPrepareIfNeeded = useCallback(() => {
+    if (!image || !subject) return;
+    const sig = JSON.stringify({
+      guides: project.guides, rows: project.rows, subject, preheader,
+      designWidth: project.designWidth, emailWidth: project.emailWidth,
+      addFooter: project.addFooter, campaignName, segmentName,
+      sendAt: combineSendAt(settings.sendDate, settings.sendTime), zone: settings.timeZone,
+    });
+    if (preparedSig.current === sig) return;
+    preparedSig.current = sig;
+    enqueue(async () => {
+      await runFlow(recordRef.current?.braze.campaign ? "replace" : "draft", {}, "prepare");
+      // Targeting and delivery time live on the campaign, so this is what
+      // "connected to the audience" means; it saves a draft, nothing sends.
+      await runFlow("schedule");
+    });
+  }, [image, subject, preheader, project, campaignName, segmentName, settings, enqueue, runFlow]);
+
+  const advanceFrom = useCallback((from: StepKey) => {
+    if (from === "audience") startImportIfNeeded();
+    if (from === "design") startPrepareIfNeeded();
+  }, [startImportIfNeeded, startPrepareIfNeeded]);
+
+  const goToStep = useCallback((next: StepKey) => {
+    setStep(current => {
+      if (next !== current) advanceFrom(current);
+      return next;
+    });
+  }, [advanceFrom]);
 
   const snapshot = useCallback((): Partial<ProjectRecord> => ({
     name: campaignName,
@@ -236,6 +296,7 @@ export default function Page() {
     try {
       const saved = record ? await saveProject(record.id, snapshot()) : await createProject(snapshot());
       setRecord(saved);
+      recordRef.current = saved;
       setDirty(false);
       api.setStatus("Salvo.");
     } catch (err) {
@@ -247,6 +308,7 @@ export default function Page() {
     try {
       const loaded = await loadProject(id);
       setRecord(loaded);
+      recordRef.current = loaded;
       setCampaignName(loaded.name);
       setSubject(loaded.email.subject ?? "");
       setPreheader(loaded.email.preheader ?? "");
@@ -261,7 +323,7 @@ export default function Page() {
         addFooter: loaded.markup.addFooter,
       });
       setDirty(false);
-      setStep("design");
+      setStep("audience");
       api.setStatus(image ? "Aberto." : `Aberto — adicione ${loaded.markup.imageName ?? "a arte"} novamente para ver.`);
     } catch (err) {
       api.setStatus(err instanceof Error ? err.message : "Não foi possível abrir.");
@@ -269,7 +331,7 @@ export default function Page() {
   }, [api, image]);
 
   const index = STEPS.findIndex(s => s.key === step);
-  const canAdvance = step === "design" ? !!image : true;
+  const anyRunning = Object.values(flowState).some(s => s === "running");
 
   return (
     <main>
@@ -282,11 +344,17 @@ export default function Page() {
           onSave={handleSave}
           onNew={() => {
             setRecord(null);
-            setCampaignName(stamp());
-            setSegmentName(stamp());
-            setSubject(""); setPreheader(""); setTestEmails(""); setAudienceRaw("");
+            recordRef.current = null;
+            const today = stamp();
+            setCampaignName(today);
+            setSegmentName(today);
+            setSubject(""); setPreheader(""); setTestEmails([]); setAudienceRaw("");
+            setFlowState({});
+            setLog([]);
+            importedSig.current = "";
+            preparedSig.current = "";
             cellsRef.current = null;
-            setStep("design");
+            setStep("audience");
             api.reset();
           }}
           campaignName={campaignName}
@@ -299,7 +367,7 @@ export default function Page() {
             <button className="ghost" onClick={api.redo} disabled={!api.canRedo} title="Refazer (⇧⌘Z)">↷</button>
           </span>
         )}
-        {busy ? <span className="busy">processando…</span> : <span className="status">{api.status}</span>}
+        {anyRunning ? <span className="busy">processando no Braze…</span> : <span className="status">{api.status}</span>}
       </header>
 
       <nav className="steps">
@@ -307,8 +375,7 @@ export default function Page() {
           <button
             key={s.key}
             className={`step${step === s.key ? " active" : ""}${i < index ? " done" : ""}`}
-            onClick={() => setStep(s.key)}
-            disabled={i > 0 && !image}
+            onClick={() => goToStep(s.key)}
           >
             <span className="step-n">{i + 1}</span>
             {s.label}
@@ -316,22 +383,6 @@ export default function Page() {
         ))}
       </nav>
 
-      {step === "design" && <DesignStep api={api} onFile={onFile} />}
-      {step === "details" && (
-        <DetailsStep
-          campaignName={campaignName}
-          subject={subject}
-          preheader={preheader}
-          testEmails={testEmails}
-          onChange={patch => {
-            if (patch.campaignName !== undefined) setCampaignName(patch.campaignName);
-            if (patch.subject !== undefined) setSubject(patch.subject);
-            if (patch.preheader !== undefined) setPreheader(patch.preheader);
-            if (patch.testEmails !== undefined) setTestEmails(patch.testEmails);
-            setDirty(true);
-          }}
-        />
-      )}
       {step === "audience" && (
         <AudienceStep
           raw={audienceRaw}
@@ -343,30 +394,46 @@ export default function Page() {
           }}
         />
       )}
+      {step === "details" && (
+        <DetailsStep
+          campaignName={campaignName}
+          subject={subject}
+          preheader={preheader}
+          onChange={patch => {
+            if (patch.campaignName !== undefined) setCampaignName(patch.campaignName);
+            if (patch.subject !== undefined) setSubject(patch.subject);
+            if (patch.preheader !== undefined) setPreheader(patch.preheader);
+            setDirty(true);
+          }}
+        />
+      )}
+      {step === "design" && <DesignStep api={api} onFile={onFile} />}
       {step === "send" && (
         <SendStep
           record={record}
           campaignName={campaignName}
           subject={subject}
           rowCount={regions.length}
+          hasImage={!!image}
           audienceCount={audience.valid.length}
           segmentName={segmentName}
           testEmails={testEmails}
+          onTestEmails={setTestEmails}
           settings={settings}
           onSettings={patch => setSettings(s => ({ ...s, ...patch }))}
-          busy={busy}
-          onRun={runFlow}
+          flowState={flowState}
+          onRun={(flow, extra) => enqueue(() => runFlow(flow, extra))}
           log={log}
         />
       )}
 
       <footer className="step-nav">
-        <button className="ghost" onClick={() => setStep(STEPS[Math.max(0, index - 1)].key)} disabled={index === 0}>
+        <button className="ghost" onClick={() => goToStep(STEPS[Math.max(0, index - 1)].key)} disabled={index === 0}>
           Voltar
         </button>
         <span className="spacer" />
         {index < STEPS.length - 1 && (
-          <button className="primary" onClick={() => setStep(STEPS[index + 1].key)} disabled={!canAdvance}>
+          <button className="primary" onClick={() => goToStep(STEPS[index + 1].key)}>
             Avançar: {STEPS[index + 1].label}
           </button>
         )}
