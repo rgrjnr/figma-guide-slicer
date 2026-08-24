@@ -5,7 +5,7 @@
       "value": "en",
       "domain": "dashboard-03.braze.com",
       "path": "/",
-      "expires": 1790120608.273659,
+      "expires": 1790185378.244982,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -25,67 +25,17 @@
       "value": "roger@rogerjunior.com",
       "domain": "ssobiz.wbd.com",
       "path": "/",
-      "expires": 1819056308,
+      "expires": 1819129225,
       "httpOnly": false,
       "secure": true,
       "sameSite": "Lax"
-    },
-    {
-      "name": "JSESSIONID",
-      "value": "359732A315771CF30ADD5A4C3B773254",
-      "domain": "ssobiz.wbd.com",
-      "path": "/",
-      "expires": -1,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "idx",
-      "value": "eyJ6aXAiOiJERUYiLCJ2ZXIiOiIxIiwiYWxpYXMiOiJlbmNyeXB0aW9ua2V5Iiwib2lkIjoiMDBvYjA3aGMyd0NmVFBFcGc0eDYiLCJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiZGlyIiwieHNpZCI6ImlkeHFIdUlJZlNRVGR1elYyWTl3QVJzWUEifQ..023OZpYPx8A72j0f.KETmkboRBITWCI1VVIDV2eV7Txv-1vgEUkrahSXNAozS5F0jijrp0dLOuPK4jSQKpDmI1ZqmiaxHhEL-eVTG8sk3b8SwFgHgEkRj0ay7ztlaVHIShcndWrtmaKq5RDfkz9Yo1ZclHXxQ72eUtPenvfrpv1Pyjbaz5P6TZta4-_P8_A_TK60z9cIg2hh9QfH4S51w70gylWefVGb5U-v9hq8Srfk7u3bUsRDl4_SxgbMe33tmdz7gjj5d06xS0t_YncKcl8M52bd0MzKbLOTZcF3_xjkqeUqApdFAD-ieTVw6_5CKG0Bsw8Hm0oUmBsoiuu_HAwi69N51FFA0YX9dK-GEeyGw1qjJjbISgnqp2aNrQD-sufbRcQgOuEbml-e9inkqA_-p8qAXuWSWMtZOR-9qYEiiUXmIpgfh2oILP2aAKdIJ0OQAe8easQuhbTiXgVdQTdUHyWpl8mb4tnkQnQG5C-D69pSEvjtv9rRl6SW0MVDA4ezmfIkkBvTaxObzclFHCmcsWaNuFO6ZoRa8KYpCCkZWDWN2MajpNXZRsMqXRn0AnJz7omeULwVU6jMyJq4zBr94rHsFv_HGxAAUF6GVrF8oQwvQJYSv8MdpfdXD_9cjGGRui8ncW9OGytuMYCjxsT2bHm2HU48GjnDOgs7GjqxXn6qon942toZmETMXzgmZ1QOgM4-Dp15IDEtiW1yWtqAyrxEwZ6BhZYkpnw9IOqtYnnJa0okWn9__dLeKH6xriYtHPIgTx-AfUuwNiVI7ELzQQPKf-ZVoVfNizhDPmm0izEQGHGicxHf014QKzReWUsYksUa9tU1eGlmkWLd2dAJns8O72uHVcEg_gYuM-38UhETajfUTmJhD0vjyOdHyJQaPLJ7chYijzRRFzTWFq-P3A3lpZYdyao4ro5g-VW3NNFNew8vUVZEGl3f_7Xo8XjDraPPX_fUEsoJB1cP9cJKtgXty6GwgeHOiQeRWk_fiGLfh5Z6MvebgPQVARAKl7WcRlDqiT_7--UaI_5LvtCfjwhQ7Cju1Tako73doU-u1Ax8vW4Cvnb5MrbEUt_e_GVDHFVU_.CHHCd_2yvLmQg5LdVNq8FQ",
-      "domain": "ssobiz.wbd.com",
-      "path": "/",
-      "expires": -1,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "luf_703975935",
-      "value": "eyJ6aXAiOiJERUYiLCJ2ZXIiOiIxIiwiYWxpYXMiOiJlbmNyeXB0aW9ua2V5Iiwib2lkIjoiMDBvYjA3aGMyd0NmVFBFcGc0eDYiLCJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiZGlyIiwidGltZXN0YW1wIjoxNzg3NTIwMzEwNzM5fQ..LKZoSkTWcFDgbH0e.skzyN047hqjPpqSrAX99eJ2PghSgIg34XbZ1qNVHvX2NMza_EjnHIXTqeVKS_1wWk64IfFVynHGobUJhFHBRlyFXzLwT1DayHk__rOfNX2tt4qdLJzkxcV6DbxNFhNmmtGIR5gXZFxCfIMukGwG1NIT1GcRS_JqwCEphwbym41U9ViTVO2KHjTB6R49oHUzKTzhl5mJEL0iw192cIxdVLfi6jdqXkm28-3FP6Z99r9ea1fWHEVLRrFMMRGEnBmQgfd0wxN6d1RiIuQ.ke9RnbXgkwPPXTJ7y87vtw",
-      "domain": "ssobiz.wbd.com",
-      "path": "/",
-      "expires": 1790112310.851931,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "remember_login_enc_v1",
-      "value": "%242%240G6WYsh9hX9YXZOx6izIuw%3D%3D%24WShuzlTXfSIeUu82LdeKkMYVotToBwnDd1O%2BHzguH%2B8%3D",
-      "domain": ".braze.com",
-      "path": "/",
-      "expires": 1795469111.791172,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "_session_id",
-      "value": "85c0decc3ef0f23f411e32e91604d67d",
-      "domain": "dashboard-03.braze.com",
-      "path": "/",
-      "expires": -1,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
     },
     {
       "name": "ag_id___5a12fb5ea12f7457f92c5c91",
       "value": "60106fe73d519f17d1749fd6",
       "domain": "dashboard-03.braze.com",
       "path": "/",
-      "expires": 1790207008.273467,
+      "expires": 1790271778.244695,
       "httpOnly": true,
       "secure": true,
       "sameSite": "Lax"
@@ -95,7 +45,7 @@
       "value": "60106fe73d519f17d1749fd6",
       "domain": "dashboard-03.braze.com",
       "path": "/",
-      "expires": 1790207008.273578,
+      "expires": 1790271778.244812,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -115,7 +65,7 @@
       "value": "g%3A6654ea119dc7430058c1dc94%7Ce%3Aundefined%7Cc%3A1787520315244%7Cl%3A1787520315262",
       "domain": ".braze.com",
       "path": "/",
-      "expires": 1822088591,
+      "expires": 1822153363,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -125,47 +75,117 @@
       "value": "g%3Ade22e3a5-afda-467d-bb72-b9d54ad96ee6%7Ce%3Aundefined%7Cc%3A1787520315265%7Cl%3A1787520315265",
       "domain": ".braze.com",
       "path": "/",
-      "expires": 1822088591,
+      "expires": 1822153363,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
     },
     {
-      "name": "fs_uid",
-      "value": "#HT1ND#e94eb1a2-9e32-4c5f-9925-8deaf96f684b:8ca3c46a-0cfe-41f5-a30a-6c77ca76e528:1787520754949::45#c8895193###/1819056889",
+      "name": "sign_in_email",
+      "value": "roger%40rogerjunior.com",
+      "domain": "dashboard-03.braze.com",
+      "path": "/",
+      "expires": 1787596818.143878,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "JSESSIONID",
+      "value": "20F068C0B5D41AE4257D48773CBE57F9",
+      "domain": "ssobiz.wbd.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "idx",
+      "value": "eyJ6aXAiOiJERUYiLCJ2ZXIiOiIxIiwiYWxpYXMiOiJlbmNyeXB0aW9ua2V5Iiwib2lkIjoiMDBvYjA3aGMyd0NmVFBFcGc0eDYiLCJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiZGlyIiwieHNpZCI6ImlkeHl3XzBXNXUxUVJDYVdrbnd5eDR6bEEifQ..vhJyYnr_AkGhyaPe.zE16KXsGKhknULEnNaRRPn7lp5_L4AcmUvZ9MinSMf6QfcSgDY7s8esEIdGqYfMGCM-5quBeVkPmHBi7XM_rv30ThsGQTsmI17cTIRz4JfaZgEldLelzqi-UmHFWRkvlvbeNSfgxTPBIhOM_CwrErFwj9DRWI7YPeA2HQrLKWSQI5zIQ9uyCaDT_pOQTEdRfzti61Y5kM9L_dV66og4XqPLXwpHTIFpne5A42_tJZbAVY580o1QaUME2FjI57w9o4pBxOLnZwrCmAepJZEjmY9ZH97SG8H6tuQud0-DBpzx-U0foPNXVxXiHGuetN54K85QREkRCh9YPylVBQtYrAFNE9HhPz8VV4KnCLF2xwPBN8NQzNvDhO-_GzA-FtnTgTWvPXELP63490W8fees-Fel8gfVxFpvAfUMfUjGTVvM3eLmXEIIJjQuPP0jO92IUTd_hssmMRA-M20DnWRk4zSHd4evnwhL9yfnFCqPTdxy3Ztu912LzB71OMheVR3vwqE9xRdIz-yxLyQWnTqC7TOk2LBYcROGN8S-R8WqQILy-TvRs9CAeJXHiD7evykL-yQoPSmDK_lkyZpymDULjAek7N1p_NwAHNkoTEIwYjGz0ixJd2wyWTxd--TL-KVVJmM4djIhFIG_IhJMvbS6fuNGSjagO0IKckih493rlaY_8Z6NLneapyZk61nSbIyAF_kQqD_l8tncJGq2JcyB_PSqxc7FzQGYv5I6KQuHUM8VEmBaplSJAeqwPycgdEDP9Bhf0LsXYAuEeG5dnVdahvmZSh7DV3oydyk0nXUtk-8PAtP0tAljG-Rv9Cws7WTT7CkWeOSkwuV6YshFAeOJlBw21jDJLNrM91_Xb1NvItGaT_kIAGHVLML2mjQRvWaWhVZDOpO-QEEypoSKRi-HI8ZMbA4KQL9G-DufK35NHrKDhUdwr7JHOvv_bTA5mR7qMiOIm8p3N0O7jGJAE86oYQgozYAvkLNqfShpxfG688XdMxoXEn-u3YDxFNXjTgmk5N8O5bQrE7cjtk3_rVxb-NkNvm-NKwqqMIJSGGAXNGCMjRhvDZqnXWyIViTM.z9yafpLY2-BerImhESlF0g",
+      "domain": "ssobiz.wbd.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "luf_703975935",
+      "value": "eyJ6aXAiOiJERUYiLCJ2ZXIiOiIxIiwiYWxpYXMiOiJlbmNyeXB0aW9ua2V5Iiwib2lkIjoiMDBvYjA3aGMyd0NmVFBFcGc0eDYiLCJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiZGlyIiwidGltZXN0YW1wIjoxNzg3NTkzMjMyNjQ0fQ..mJ2KOBtL2GG0jURm.oRb1d4MXAwtq_2b3XzV1cEUjuypHP_r56Dy2k3kxNVBoBE8hxVCg8TmZ4DyG6gcWgpF3KM14D8jxA_kH3Hq_uWEvYcz3CplHA89WJflr9ntDyW54C_GBUo7oKl3xba-km4wkcfU5Ao1JtJeVFzkiRiyFoq10Nwi2I4RhMjjhHwgvA8fwoTSQ3qoR_mFROj1UW0383u8igWejDiBxQ8iEgP9aeFxb5VsXtSFBOdmMCL01gd4mQ-j52-_nAIcvykTi5d9RYyEMcajDR48.KCyDBYu6PUggIz1_QIG69Q",
+      "domain": "ssobiz.wbd.com",
+      "path": "/",
+      "expires": 1790185232.711319,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "remember_login_enc_v1",
+      "value": "%242%240Jhw9oPsPghBht3CR5VhWQ%3D%3D%24u7qnSdcac6%2FrNIzv4xZdeys6XqIDX%2FzlT8ckQjCxeKY%3D",
       "domain": ".braze.com",
       "path": "/",
-      "expires": 1819056889,
+      "expires": 1795542033.588688,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_session_id",
+      "value": "835bfb6073739a04ffa65d547b185986",
+      "domain": "dashboard-03.braze.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "fs_lua",
+      "value": "1.1787593255500",
+      "domain": ".braze.com",
+      "path": "/",
+      "expires": 1787595055,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Strict"
+    },
+    {
+      "name": "fs_uid",
+      "value": "#HT1ND#e94eb1a2-9e32-4c5f-9925-8deaf96f684b:f15866a7-99d3-4742-8fd6-a589ad517541:1787593235099::2#c8895193###/1819056895",
+      "domain": ".braze.com",
+      "path": "/",
+      "expires": 1819056895,
       "httpOnly": false,
       "secure": true,
       "sameSite": "Strict"
     },
     {
       "name": "__cf_bm",
-      "value": "1iy9wliu9xRQ06KhuPKwAk1VyqTdwoBdBzHRtEfg8SM-1787528588.6372547-1.0.1.1-9yHaoZuGJm1eEL9y2QTtI7MyU67gVPFa8wKwdim3..0AFc5nMTGlewyVYCAzBeGCmdm3uKkj8bMGKscI.hLErGAok8I.qv48kktbqz18l0F_vyTfwZLdyOdVBZ98hckW",
+      "value": "B0aqb0CSJAqY1S_Ypu_loMhq3LKcgJsaPjBWL8Cd9yo-1787593359.9869175-1.0.1.1-cjkljENrIqjq1_8WxL.PpirRYjCRhxTcB6hTB7crPXoKsllV4gR0GV2v1siSVLdgdEiyHSxvt8AMxpaNvyHb1hF_D5jY2DOEjiFoTYEXX4aNrYeNJvDEduJT9hlVBVzX",
       "domain": ".braze.com",
       "path": "/",
-      "expires": 1787530388.631446,
+      "expires": 1787595160.044919,
       "httpOnly": true,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "ab.storage.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
-      "value": "g%3A63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9%7Ce%3A1787528904073%7Cc%3A1787528297451%7Cl%3A1787528604073",
+      "value": "g%3A503080ea-769a-4d2d-bd88-4ea18b2831c6%7Ce%3A1787593677561%7Cc%3A1787593236372%7Cl%3A1787593377561",
       "domain": ".braze.com",
       "path": "/",
-      "expires": 1822088604,
+      "expires": 1822153377,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
     },
     {
       "name": "_dd_s",
-      "value": "rum=2&id=95e65224-b984-40a3-9d2a-5c5ad61ec17e&created=1787528296464&expire=1787529502849&logs=1",
+      "value": "rum=2&id=d0955f2c-d450-49b7-adc5-cd23513e795a&created=1787593234980&expire=1787594276154&logs=1",
       "domain": "dashboard-03.braze.com",
       "path": "/",
-      "expires": 1787529510,
+      "expires": 1787594283,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Strict"
@@ -185,27 +205,27 @@
         },
         {
           "name": "ab.storage.banners.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":\"c37197f8-1238-46c0-99bb-faa244edaa65\"}"
+          "value": "{\"v\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\"}"
         },
         {
           "name": "ab.storage.ccLastFullSync.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":1787524371}"
+          "value": "{\"v\":1787593257}"
         },
         {
           "name": "ab.storage.lastSdkReq.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":1787528607881}"
+          "value": "{\"v\":1787593364155}"
         },
         {
           "name": "chmln:l.C.d",
-          "value": "{\"profile\":{\"M\":\"Profile\",\"attributes\":{\"id\":\"6655a7cd3a5d160036066c9e\",\"uid\":\"6654ea119dc7430058c1dc94\",\"last_anonymous_at\":\"2026-08-23T23:43:24.743Z\"}},\"elements:observed\":{\"6968e349a205e100211045b3\":{\"at\":\"2026-08-23T21:32:39.169Z\"},\"6968d440a205e10021103ea3\":{\"at\":\"2026-08-23T21:32:39.172Z\"},\"6967df23f14ac7001443bbad\":{\"at\":\"2026-08-23T21:32:39.185Z\"},\"6968e21da205e10025d8f0f1\":{\"at\":\"2026-08-23T21:32:59.531Z\"},\"6626bcd1cfd372001b17fd3b\":{\"at\":\"2026-08-23T21:33:07.664Z\"},\"66df756fb2fe08002b3bb2b1\":{\"at\":\"2026-08-23T21:33:07.664Z\"},\"6968e21da205e10025d8f0f0\":{\"at\":\"2026-08-23T21:33:34.313Z\"},\"698e31db086e65002c6626d5\":{\"at\":\"2026-08-23T21:33:35.548Z\"},\"696935ef6b1380001b2c7ebb\":{\"at\":\"2026-08-23T21:34:37.214Z\"},\"6967da2493c055002921fdea\":{\"at\":\"2026-08-23T21:34:37.231Z\"},\"684b4bbcb9eeb5a0a0675d9e\":{\"at\":\"2026-08-23T21:34:37.248Z\"},\"669fd266e32563002f1f46a4\":{\"at\":\"2026-08-23T21:37:06.537Z\"},\"6626bb4dcfd372001f73b5b3\":{\"at\":\"2026-08-23T21:38:14.667Z\"},\"662aaf3a2cbefe002567c0ef\":{\"at\":\"2026-08-23T21:38:53.565Z\"},\"6967da2493c055002921fdf1\":{\"at\":\"2026-08-23T21:39:55.449Z\"},\"67d307316a36e6001b419cbb\":{\"at\":\"2026-08-23T21:41:48.421Z\"},\"6a172ee06954c01713cbdd15\":{\"at\":\"2026-08-23T21:42:51.873Z\"},\"6792968040f77f69fcd4f88f\":{\"at\":\"2026-08-23T21:45:14.105Z\"},\"6671b4be5e5cb9002f9879bc\":{\"at\":\"2026-08-23T21:49:23.989Z\"},\"6626bba0127b61001fca9f42\":{\"at\":\"2026-08-23T21:49:25.090Z\"},\"6970806cc202d60026256956\":{\"at\":\"2026-08-23T21:51:08.706Z\"},\"66e4a45f65767d001f55a2e4\":{\"at\":\"2026-08-23T21:51:09.288Z\"},\"6968dac9a205e1002dd4ffc2\":{\"at\":\"2026-08-23T21:51:10.155Z\"},\"6985006018f3a930da4ce41a\":{\"at\":\"2026-08-23T21:54:10.108Z\"},\"6967da2493c055002921fdf7\":{\"at\":\"2026-08-23T21:56:43.265Z\"},\"6626bb61127b61002b601203\":{\"at\":\"2026-08-23T22:09:39.002Z\"},\"679297dd40f77f69fcd4f895\":{\"at\":\"2026-08-23T22:11:23.359Z\"},\"66452df5a2cc1e002324d3e7\":{\"at\":\"2026-08-23T22:11:37.576Z\"},\"6968dda4a205e1002dd5025a\":{\"at\":\"2026-08-23T22:12:25.609Z\"},\"6967da2493c055002921fddc\":{\"at\":\"2026-08-23T22:25:38.752Z\"},\"6968dc04a205e1002dd500d0\":{\"at\":\"2026-08-23T22:25:40.422Z\"},\"6626bd66127b61001aa5b5dc\":{\"at\":\"2026-08-23T22:26:29.769Z\"},\"6968d9e2a205e1001d96bcb6\":{\"at\":\"2026-08-23T22:26:29.770Z\"},\"696931ed6b1380001b2c7d61\":{\"at\":\"2026-08-23T22:28:18.629Z\"},\"662a73d5dbc0f4002b970ae0\":{\"at\":\"2026-08-23T22:28:18.668Z\"},\"6626bd3a127b61001367ca78\":{\"at\":\"2026-08-23T22:32:26.471Z\"},\"66a02e5fe3256300132cb859\":{\"at\":\"2026-08-23T22:32:26.472Z\"},\"6967da2493c055002921fde3\":{\"at\":\"2026-08-23T22:33:52.003Z\"},\"6626b758127b61002f89fcab\":{\"at\":\"2026-08-23T22:33:53.876Z\"},\"66a02ddfc90743001e1ffaff\":{\"at\":\"2026-08-23T22:34:29.685Z\"},\"66df756fb2fe08002b3bb2b7\":{\"at\":\"2026-08-23T22:35:09.854Z\"},\"696932113caeb54476fed3a8\":{\"at\":\"2026-08-23T22:35:10.736Z\"},\"66ce07ad80ef5e0023300f6a\":{\"at\":\"2026-08-23T23:03:07.231Z\"},\"6968dc0ac45b812963625c78\":{\"at\":\"2026-08-23T23:38:26.884Z\"},\"65669bcb5c7d240019e86587\":{\"at\":\"2026-08-23T23:43:18.754Z\"}}}"
+          "value": "{\"profile\":{\"M\":\"Profile\",\"attributes\":{\"id\":\"6655a7cd3a5d160036066c9e\",\"uid\":\"6654ea119dc7430058c1dc94\",\"last_anonymous_at\":\"2026-08-24T17:42:57.639Z\"}}}"
         },
         {
           "name": "ab.storage.ff.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":\"c37197f8-1238-46c0-99bb-faa244edaa65\"}"
+          "value": "{\"v\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\"}"
         },
         {
           "name": "ab.storage.globalRateLimitCurrentTokenCount.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":0}"
+          "value": "{\"v\":11}"
         },
         {
           "name": "ab.storage.ccDismissals.invalid_api_key",
@@ -213,7 +233,7 @@
         },
         {
           "name": "ab.storage.ffLastRefreshAt.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":1787523935813}"
+          "value": "{\"v\":1787593237178}"
         },
         {
           "name": "ab.storage.ccDismissals.bef30adf-6179-4b26-a3b5-42268996ad95",
@@ -225,19 +245,19 @@
         },
         {
           "name": "ab.storage.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":\"g:63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9|e:1787528904073|c:1787528297451|l:1787528604073\"}"
+          "value": "{\"v\":\"g:503080ea-769a-4d2d-bd88-4ea18b2831c6|e:1787593677561|c:1787593236372|l:1787593377561\"}"
         },
         {
           "name": "pusherTransportTLS",
-          "value": "{\"timestamp\":1787528591884,\"transport\":\"ws\",\"latency\":467,\"cacheSkipCount\":0}"
+          "value": "{\"timestamp\":1787593364334,\"transport\":\"ws\",\"latency\":572,\"cacheSkipCount\":0}"
         },
         {
           "name": "ab.storage.events.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":[{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787526384632,\"s\":\"cd511ad5-375c-4400-ba21-0d5b9d4bf903\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/users/user_import?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787526384632,\"s\":\"cd511ad5-375c-4400-ba21-0d5b9d4bf903\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"7fa7cc2e-e108-4e84-a565-0e1b870ded27\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787526385163,\"s\":\"cd511ad5-375c-4400-ba21-0d5b9d4bf903\",\"d\":{\"n\":\"pm.pick_up_where_you_left_off_impression\",\"p\":{\"count\":0,\"type\":\"empty\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"se\",\"ts\":1787526385162,\"s\":\"cd511ad5-375c-4400-ba21-0d5b9d4bf903\",\"d\":{\"d\":254.052}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ss\",\"ts\":1787528297450,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528297878,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528298316,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528298319,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"ba096408-eb4c-46e7-b074-ec597a014822\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528300503,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528301160,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"57b1dd5f-e5cf-4eed-9dd6-6f8aada86824\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528302138,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/campaigns?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528305848,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/6a8b8470c81c0700887a5fc2?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528306733,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"Began editing any campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaignId\":\"6a8b8470c81c0700887a5fc2\",\"campaignType\":\"email\",\"postLaunchDraft\":false}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528309171,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.email.html.campaign.launch_editor\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528309890,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.email.html.campaign.launch_editor\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528313652,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/6a8b8470c81c0700887a5fc2?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528313747,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"saved campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaign_id\":\"6a8b8470c81c0700887a5fc2\",\"optimization\":\"ab\",\"post_launch_draft\":false}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528314167,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"Began editing any campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaignId\":\"6a8b8470c81c0700887a5fc2\",\"campaignType\":\"email\",\"postLaunchDraft\":false}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528316511,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528419364,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528419984,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528419986,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"a8c05912-537d-4b92-8a59-83cdf89267f2\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528420488,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.pick_up_where_you_left_off_impression\",\"p\":{\"count\":15,\"type\":\"success\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528420488,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.pick_up_where_you_left_off_impression\",\"p\":{\"count\":15,\"type\":\"success\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528421973,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528422366,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"524ebcf8-d4bf-4957-83fe-9cd3aed1db1a\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528423256,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/campaigns?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528425922,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/6a8b84e87ef6d40086b21627?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528426799,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"Began editing any campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaignId\":\"6a8b84e87ef6d40086b21627\",\"campaignType\":\"email\",\"postLaunchDraft\":false}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528429239,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.email.html.campaign.launch_editor\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528430271,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.email.html.campaign.launch_editor\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528433710,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/6a8b84e87ef6d40086b21627?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528433776,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"saved campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaign_id\":\"6a8b84e87ef6d40086b21627\",\"optimization\":\"ab\",\"post_launch_draft\":false}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528434195,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"Began editing any campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaignId\":\"6a8b84e87ef6d40086b21627\",\"campaignType\":\"email\",\"postLaunchDraft\":false}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528589078,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528589783,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528589785,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"1615912a-e394-4461-b217-02c4c353865c\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528589789,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.pick_up_where_you_left_off_impression\",\"p\":{\"count\":15,\"type\":\"success\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528589789,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.pick_up_where_you_left_off_impression\",\"p\":{\"count\":15,\"type\":\"success\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528591706,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528591902,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"20154652-c7b7-40bd-bd59-c9029fb6a004\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528592833,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/campaigns?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528595382,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/6a8b8592f888bb00883526eb?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528596171,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"Began editing any campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaignId\":\"6a8b8592f888bb00883526eb\",\"campaignType\":\"email\",\"postLaunchDraft\":false}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528599062,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.email.html.campaign.launch_editor\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528600235,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"pm.email.html.campaign.launch_editor\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528603413,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/6a8b8592f888bb00883526eb?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528603508,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"saved campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaign_id\":\"6a8b8592f888bb00883526eb\",\"optimization\":\"ab\",\"post_launch_draft\":false}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528604074,\"s\":\"63dd85df-f3f0-4b5e-8b25-5bf5d23fc4c9\",\"d\":{\"n\":\"Began editing any campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaignId\":\"6a8b8592f888bb00883526eb\",\"campaignType\":\"email\",\"postLaunchDraft\":false}}}]}"
+          "value": "{\"v\":[{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593258746,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593258747,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"a859bbfd-1ad5-4f59-8d1b-9a348cc7f778\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593258750,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"pm.pick_up_where_you_left_off_impression\",\"p\":{\"count\":15,\"type\":\"success\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593258751,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"pm.pick_up_where_you_left_off_impression\",\"p\":{\"count\":15,\"type\":\"success\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787593359785,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"key\":\"feature_flags\",\"value\":[\"featureflags.prospect_overview\",\"product_announcement_banner\",\"chameleon_sdk\"]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593361041,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593361042,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"559f78c8-58ca-4e8c-ab11-8b3fb2f51c1b\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593361048,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"pm.pick_up_where_you_left_off_impression\",\"p\":{\"count\":15,\"type\":\"success\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593361049,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"pm.pick_up_where_you_left_off_impression\",\"p\":{\"count\":15,\"type\":\"success\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787593363805,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"key\":\"feature_flags\",\"value\":[\"featureflags.prospect_overview\",\"product_announcement_banner\",\"chameleon_sdk\"]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593364865,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"pm.agentic_ai\",\"p\":{\"action\":\"can launch\",\"sage_chat_session_id\":\"e4a19f5b-2cd7-4420-8be5-8571e4a55ed8\",\"operator_runtime\":\"interactive\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593365823,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/campaigns?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593368296,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/6a8c829716e7d6008821170b?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593368949,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"Began editing any campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaignId\":\"6a8c829716e7d6008821170b\",\"campaignType\":\"email\",\"postLaunchDraft\":false}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593372086,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"pm.email.html.campaign.launch_editor\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593372989,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"pm.email.html.campaign.launch_editor\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593376722,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/engagement/campaigns/6a8c829716e7d6008821170b?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593376799,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"saved campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaign_id\":\"6a8c829716e7d6008821170b\",\"optimization\":\"ab\",\"post_launch_draft\":false}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593377561,\"s\":\"503080ea-769a-4d2d-bd88-4ea18b2831c6\",\"d\":{\"n\":\"Began editing any campaign\",\"p\":{\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\",\"campaignId\":\"6a8c829716e7d6008821170b\",\"campaignType\":\"email\",\"postLaunchDraft\":false}}}]}"
         },
         {
           "name": "_fs_uid",
-          "value": "#HT1ND#e94eb1a2-9e32-4c5f-9925-8deaf96f684b:8ca3c46a-0cfe-41f5-a30a-6c77ca76e528:1787520754949::45#c8895193###/1819056889"
+          "value": "#HT1ND#e94eb1a2-9e32-4c5f-9925-8deaf96f684b:f15866a7-99d3-4742-8fd6-a589ad517541:1787593235099::2#c8895193###/1819056895"
         },
         {
           "name": "ab.storage.device.bef30adf-6179-4b26-a3b5-42268996ad95",
@@ -245,7 +265,7 @@
         },
         {
           "name": "ab.storage.requestAttempts.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"content_cards/sync\":2,\"data\":22,\"feature_flags/sync\":15,\"banners/sync\":15}}"
+          "value": "{\"v\":{\"content_cards/sync\":3,\"data\":5,\"feature_flags/sync\":15,\"banners/sync\":15}}"
         },
         {
           "name": "ab.storage.ffImpressions.bef30adf-6179-4b26-a3b5-42268996ad95",
@@ -273,7 +293,7 @@
         },
         {
           "name": "ab.storage.messagingSessionStart.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":1787520315250}"
+          "value": "{\"v\":1787593236373}"
         },
         {
           "name": "ab.storage.sdkVersion.bef30adf-6179-4b26-a3b5-42268996ad95",
@@ -285,11 +305,11 @@
         },
         {
           "name": "ab.storage.triggers.ts.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":1787523935372}"
+          "value": "{\"v\":1787593236914}"
         },
         {
           "name": "_fs_lua",
-          "value": "1.1787524507288"
+          "value": "1.1787593255500"
         },
         {
           "name": "ab.storage.ff.bef30adf-6179-4b26-a3b5-42268996ad95",
@@ -297,19 +317,19 @@
         },
         {
           "name": "ab.storage.cc.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":[{\"tp\":\"captioned_image\",\"id\":\"NmE2YmM4MGMwZjBiYzIwMDg0NDE1NjI3XyRfY2M9ZDg0NzUwOGQtNmI2NS1mNWMzLTk2ZWQtOTc5NTZjNTVmNjc4Jm12PTZhNmJjODBjMGYwYmMyMDA4NDQxNTYyMSZwaT1jbXA=\",\"v\":false,\"tt\":\"Braze 2026 ESG Report: Climate Action, Community Impact, Global Inclusion & Opportunity\",\"i\":\"https://braze-images.com/appboy/communication/marketing/content_cards_message_variations/images/6a6bc80c0f0bc20084415621/a1a033aac7ea17b8182c76ea4c6f9e08354a8bd7/original.png?1786138396\",\"ds\":\"Five years of commitments. Five years of delivering on them. Our 2026 ESG Report reflects our efforts to grow responsibly and create lasting value for our people, our customers, and the communities we serve. \\n\\nThis year’s progress, by the numbers:\\n\\nAn 18% reduction in year-over-year company-wide emissions.\\n\\n$4.4M in charitable grants to over 200 organizations since launching the Braze for Social Impact Fund, 94% of which were directed by Braze employees in FY’26.\\n\\nEight consecutive years of ISO 27001 and SOC 2 Type 2 compliance.\\n\",\"ca\":\"2026-08-20T23:00:00.000Z\",\"ea\":\"2026-09-03T23:00:00.000Z\",\"u\":\"https://esg.braze.com/overview/default.aspx?utm_campaign=fy27-q3-global-customer-customer-esg-2026&utm_medium=dashboard-cc&utm_source=braze&utm_content=lp-esg-report-\",\"dm\":\"Read the full ESG Report\",\"ar\":1.7772511848341233,\"e\":{},\"p\":false,\"db\":true,\"cl\":false,\"l\":null,\"ia\":\"2026 Braze ESG Report\",\"s\":false},{\"tp\":\"captioned_image\",\"id\":\"NmE3MjRhN2VhYjNmZTAwMDg4NTZkZjNjXyRfYnAmY2M9ZWU4Y2JjMDItMGQ3MS0wOWI2LTU2N2EtMWIyYzg4YjhmYTBlJmN0JmRpJmRtJm12PTZhNzI0YTdlYWIzZmUwMDA4ODU2ZGYzZSZvZCZwaT13ZnMmcm0mdz02YTcyNGE3ZWFiM2ZlMDAwODg1NmRmMzkmd3A9MjAyNi0wOC0wNFQyMCUzQTI4JTNBNTMuMDAwWiZ3dj02YTcyNGE3ZWFiM2ZlMDAwODg1NmRmNTU=\",\"v\":false,\"tt\":\"July 23, 2026 release\",\"i\":\"https://braze-images.com/appboy/communication/marketing/content_cards_message_variations/images/6a724a7eab3fe0008856df3e/d81e05be4e99e6dc6de79d7f71462895f07920e3/original.png?1785875073\",\"ds\":\"This release is a step forward for AI, observability, and creative workflows:\\n\\n• Braze MCP Server — Connect AI agents like Claude or ChatGPT directly to your workspace to read analytics, manage templates, and update Content Blocks through natural language.\\n\\n• Messaging Diagnostics Dashboard — A structured breakdown of why messages were sent, aborted, or dropped — by reason, channel, and user — without opening a support ticket.\\n\\n• Asset Swap — Update a creative asset once in the Media Library and have it propagate automatically to every campaign, Canvas, and template that references it.\\n\\n• WhatsApp Limited Time Offer Templates — Add a native countdown to time-sensitive promotions directly in WhatsApp marketing messages.\\n\",\"ca\":\"2026-08-04T20:29:24.000Z\",\"ea\":\"2026-08-24T04:00:00.000Z\",\"u\":\"https://www.braze.com/docs/releases/2026/7_23_26\",\"dm\":\"See everything that launched\",\"ar\":6.94,\"e\":{},\"p\":true,\"db\":false,\"cl\":false,\"l\":null,\"ia\":\"What's new in Braze\",\"s\":false}]}"
+          "value": "{\"v\":[{\"tp\":\"captioned_image\",\"id\":\"NmE2YmM4MGMwZjBiYzIwMDg0NDE1NjI3XyRfY2M9ZDg0NzUwOGQtNmI2NS1mNWMzLTk2ZWQtOTc5NTZjNTVmNjc4Jm12PTZhNmJjODBjMGYwYmMyMDA4NDQxNTYyMSZwaT1jbXA=\",\"v\":false,\"tt\":\"Braze 2026 ESG Report: Climate Action, Community Impact, Global Inclusion & Opportunity\",\"i\":\"https://braze-images.com/appboy/communication/marketing/content_cards_message_variations/images/6a6bc80c0f0bc20084415621/a1a033aac7ea17b8182c76ea4c6f9e08354a8bd7/original.png?1786138396\",\"ds\":\"Five years of commitments. Five years of delivering on them. Our 2026 ESG Report reflects our efforts to grow responsibly and create lasting value for our people, our customers, and the communities we serve. \\n\\nThis year’s progress, by the numbers:\\n\\nAn 18% reduction in year-over-year company-wide emissions.\\n\\n$4.4M in charitable grants to over 200 organizations since launching the Braze for Social Impact Fund, 94% of which were directed by Braze employees in FY’26.\\n\\nEight consecutive years of ISO 27001 and SOC 2 Type 2 compliance.\\n\",\"ca\":\"2026-08-20T23:00:00.000Z\",\"ea\":\"2026-09-03T23:00:00.000Z\",\"u\":\"https://esg.braze.com/overview/default.aspx?utm_campaign=fy27-q3-global-customer-customer-esg-2026&utm_medium=dashboard-cc&utm_source=braze&utm_content=lp-esg-report-\",\"dm\":\"Read the full ESG Report\",\"ar\":1.7772511848341233,\"e\":{},\"p\":false,\"db\":true,\"cl\":false,\"l\":null,\"ia\":\"2026 Braze ESG Report\",\"s\":false}]}"
         },
         {
           "name": "ab.storage.dynamicRateLimitCurrentTokenCount.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"content_cards/sync\":0,\"banners/sync\":0}}"
+          "value": "{\"v\":{\"content_cards/sync\":1,\"banners/sync\":0}}"
         },
         {
           "name": "ab.storage.lastReqToEndpoint.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"data\":1787528607880,\"content_cards/sync\":1787528607881,\"feature_flags/sync\":1787528591669,\"banners/sync\":1787528589046}}"
+          "value": "{\"v\":{\"data\":1787593363807,\"content_cards/sync\":1787593364155,\"feature_flags/sync\":1787593236840,\"banners/sync\":1787593237106}}"
         },
         {
           "name": "ab.storage.banners.lastRequestedTime.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"product_announcements_banner_2\":1787528589045,\"product_announcements_banner_3\":1787528589045}}"
+          "value": "{\"v\":{\"product_announcements_banner_2\":1787593237106,\"product_announcements_banner_3\":1787593237106}}"
         },
         {
           "name": "ab.storage.ccImpressions.invalid_api_key",
@@ -364,7 +384,7 @@
         },
         {
           "name": "ab.storage.lastSdkReq.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":1787528590399}"
+          "value": "{\"v\":1787593362183}"
         },
         {
           "name": "chmln:l.C.d",
@@ -376,7 +396,7 @@
         },
         {
           "name": "ab.storage.globalRateLimitCurrentTokenCount.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":7}"
+          "value": "{\"v\":23}"
         },
         {
           "name": "ab.storage.ccDismissals.invalid_api_key",
@@ -388,7 +408,7 @@
         },
         {
           "name": "ab.storage.ccDismissals.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{}}"
+          "value": "{\"v\":{\"NmE3MjRhN2VhYjNmZTAwMDg4NTZkZjNjXyRfYnAmY2M9ZWU4Y2JjMDItMGQ3MS0wOWI2LTU2N2EtMWIyYzg4YjhmYTBlJmN0JmRpJmRtJm12PTZhNzI0YTdlYWIzZmUwMDA4ODU2ZGYzZSZvZCZwaT13ZnMmcm0mdz02YTcyNGE3ZWFiM2ZlMDAwODg1NmRmMzkmd3A9MjAyNi0wOC0wNFQyMCUzQTI4JTNBNTMuMDAwWiZ3dj02YTcyNGE3ZWFiM2ZlMDAwODg1NmRmNTU=\":true}}"
         },
         {
           "name": "ab.storage.attributes.bef30adf-6179-4b26-a3b5-42268996ad95",
@@ -396,11 +416,11 @@
         },
         {
           "name": "ab.storage.sessionId.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":\"g:af9063d4-e73b-449b-a2c3-d2c915295d20|e:1787528890532|c:1787528299023|l:1787528590532\"}"
+          "value": "{\"v\":\"g:bb2ae28a-8977-4ac3-aa56-5675c496f191|e:1787593662190|c:1787593361084|l:1787593362190\"}"
         },
         {
           "name": "ab.storage.events.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":[{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787526350433,\"s\":\"f8d2bf1e-cad3-4814-a7a6-dc484ea87083\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787526350754,\"s\":\"f8d2bf1e-cad3-4814-a7a6-dc484ea87083\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"se\",\"ts\":1787526350751,\"s\":\"f8d2bf1e-cad3-4814-a7a6-dc484ea87083\",\"d\":{\"d\":218.315}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ss\",\"ts\":1787528299023,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528299261,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528301096,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528301601,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528301843,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528314118,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528420150,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528420491,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528422403,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528422634,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528422859,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528433612,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528589916,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528590279,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528590533,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}}]}"
+          "value": "{\"v\":[{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787526350433,\"s\":\"f8d2bf1e-cad3-4814-a7a6-dc484ea87083\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787526350754,\"s\":\"f8d2bf1e-cad3-4814-a7a6-dc484ea87083\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"se\",\"ts\":1787526350751,\"s\":\"f8d2bf1e-cad3-4814-a7a6-dc484ea87083\",\"d\":{\"d\":218.315}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ss\",\"ts\":1787528299023,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528299261,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528301096,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528301601,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528301843,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528314118,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528420150,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528420491,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528422403,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528422634,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528422859,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528433612,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787528589916,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528590279,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787528590533,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"se\",\"ts\":1787528590532,\"s\":\"af9063d4-e73b-449b-a2c3-d2c915295d20\",\"d\":{\"d\":291.509}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ss\",\"ts\":1787593361084,\"s\":\"bb2ae28a-8977-4ac3-aa56-5675c496f191\",\"d\":{}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"set\",\"ts\":1787593361330,\"s\":\"bb2ae28a-8977-4ac3-aa56-5675c496f191\",\"d\":{\"key\":\"feature_flags\",\"value\":[]}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593361832,\"s\":\"bb2ae28a-8977-4ac3-aa56-5675c496f191\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage/app-usage?locale=en\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"company_name\":\"Turner\",\"developer_email\":\"roger@rogerjunior.com\"}}},{\"u\":\"6654ea119dc7430058c1dc94\",\"t\":\"ce\",\"ts\":1787593362193,\"s\":\"bb2ae28a-8977-4ac3-aa56-5675c496f191\",\"d\":{\"n\":\"dashboard_page\",\"p\":{\"path\":\"/dashboard/app_usage?locale=en\",\"app_group_id\":\"60106fe73d519f17d1749fd6\",\"company_id\":\"5a12fb5ea12f7457f92c5c91\",\"developer_id\":\"6654ea119dc7430058c1dc94\",\"developer_email\":\"roger@rogerjunior.com\"}}}]}"
         },
         {
           "name": "ab.storage.device.bef30adf-6179-4b26-a3b5-42268996ad95",
@@ -408,7 +428,7 @@
         },
         {
           "name": "ab.storage.requestAttempts.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"content_cards/sync\":3,\"data\":12,\"feature_flags/sync\":9,\"banners/sync\":8}}"
+          "value": "{\"v\":{\"content_cards/sync\":3,\"data\":13,\"feature_flags/sync\":10,\"banners/sync\":10}}"
         },
         {
           "name": "ab.storage.ffImpressions.bef30adf-6179-4b26-a3b5-42268996ad95",
@@ -432,7 +452,7 @@
         },
         {
           "name": "ab.storage.messagingSessionStart.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":1787520316442}"
+          "value": "{\"v\":1787593361085}"
         },
         {
           "name": "ab.storage.sdkVersion.bef30adf-6179-4b26-a3b5-42268996ad95",
@@ -456,15 +476,15 @@
         },
         {
           "name": "ab.storage.dynamicRateLimitCurrentTokenCount.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"content_cards/sync\":2,\"banners/sync\":0}}"
+          "value": "{\"v\":{\"content_cards/sync\":2,\"banners/sync\":3}}"
         },
         {
           "name": "ab.storage.lastReqToEndpoint.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"data\":1787528589699,\"content_cards/sync\":1787528590399,\"feature_flags/sync\":1787528589899,\"banners/sync\":1787528422857}}"
+          "value": "{\"v\":{\"data\":1787593361087,\"content_cards/sync\":1787593362004,\"feature_flags/sync\":1787593361322,\"banners/sync\":1787593362183}}"
         },
         {
           "name": "ab.storage.banners.lastRequestedTime.bef30adf-6179-4b26-a3b5-42268996ad95",
-          "value": "{\"v\":{\"product_announcements_banner_2\":1787528422857,\"product_announcements_banner_3\":1787528422857}}"
+          "value": "{\"v\":{\"product_announcements_banner_2\":1787593362183,\"product_announcements_banner_3\":1787593362183}}"
         },
         {
           "name": "ab.storage.ccImpressions.invalid_api_key",

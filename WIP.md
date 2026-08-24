@@ -1,5 +1,22 @@
 # WIP
 
+## 2026-08-24 — main (expired-session login fixed, chain fully verified)
+
+Roger's session expired for real and login hung: Braze remembers the email, so
+an expired session skips /sign_in and lands straight on the "Sign In to US
+Cluster 03" provider screen — the linear flow only clicked "WBD Okta" when it
+had arrived via the email screen, so it sat waiting for a dashboard forever.
+Fix: login is now a state machine (classifyScreen in flows/login.mjs) — name
+whatever screen is showing (okta widget fields first, then braze email,
+provider gated on /auth|/sign_in URL, portal, signed-in), handle it, loop; a
+sustained-unknown streak fails with the URL instead of a bare timeout.
+Works: ran against the genuinely expired session — provider → username →
+password → Google Authenticator code → dashboard, unattended; second run
+reused the fresh session. VERIFIED.login flipped true. 39 unit tests (new
+classifier fixtures incl. the exact expired-session screen) + 6 e2e green.
+Notes: no factor chooser (TOTP is default); no trust-device checkbox on the
+code screen, so full re-login happens on every lapse — fine, it's unattended.
+
 ## 2026-08-24 — main (UI rebuilt around the request)
 
 Rebuilt the Studio as four steps (Arte / Detalhes / Público / Enviar ao Braze),

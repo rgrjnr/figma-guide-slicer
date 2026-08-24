@@ -18,13 +18,15 @@ export const VERIFIED = {
    *  behind it (password, factor) still need a recording session. */
   oktaIdentifier: true,
   brazeSignIn: true,
+  // 2026-08-24: driven end to end against a genuinely expired session —
+  // provider screen, username, password, Google Authenticator code, dashboard.
   // Every Braze selector below was read off the live dashboard and driven end
   // to end: a real campaign was composed from a ZIP, scheduled, targeted at a
   // segment, and saved as a draft; a real CSV was imported.
   createEmailDraft: true,
   scheduleCampaign: true,
   importAudience: true,
-  login: false,
+  login: true,
 };
 
 /**

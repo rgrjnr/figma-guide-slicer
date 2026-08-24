@@ -3,46 +3,61 @@ import { freshTotp } from "../auth.mjs";
 import { braze, okta, warnIfUnverified } from "../selectors.mjs";
 import { appGroupFromUrl } from "../urls.mjs";
 
-/**
- * Okta orgs run on custom domains: WBD's Braze IdP is ssobiz.wbd.com (confirmed
- * by the SAML AuthnRequest's Destination) and the end-user portal is
- * wmbiz.okta.com. Neither is reliably ".okta.com", so Okta is recognised by its
- * widget rather than its hostname. This regex is only a hint for URL waits.
- */
-const OKTA_HOST_HINT = /\.okta(preview)?\.com|\.okta-emea\.com|ssobiz\.wbd\.com/;
 /** The Okta end-user portal, as opposed to an app's own sign-in redirect. */
 const OKTA_PORTAL = /\/enduser\/|\/app\/UserHome/;
 const BRAZE_SIGN_IN = /\/sign_in|\/auth\b/;
 
-/** Which Okta screen is showing, or null if this is not the Okta widget. */
-async function currentScreen(page, timeout = 1_000) {
+/**
+ * Name whichever sign-in screen is showing, or null while a redirect settles.
+ *
+ * Login used to be a linear script — email, provider, Okta, dashboard — which
+ * worked exactly once, on a cold start. An expired session enters the chain at
+ * an arbitrary point depending on which cookies survived: Braze remembered the
+ * email and jumped straight to the "Sign In to US Cluster 03" provider screen,
+ * the script only clicked the provider when it had come through the email
+ * screen, and the run sat waiting for a dashboard that was never coming. So the
+ * screen is classified from the DOM every time, and order of appearance stops
+ * mattering.
+ *
+ * Checked most-specific first: the Okta widget's fields, then Braze's own
+ * sign-in screens, then the portal, then the signed-in dashboard.
+ */
+export async function classifyScreen(page, quick = 400) {
   for (const [name, locator] of Object.entries(okta.screens)) {
-    if (await locator(page).isVisible({ timeout }).catch(() => false)) return name;
+    if (await locator(page).isVisible({ timeout: quick }).catch(() => false)) return name;
+  }
+  if (await braze.signIn.email(page).isVisible({ timeout: quick }).catch(() => false)) {
+    return "brazeEmail";
+  }
+  if (
+    BRAZE_SIGN_IN.test(page.url()) &&
+    (await braze.signIn
+      .ssoProvider(page, new RegExp(config.ssoButton, "i"))
+      .isVisible({ timeout: quick })
+      .catch(() => false))
+  ) {
+    return "brazeProvider";
+  }
+  if (OKTA_PORTAL.test(page.url())) return "portal";
+  if (await braze.signedIn(page).isVisible({ timeout: quick * 2 }).catch(() => false)) {
+    return "signedIn";
   }
   return null;
 }
 
-const onOkta = async page => (await currentScreen(page)) !== null;
-
 /** True when the browser is sitting inside an authenticated Braze dashboard. */
 export async function isSignedIn(page) {
-  if (BRAZE_SIGN_IN.test(page.url()) || (await onOkta(page))) return false;
-  return braze.signedIn(page).isVisible({ timeout: 5_000 }).catch(() => false);
+  return (await classifyScreen(page)) === "signedIn";
 }
 
+const OKTA_SCREENS = new Set(["identifier", "password", "factor", "code"]);
+
 /**
- * Sign in through Okta Identity Engine.
- *
- * Two entry paths are supported, because which one applies depends on how the
- * tenant is set up: going to Braze and being redirected to Okta, or signing
- * into the Okta portal and clicking the Braze tile. The flow starts at Braze
- * when BRAZE_URL is set and falls back to the portal if it ends up there.
- *
- * Safe to call when the stored session is still valid — it notices and returns
- * without touching the form.
+ * Sign in, from wherever the session happens to be. Safe to call when the
+ * stored session is still valid — the first classification says so and the
+ * flow returns without touching anything.
  */
 export async function login(ctx) {
-  const { page } = ctx;
   warnIfUnverified(ctx, "login");
 
   const entry = config.url || config.oktaUrl;
@@ -52,91 +67,74 @@ export async function login(ctx) {
     await p.goto(entry, { waitUntil: "domcontentloaded" });
   });
 
-  if (await isSignedIn(page)) {
-    ctx.log("already signed in — the stored session is still good");
-    return;
-  }
+  const MAX_SCREENS = 15;
+  // Redirect chains (Braze -> Okta -> SAML -> Braze) show nothing recognisable
+  // for a few seconds; only a *sustained* unknown means we are actually stuck.
+  let unknownStreak = 0;
 
-  // Braze does not redirect to Okta on its own: its sign-in page asks for the
-  // email address first, recognises the SSO domain, and only then hands off.
-  if (await braze.signIn.isShowing(page).isVisible({ timeout: 5_000 }).catch(() => false)) {
-    await ctx.step("hand off to SSO from the Braze sign-in page", async p => {
-      await braze.signIn.email(p).fill(config.email);
-      await braze.signIn.submit(p).click();
-      await p.waitForURL(u => !/\/sign_in/.test(String(u)), { timeout: 30_000 });
-    });
+  for (let i = 0; i < MAX_SCREENS; i++) {
+    const screen = await classifyScreen(ctx.page, 1_000);
 
-    // Braze then offers the configured identity providers by name rather than
-    // redirecting on its own.
-    if (!(await onOkta(page))) {
-      await ctx.step(`choose the "${config.ssoButton}" identity provider`, async p => {
-        const provider = braze.signIn.ssoProvider(p, new RegExp(config.ssoButton, "i"));
-        await provider.waitFor({ state: "visible", timeout: 15_000 });
-        await provider.click();
-        // The SAML hand-off lands on the org's own domain, which is not
-        // necessarily an okta.com one — wait for the widget, not the URL.
-        await p.waitForFunction(
-          () => !!document.querySelector('input[name="identifier"], input[name="credentials.passcode"]'),
-          null,
-          { timeout: 30_000 }
-        ).catch(() => {});
-      });
+    if (screen === "signedIn") {
+      ctx.log(i === 0 ? "already signed in — the stored session is still good" : "signed in");
+      return;
+    }
+
+    if (screen === null) {
+      if (++unknownStreak >= 8) {
+        throw new Error(
+          `Stuck on an unrecognised screen at ${ctx.page.url()} — ` +
+            "see the last screenshot in the run directory and braze/selectors.mjs."
+        );
+      }
+      await ctx.page.waitForTimeout(3_000);
+      continue;
+    }
+    unknownStreak = 0;
+
+    const beforeUrl = ctx.page.url();
+    await handle[screen](ctx);
+
+    if (OKTA_SCREENS.has(screen)) {
+      // Okta reports a bad password or code inline rather than by failing to
+      // navigate; without this it surfaces later as a baffling timeout.
+      await assertNoError(ctx, `${screen} rejected`);
+      await waitForNextScreen(ctx, screen, beforeUrl);
     }
   }
 
-  if (await onOkta(page)) {
-    await authenticate(ctx);
-  } else {
-    ctx.log(`no Okta widget at ${page.url()} — continuing`);
-  }
+  throw new Error(
+    `Still not inside Braze after ${MAX_SCREENS} screens — see the screenshots in the run directory.`
+  );
+}
 
-  // Signing in through the portal lands on the app tiles, not inside Braze.
-  if (OKTA_PORTAL.test(ctx.page.url()) || (await onOkta(ctx.page))) {
-    await ctx.step(`click the "${config.appTile}" tile`, async p => {
+const handle = {
+  brazeEmail: ctx =>
+    ctx.step("enter the email on the Braze sign-in page", async p => {
+      await braze.signIn.email(p).fill(config.email);
+      await braze.signIn.submit(p).click();
+      await p.waitForTimeout(3_000);
+    }),
+
+  brazeProvider: ctx =>
+    ctx.step(`choose the "${config.ssoButton}" identity provider`, async p => {
+      await braze.signIn.ssoProvider(p, new RegExp(config.ssoButton, "i")).click();
+      // The SAML hand-off crosses domains; give it a moment before the loop
+      // looks at what arrived.
+      await p.waitForTimeout(3_000);
+    }),
+
+  portal: ctx =>
+    ctx.step(`click the "${config.appTile}" tile`, async p => {
       await okta.appTile(p, config.appTile).click();
-      // Tiles usually open the app in a new tab.
+      // Tiles usually open the app in a new tab; follow it if one appears.
       const opened = await p.context().waitForEvent("page", { timeout: 15_000 }).catch(() => null);
       if (opened) {
         await opened.waitForLoadState("domcontentloaded");
         ctx.page = opened;
       }
-    });
-  }
+    }),
 
-  await ctx.step("confirm we are inside Braze", async () => {
-    await braze.signedIn(ctx.page).waitFor({ state: "visible", timeout: 30_000 });
-  });
-}
-
-/**
- * The Okta widget, driven by whichever screen is actually showing rather than
- * by an assumed order. Orgs differ — some ask for the factor before the
- * password, some skip the password entirely, some show the code field straight
- * away — and a fixed sequence breaks on all of those. Each pass looks at the
- * DOM, handles that one screen, and waits for the page to change.
- */
-async function authenticate(ctx) {
-  const MAX_SCREENS = 8;
-
-  for (let i = 0; i < MAX_SCREENS; i++) {
-    const screen = await currentScreen(ctx.page, 2_000);
-    if (!screen) {
-      ctx.log("Okta widget is gone — authenticated");
-      return;
-    }
-
-    const before = ctx.page.url();
-    await handle[screen](ctx);
-    await assertNoError(ctx, `${screen} rejected`);
-    await waitForNextScreen(ctx, screen, before);
-  }
-
-  throw new Error(
-    `Still on the Okta widget after ${MAX_SCREENS} screens — see the screenshots in the run directory.`
-  );
-}
-
-const handle = {
   identifier: ctx =>
     ctx.step("enter username", async p => {
       await okta.identifier(p).fill(config.email);
@@ -145,15 +143,17 @@ const handle = {
 
   password: ctx =>
     ctx.step("enter password", async p => {
+      if (!config.password) {
+        throw new Error("Okta is asking for the password, but BRAZE_PASSWORD is not set in web/.env.local.");
+      }
       await okta.password(p).fill(config.password);
       await okta.passwordSubmit(p).click();
     }),
 
   factor: ctx =>
     ctx.step("choose the code authenticator", async p => {
-      // Each row has its own Select button, so the button must be scoped to the
-      // row naming the authenticator — a bare "Select" would take whichever is
-      // listed first, which is usually a push factor we cannot answer.
+      // Scoped to the row naming the authenticator — a bare "Select" would take
+      // whichever factor is listed first, usually a push we cannot answer.
       const chooser = okta.chooseTotpFactor(p);
       if (await chooser.isVisible({ timeout: 5_000 }).catch(() => false)) {
         await chooser.click();
@@ -183,7 +183,7 @@ const handle = {
 };
 
 /**
- * Wait for the widget to move on. A screen that is still showing its own field
+ * Wait for the Okta widget to move on. A screen still showing its own field
  * after this means the input was rejected without an error banner, which would
  * otherwise spin until the loop guard trips.
  */
@@ -209,18 +209,12 @@ async function waitForNextScreen(ctx, previous, previousUrl) {
   await ctx.page.waitForLoadState("domcontentloaded").catch(() => {});
 }
 
-/**
- * Okta reports a bad password or code inline rather than by failing to
- * navigate, so a silent wrong answer would otherwise surface much later as a
- * confusing timeout on the next step.
- */
 async function assertNoError(ctx, what) {
   const error = okta.error(ctx.page);
   if (await error.isVisible({ timeout: 3_000 }).catch(() => false)) {
     throw new Error(`${what}: ${(await error.innerText()).trim().replace(/\s+/g, " ")}`);
   }
 }
-
 
 /**
  * The app-group id scopes every dashboard URL. It is read off wherever the

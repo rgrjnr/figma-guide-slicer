@@ -85,9 +85,17 @@ is actually on the page and handles that one. Orgs vary — some ask for the
 factor before the password, some skip the password, some open straight on the
 code field — and a fixed sequence breaks on all of them.
 
-Still unverified: the password and factor screens. If this org only offers a
-push notification rather than a code, the flow says so explicitly and you can
-approve it on your phone while it waits.
+All of it is now verified for real: on 2026-08-24 an expired session was driven
+end to end — provider screen, username, password, Google Authenticator code,
+dashboard — with no one watching. Two details worth knowing:
+
+- **An expired session skips the email screen.** Braze remembers the address
+  and lands straight on the provider screen, which is why login is a state
+  machine over whatever screen is showing rather than a fixed sequence — a
+  linear flow got stuck exactly there.
+- **There is no "trust this device" option on the code screen**, so a full
+  password + code login happens whenever the session lapses. It runs
+  unattended, so this costs a few seconds, not a human.
 
 ## The campaign flow
 
