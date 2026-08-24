@@ -19,17 +19,33 @@ const KIND_LABEL: Record<string, string> = {
 };
 
 /**
- * Every row's links, in one list beside the design.
+ * The links, in one list beside the design — but only for rows someone has
+ * pointed at. Listing a field for every image row buried the handful that
+ * matter under twenty that never will, so a row appears here when its circle
+ * button on the artwork is clicked, and stays once it has a link or is social.
  *
- * Focusing a field points the canvas at the row it belongs to, so there is
- * never a question of which part of the email a link is being attached to —
- * which is the thing that is easy to get wrong when the two are separate.
+ * Focusing a field still points the canvas at its row, so which part of the
+ * email a link is attached to is never in question.
  */
 export function LinksPanel({ api, regions, focusedY0, onFocus }: Props) {
+  const shown = regions
+    .map((region, index) => ({ region, index, row: api.rowFor(region.y0) }))
+    .filter(({ region, row }) =>
+      region.y0 === focusedY0 || row.kind !== "image" || row.cells.some(c => c.link)
+    );
+
+  if (shown.length === 0) {
+    return (
+      <p className="hint">
+        Passe o mouse sobre uma linha na arte e use o botão de link ou o de
+        redes sociais.
+      </p>
+    );
+  }
+
   return (
     <div className="links-panel">
-      {regions.map((region, index) => {
-        const row = api.rowFor(region.y0);
+      {shown.map(({ region, index, row }) => {
         const focused = focusedY0 === region.y0;
         return (
           <div
@@ -63,6 +79,7 @@ export function LinksPanel({ api, regions, focusedY0, onFocus }: Props) {
                 )}
                 <input
                   className="url"
+                  autoFocus={focused && i === 0}
                   value={cell.link}
                   placeholder={
                     (cell.platform && PLATFORM_URLS[cell.platform]) || "Colar o link desta parte"

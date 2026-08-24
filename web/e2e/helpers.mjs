@@ -24,9 +24,15 @@ export async function goToStep(page, name) {
 export const guides = page => page.locator(".guide:not(.proposed)").count();
 export const regions = page => page.locator(".region").count();
 
-/** Type a URL into a row's field in the links panel beside the design. */
+/**
+ * Give a row a link the way a person does: click its circle on the artwork,
+ * then type into the field that appears in the side panel.
+ */
 export async function setRowLink(page, index, url) {
-  const field = page.locator(".link-row").nth(index).locator("input.url").first();
+  const row = page.locator(".region").nth(index);
+  await row.hover();
+  await row.locator(".row-actions .round.link").click();
+  const field = page.locator(".link-row.focused input.url").first();
   await field.waitFor({ state: "visible" });
   await field.fill(url);
   await field.blur();

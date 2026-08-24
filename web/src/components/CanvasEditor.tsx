@@ -250,7 +250,18 @@ export function CanvasEditor({ api, tool, regions, selectedY0, onSelectRow }: Pr
                     what you actually want is to split it further. */}
                 <div className="row-actions">
                   <button
-                    className={`round${row.kind === "social" ? " on" : ""}`}
+                    className={`round link${linked ? " on" : ""}`}
+                    title={linked ? "Editar o link desta linha" : "Adicionar um link a esta linha"}
+                    onPointerDown={e => e.stopPropagation()}
+                    onClick={e => {
+                      e.stopPropagation();
+                      onSelectRow(selectedY0 === r.y0 ? null : r.y0);
+                    }}
+                  >
+                    <LinkIcon />
+                  </button>
+                  <button
+                    className={`round social${row.kind === "social" ? " on" : ""}`}
                     title="Esta linha é uma barra de redes sociais"
                     onPointerDown={e => e.stopPropagation()}
                     onClick={e => {

@@ -1,5 +1,15 @@
 # WIP
 
+## 2026-08-24 — main (links on demand)
+
+The links panel listed a field for every row, burying the few that matter.
+Back to the two centred hover circles on the artwork — link and social, as
+before — but the field opens in the side panel (autofocused), not on the
+canvas, keeping the highlight+scroll sync. A row stays listed once it has a
+link or is social; clicking elsewhere on the art still splits.
+Works: new e2e/links.mjs (6 checks); setRowLink helper now goes through the
+circle like a person would. 7 e2e suites + 39 unit tests green.
+
 ## 2026-08-24 — main (expired-session login fixed, chain fully verified)
 
 Roger's session expired for real and login hung: Braze remembers the email, so
