@@ -31,6 +31,21 @@ const checks = [
     await page.locator(".field input").last().inputValue())],
   ["no page errors", errors.length === 0],
 ];
+// The spreadsheet arrives by drag, usually while the paste tab is still open —
+// that drop used to be silently swallowed. It must land either way.
+const dt = await page.evaluateHandle(() => {
+  const dt = new DataTransfer();
+  dt.items.add(new File(["email\ndropped@example.com\n"], "BASE 24.07.26.xlsx.csv".replace(".xlsx", ""),
+    { type: "text/csv" }));
+  return dt;
+});
+await page.locator(".source-toggle button").first().click(); // back to the paste tab
+await page.dispatchEvent(".step-body.form", "drop", { dataTransfer: dt });
+await page.waitForTimeout(1200);
+checks.push(["a file dropped on the paste tab still lands",
+  /dropped@example\.com|1 endereço|endereço/.test(await page.locator(".summary").first().innerText().catch(() => ""))
+  || (await page.locator(".dropzone").innerText().catch(() => "")).includes("24.07.26")]);
+
 console.log("");
 let failed = 0;
 for (const [l, ok] of checks) { console.log(`  ${ok ? "PASS" : "FAIL"}  ${l}`); if (!ok) failed++; }

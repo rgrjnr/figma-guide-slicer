@@ -1,5 +1,17 @@
 # WIP
 
+## 2026-08-24 — main (spreadsheet drop fixed)
+
+Roger's real mailing list "could not be imported": the file was fine (11,974
+unique addresses once parsed) — the Público step's default tab is "Colar
+endereços", which had no drop target, so a spreadsheet dragged there was
+silently swallowed. The dropzone only existed after clicking "Enviar arquivo".
+Fix: the whole step is now a drop target on either tab; a drop switches to the
+file tab and reads. Wrong file types get named ("use uma planilha") instead of
+being read as text. Verified with the actual xlsx dropped on the paste tab.
+Also: their 18:23 draft run succeeded (campaign 20260824) — login fix holding.
+Note to self: stop rm -rf'ing .runs during e2e; it wiped their failure history.
+
 ## 2026-08-24 — main (links on demand)
 
 The links panel listed a field for every row, burying the few that matter.

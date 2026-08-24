@@ -25,6 +25,14 @@ export function AudienceStep({ raw, segmentName, onChange }: Props) {
 
   const readFile = async (file: File | undefined) => {
     if (!file) return;
+    // A design dragged to the wrong step should say so, not be read as text.
+    if (!/\.(xlsx|xls|csv|txt)$/i.test(file.name)) {
+      setSource("file");
+      setFileName(`${file.name} — use uma planilha (.xlsx, .xls ou .csv)`);
+      return;
+    }
+    // Reading happens on the file tab either way, so what arrived is visible.
+    setSource("file");
     setReading(true);
     setFileName(file.name);
     try {
@@ -41,7 +49,15 @@ export function AudienceStep({ raw, segmentName, onChange }: Props) {
   };
 
   return (
-    <div className="step-body form">
+    // The whole step is a drop target. The spreadsheet arrives by drag more
+    // often than not, and the person dragging it has no reason to know a
+    // particular tab has to be open first — dropping it on the paste tab used
+    // to be silently swallowed, which read as "the file cannot be imported".
+    <div
+      className="step-body form"
+      onDragOver={e => e.preventDefault()}
+      onDrop={e => { e.preventDefault(); void readFile(e.dataTransfer.files[0]); }}
+    >
       <div className="form-inner">
         <div className="source-toggle">
           <button className={source === "paste" ? "active" : ""} onClick={() => setSource("paste")}>
