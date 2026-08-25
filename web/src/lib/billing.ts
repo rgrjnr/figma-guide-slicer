@@ -41,6 +41,12 @@ export interface SyncedFields {
   firstSentAt?: string;
   /** Relative path under data/assets, e.g. `campaigns/<id>/preview.png`. */
   thumbnail?: string;
+  /**
+   * When this campaign was last opened individually to read its delivery date.
+   * Stamped even when nothing was found, so a campaign with no date to give is
+   * not re-opened on every run.
+   */
+  detailAt?: string;
 }
 
 /**

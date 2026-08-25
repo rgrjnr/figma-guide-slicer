@@ -363,6 +363,55 @@ test("qty and rate off a request body are validated before anything is written",
   assert.equal(campaigns.getCampaign("a").billing.state, "unbilled");
 });
 
+/**
+ * The campaign index has no send-date column, so the date costs one navigation
+ * per campaign. These pin the rule that keeps that bounded.
+ */
+test("only campaigns that can still tell us something get opened", () => {
+  reset();
+  campaigns.upsertFromSync([
+    row("stopped-unread", "stopped"),
+    row("stopped-read", "stopped"),
+    row("active", "active"),
+    row("draft", "draft"),
+    row("archived", "archived"),
+  ]);
+  campaigns.applyDetails([{ id: "stopped-read", sentAt: "2026-08-02T10:00" }]);
+
+  const picked = campaigns.campaignsNeedingDetail().map(c => c.id);
+  assert.ok(!picked.includes("stopped-read"), "a stopped campaign already read is finished");
+  assert.ok(!picked.includes("draft") && !picked.includes("archived"), "neither has a send date to find");
+  assert.deepEqual(picked, ["stopped-unread", "active"], "billable-and-unread comes first");
+
+  // force re-reads everything, including the finished ones.
+  assert.equal(campaigns.campaignsNeedingDetail({ force: true }).length, 5);
+  assert.equal(campaigns.campaignsNeedingDetail({ limit: 1 })[0].id, "stopped-unread");
+});
+
+test("a campaign with no delivery date is not re-opened on every run", () => {
+  reset();
+  campaigns.upsertFromSync([row("a", "stopped")]);
+  // Looked, found nothing: that is a different fact from "not looked yet".
+  campaigns.applyDetails([{ id: "a", sentAt: null }]);
+
+  assert.ok(campaigns.getCampaign("a").detailAt, "the attempt is recorded");
+  assert.deepEqual(campaigns.campaignsNeedingDetail().map(c => c.id), []);
+  // And the date the list did supply is not blanked by the empty read.
+  assert.equal(campaigns.getCampaign("a").firstSentAt, "2026-08-02T10:00:00.000Z");
+});
+
+test("reading a date off the campaign beats the one the list guessed with", () => {
+  reset();
+  campaigns.upsertFromSync([row("a", "stopped")]);
+  campaigns.setBilling("a", { state: "invoiced", invoiceId: "INV-202608-01" });
+  campaigns.applyDetails([{ id: "a", sentAt: "2026-08-03T09:30" }]);
+
+  const after = campaigns.getCampaign("a");
+  assert.equal(after.firstSentAt, "2026-08-03T09:30");
+  assert.equal(after.billing.state, "invoiced", "the detail pass is the sync axis; it must not touch billing");
+  assert.equal(after.brazeStatus, "stopped");
+});
+
 test("the pure helpers stand on their own", () => {
   assert.equal(billing.invoiceMonth(new Date("2026-08-25T00:00:00.000Z")), "202608");
   assert.equal(billing.nextInvoiceId([], new Date("2026-08-25T00:00:00.000Z")), "INV-202608-01");

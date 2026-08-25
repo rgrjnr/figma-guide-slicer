@@ -21,6 +21,7 @@ import { chromium } from "playwright";
 import { readRows, parseRow, mapColumns, normalizeStatus, findFilterChip } from "./flows/list-campaigns.mjs";
 import { braze } from "./selectors.mjs";
 import { paths } from "./urls.mjs";
+import { toIso } from "./flows/campaign-detail.mjs";
 
 const GROUP = "5f9a1b2c3d4e5f6a7b8c9d0e";
 const ID = n => `0123456789abcdef${String(n).padStart(8, "0")}`;
@@ -339,4 +340,24 @@ test("the Status filter chip is found by its own text, and its × is inside it",
 test("a page with no chips reports no filter rather than throwing", async () => {
   await page.goto(`${base}/table`);
   assert.equal(await findFilterChip(page), null);
+});
+
+/**
+ * Braze prints the delivery date as yyyy/mm/dd and the time as "h:mm am", both
+ * in the workspace's own zone. Appending a Z would move every send by the
+ * offset and put a late-evening send on the wrong day of an invoice — which is
+ * why toIso deliberately produces a zoneless stamp.
+ */
+test("the delivery date and time combine without inventing a timezone", () => {
+  assert.equal(toIso("2026/03/23", "9:30 am"), "2026-03-23T09:30");
+  assert.equal(toIso("2026/03/23", "12:05 am"), "2026-03-23T00:05");
+  assert.equal(toIso("2026/03/23", "12:05 pm"), "2026-03-23T12:05");
+  assert.equal(toIso("2026/03/23", "7:45 pm"), "2026-03-23T19:45");
+  assert.equal(toIso("2026/03/23", "19:45"), "2026-03-23T19:45");
+  assert.ok(!String(toIso("2026/03/23", "9:30 am")).endsWith("Z"), "never claims UTC");
+
+  // A date with no readable time still dates the e-mail; junk does not.
+  assert.equal(toIso("2026/03/23", ""), "2026-03-23T00:00");
+  assert.equal(toIso("", "9:30 am"), null);
+  assert.equal(toIso("tomorrow", "9:30 am"), null);
 });

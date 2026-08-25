@@ -21,6 +21,7 @@ import { replaceMessage } from "./flows/replace-message.mjs";
 import { refreshCampaign } from "./flows/refresh.mjs";
 import { sendTest } from "./flows/send-test.mjs";
 import { listCampaigns } from "./flows/list-campaigns.mjs";
+import { detailCampaigns } from "./flows/campaign-detail.mjs";
 
 const [command, ...rest] = process.argv.slice(2);
 const args = {};
@@ -63,6 +64,16 @@ const flows = {
    * ledger. There is no Braze API key on this account, so this scrape is the
    * only source of truth `data/campaigns.json` has.
    */
+  /**
+   * Read the delivery date off each campaign's own page. The index only counts
+   * e-mails; it has no send date. Slow by nature — one navigation per campaign
+   * — so it is its own command rather than part of the list sync.
+   */
+  details: ctx =>
+    detailCampaigns(ctx, {
+      ids: (args.ids || "").split(",").map(s => s.trim()).filter(Boolean),
+      limit: Number(args.limit) || 0,
+    }),
   campaigns: ctx =>
     listCampaigns(ctx, { status: args.status, limit: Number(args.limit) || 0 }),
   audience: ctx =>

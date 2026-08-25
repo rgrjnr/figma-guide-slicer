@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getProject, updateProject } from "@/lib/server/store";
-import { upsertFromSync } from "@/lib/server/campaigns";
+import { applyDetails, campaignsNeedingDetail, upsertFromSync } from "@/lib/server/campaigns";
 import type { ProjectRecord, StepRecord } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -13,7 +13,7 @@ export const maxDuration = 900;
 const WEB_ROOT = process.cwd();
 
 interface RunRequest {
-  flow: "login" | "draft" | "replace" | "audience" | "schedule" | "refresh" | "test" | "campaigns";
+  flow: "login" | "draft" | "replace" | "audience" | "schedule" | "refresh" | "test" | "campaigns" | "details";
   /** When given, the run's outcome is recorded against this project. */
   projectId?: string;
   campaignId?: string;
@@ -36,6 +36,8 @@ interface RunRequest {
   /** Campaign sync: cap the scrape, and keep only one normalised status. */
   limit?: number;
   status?: string;
+  /** Details: re-read every campaign, including ones already read. */
+  force?: boolean;
 }
 
 function argsFor(body: RunRequest, dir: string): string[] {
@@ -86,6 +88,18 @@ function argsFor(body: RunRequest, dir: string): string[] {
       push(out, "--limit", body.limit ? String(body.limit) : undefined);
       push(out, "--status", body.status);
       return out;
+    }
+    /**
+     * The index has no send-date column, so the date has to be read off each
+     * campaign's own page. Which campaigns those are is decided HERE, from the
+     * ledger, rather than by the browser flow: the rule is "anything stopped
+     * whose date we have already read is finished and never re-read", and it
+     * belongs next to the data it is asked about.
+     */
+    case "details": {
+      const pending = campaignsNeedingDetail({ limit: body.limit ?? 0, force: Boolean(body.force) });
+      if (!pending.length) throw new Error("Todas as campanhas já têm data de envio.");
+      return ["details", "--ids", pending.map(c => c.id).join(",")];
     }
     case "audience": {
       if (!body.csv) throw new Error("No audience CSV — add addresses first.");
@@ -156,6 +170,14 @@ export async function POST(request: Request) {
         // The campaign sync belongs to no project — it is the whole workspace —
         // so it writes to the ledger instead, and before the done event, so the
         // UI's refresh on done always reads post-write state.
+        if (body.flow === "details" && ok) {
+          try {
+            const written = recordDetails(output);
+            send("log", { level: "info", message: `  ${written} data(s) de envio gravada(s)` });
+          } catch (err) {
+            send("log", { level: "error", message: `não foi possível gravar as datas: ${String(err)}` });
+          }
+        }
         if (body.flow === "campaigns" && ok) {
           try {
             const written = recordCampaigns(output, Boolean(body.status || body.limit));
@@ -262,6 +284,20 @@ function recordCampaigns(output: string, filtered: boolean): number {
     console.warn(`sync: ${summary.missing} campanha(s) não apareceram mais no Braze`);
   }
   return rows.length;
+}
+
+/**
+ * Pull the details run's result off its output and write the dates into the
+ * ledger. Same reverse-scan as the sync: the flow logs its result as one JSON
+ * line, and the CLI's trailing "OK — artifacts in ..." is not JSON.
+ */
+function recordDetails(output: string): number {
+  const json = output.split("\n").map(l => l.trim()).reverse().find(l => l.startsWith("{") && l.endsWith("}"));
+  if (!json) throw new Error("a leitura das datas não reportou nada");
+
+  const result = JSON.parse(json) as { campaigns?: { id: string; sentAt?: string | null }[] };
+  if (!Array.isArray(result.campaigns)) throw new Error("a leitura das datas não reportou nada");
+  return applyDetails(result.campaigns);
 }
 
 /** One record as braze/flows/list-campaigns.mjs reports it. */

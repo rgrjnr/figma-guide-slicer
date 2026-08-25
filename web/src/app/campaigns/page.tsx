@@ -59,9 +59,12 @@ export default function CampaignsPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const sync = useCallback(async () => {
-    // The button is disabled while a sync runs, but a double-click lands both
-    // events before React re-renders; the flag is what actually holds the line.
+  /**
+   * Both dashboard reads go through here. The button is disabled while one
+   * runs, but a double-click lands both events before React re-renders; the
+   * flag is what actually holds the line.
+   */
+  const run = useCallback(async (body: Record<string, unknown>, failure: string) => {
     if (running.current) return;
     running.current = true;
     setSyncing(true);
@@ -73,13 +76,9 @@ export default function CampaignsPage() {
         setLastLine(line.message);
         if (line.level === "error") setError(line.message);
       };
-      // Deliberately uncapped and unfiltered: the run route only counts a
-      // sync as complete — and only then lets the store flag campaigns that
-      // have disappeared from the dashboard — when neither limit nor status
-      // was passed. A faster partial sync would quietly cost that.
-      const ok = await runBrazeFlow({ flow: "campaigns" }, { onLog, onStep: setProgress });
-      if (!ok) setError(current => current ?? "A sincronização falhou.");
-      // Reloaded either way: a run that died halfway still wrote every page it
+      const ok = await runBrazeFlow(body, { onLog, onStep: setProgress });
+      if (!ok) setError(current => current ?? failure);
+      // Reloaded either way: a run that died halfway still wrote everything it
       // managed to read, and those rows are better than the ones on screen.
       await load();
     } catch (err) {
@@ -90,6 +89,39 @@ export default function CampaignsPage() {
       setProgress(null);
     }
   }, [load]);
+
+  // Deliberately uncapped and unfiltered: the run route only counts a sync as
+  // complete — and only then lets the store flag campaigns that have
+  // disappeared from the dashboard — when neither limit nor status was passed.
+  // A faster partial sync would quietly cost that.
+  const sync = useCallback(() => run({ flow: "campaigns" }, "A sincronização falhou."), [run]);
+
+  /**
+   * The index has no send-date column, so the date is read off each campaign's
+   * own page — one navigation each, minutes for a whole workspace. Its own
+   * button rather than part of Sincronizar: the list refresh stays quick, and
+   * this is only worth doing when dates are actually missing.
+   */
+  const fillDates = useCallback(
+    () => run({ flow: "details" }, "Não foi possível ler as datas de envio."),
+    [run],
+  );
+
+  /**
+   * Mirrors campaignsNeedingDetail on the server: a stopped campaign already
+   * read is finished, and drafts and archived ones have no send date to find.
+   * Only ever used to label the button — the server decides what actually runs.
+   */
+  const missingDates = useMemo(
+    () =>
+      (campaigns ?? []).filter(
+        c =>
+          !(c.detailAt && c.brazeStatus === "stopped") &&
+          c.brazeStatus !== "draft" &&
+          c.brazeStatus !== "archived",
+      ).length,
+    [campaigns],
+  );
 
   const counts = useMemo(() => {
     const list = campaigns ?? [];
@@ -119,6 +151,11 @@ export default function CampaignsPage() {
             <span className="review-bar"><span style={{ width: `${bar.pct}%` }} /></span>
             {bar.n}/{bar.total} · {bar.label}
           </span>
+        )}
+        {missingDates > 0 && (
+          <button className="ghost" onClick={() => void fillDates()} disabled={syncing} title="Abre cada campanha para ler a data de envio">
+            Buscar datas ({missingDates})
+          </button>
         )}
         <button className="primary" onClick={() => void sync()} disabled={syncing}>
           {syncing ? "Sincronizando…" : "Sincronizar"}

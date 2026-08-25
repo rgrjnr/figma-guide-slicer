@@ -211,6 +211,77 @@ export function upsertFromSync(rows: readonly SyncRow[], options: SyncOptions = 
 }
 
 /**
+ * Which campaigns are worth opening one at a time to read a send date.
+ *
+ * The index has no send-date column, so the date costs one navigation each —
+ * minutes for a whole workspace. This is the rule that keeps that bounded:
+ *
+ * - Anything Braze has STOPPED is finished. Its send date cannot change again,
+ *   so once read it is never re-read.
+ * - Anything still running can still change, so it stays eligible.
+ * - Drafts and archived campaigns have no send date to find.
+ *
+ * Ordered so that if the run is cut short — a limit, an expired session, a
+ * closed laptop — the campaigns about to appear on an invoice are the ones that
+ * got done.
+ */
+export function campaignsNeedingDetail({ limit = 0, force = false } = {}): CampaignRecord[] {
+  const wanted = read().campaigns.filter(campaign => {
+    if (force) return true;
+    if (campaign.detailAt && campaign.brazeStatus === "stopped") return false;
+    if (campaign.brazeStatus === "draft" || campaign.brazeStatus === "archived") return false;
+    return true;
+  });
+
+  const rank = (campaign: CampaignRecord) => {
+    if (campaign.brazeStatus === "stopped" && !campaign.detailAt) return 0;
+    if (!campaign.detailAt) return 1;
+    return 2;
+  };
+  wanted.sort((a, b) => rank(a) - rank(b));
+  return limit > 0 ? wanted.slice(0, limit) : wanted;
+}
+
+/**
+ * Write back what opening each campaign turned up. This is the sync axis — it
+ * is Braze's own answer about Braze's own campaign — so it goes nowhere near
+ * `billing`, exactly like upsertFromSync.
+ *
+ * `detailAt` is stamped even when no date was found, because "we looked and
+ * there was nothing there" is a different fact from "we have not looked", and
+ * without recording the first, every run would re-open the same campaigns that
+ * have no delivery date to give.
+ */
+export function applyDetails(details: readonly { id: string; sentAt?: string | null }[]): number {
+  if (!Array.isArray(details)) throw new Error("applyDetails needs an array");
+
+  const db = read();
+  const at = new Date().toISOString();
+  let written = 0;
+
+  for (const detail of details) {
+    if (!detail?.id) continue;
+    const index = db.campaigns.findIndex(c => c.id === detail.id);
+    if (index < 0) continue;
+
+    const current = db.campaigns[index];
+    db.campaigns[index] = {
+      ...current,
+      // A date read from the campaign itself beats the stop date the list
+      // guessed with, but a campaign with no delivery date must not blank one
+      // the list did supply.
+      firstSentAt: detail.sentAt || current.firstSentAt,
+      detailAt: at,
+      billing: current.billing,
+    };
+    written++;
+  }
+
+  write(db);
+  return written;
+}
+
+/**
  * Drop campaigns a complete sync stopped seeing. Anything that has been
  * invoiced or paid is kept whatever Braze says: the invoice references it by
  * id, and a printable document with a dangling line is not a document.
