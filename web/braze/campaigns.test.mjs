@@ -18,7 +18,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { chromium } from "playwright";
-import { readRows, parseRow, mapColumns, normalizeStatus } from "./flows/list-campaigns.mjs";
+import { readRows, parseRow, mapColumns, normalizeStatus, findFilterChip } from "./flows/list-campaigns.mjs";
+import { braze } from "./selectors.mjs";
 import { paths } from "./urls.mjs";
 
 const GROUP = "5f9a1b2c3d4e5f6a7b8c9d0e";
@@ -68,6 +69,26 @@ const FIXTURES = {
     <div class="vrow"><a href="${href(21)}">20261001</a><span>Stopped</span><span>Email</span></div>
     <div class="vrow"><a href="${href(22)}">20261002</a><span>Draft</span><span>Email</span></div>
   </div>`,
+
+  /**
+   * The filter chip, modelled on the real one: a rounded pill reading
+   * "Status: Active" with an × beside the label. Clicking that × is the only
+   * way to clear the filter, and the filter is what hides every stopped —
+   * i.e. every billable — campaign from the sync.
+   */
+  chip: `<div class="toolbar">
+    <div class="db-chip"><span>Status: Active</span><button aria-label="Remove">×</button></div>
+    <div class="db-chip"><span>Channel: Email</span><button aria-label="Remove">×</button></div>
+  </div>
+  <table><thead><tr><th>Name</th><th>Status</th></tr></thead><tbody></tbody></table>
+  <script>
+    // The × has to actually remove its chip, or the fixture would pass a
+    // dismiss control that does nothing — which is the very failure the flow
+    // checks for before it dares call the list unfiltered.
+    document.querySelectorAll(".db-chip button").forEach(b =>
+      b.addEventListener("click", () => b.closest(".db-chip").remove())
+    );
+  </script>`,
 
   /** The empty state. "Found nothing" has to be an answer, not an exception. */
   empty: `<table>
@@ -227,4 +248,41 @@ test("the campaign index URL carries the whole view state", () => {
 
   const filtered = new URL(`https://x.test${paths.campaignList(group, { extra: { archived: "true" } })}`);
   assert.equal(filtered.searchParams.get("archived"), "true");
+});
+
+/**
+ * The chip is the whole ballgame. Braze's saved view filters the campaign
+ * index to Status: Active, and everything this project bills for is stopped —
+ * so a sync that cannot find and dismiss this chip reads the one set of
+ * campaigns that can never be invoiced, and reports success while doing it.
+ */
+test("the Status filter chip is found by its own text, and its × is inside it", async () => {
+  await page.goto(`${base}/chip`);
+
+  const found = await findFilterChip(page);
+  assert.ok(found, "the Status chip has to be findable");
+  // The chip has to resolve to the whole pill — label AND ×, hence the ×
+  // showing up in its text — because the dismiss is looked for inside it.
+  assert.match(found.text, /^Status: Active\s*×$/);
+  assert.equal(found.strategy, "status-chip-by-text");
+
+  // The dismiss control must resolve INSIDE the chip: scoping it there is what
+  // makes clicking an unlabelled × safe, since a chip holds nothing but its
+  // label and its own button.
+  const dismiss = braze.campaignList.chipDismiss(found.chip);
+  assert.equal(await dismiss.count(), 1);
+  assert.equal((await dismiss.getAttribute("aria-label")) ?? "", "Remove");
+
+  await dismiss.click();
+  const next = await findFilterChip(page);
+  assert.ok(next, "the second chip is still there — one click clears one filter");
+  assert.match(next.text, /Channel: Email/);
+
+  await braze.campaignList.chipDismiss(next.chip).click();
+  assert.equal(await findFilterChip(page), null, "with no chips left, nothing is filtered");
+});
+
+test("a page with no chips reports no filter rather than throwing", async () => {
+  await page.goto(`${base}/table`);
+  assert.equal(await findFilterChip(page), null);
 });

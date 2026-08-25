@@ -220,24 +220,70 @@ export const braze = {
      * So the filter is cleared before a single row is read, and if it cannot be
      * proven cleared the run refuses to call itself complete.
      */
+    /**
+     * The filter is a chip — a rounded pill reading "Status: Active" with its
+     * own × — and clicking that × is the only way to clear it. Confirmed from a
+     * screenshot of the real page, which is also why the match is on the chip's
+     * text rather than on a class name: the wording is Braze's product copy and
+     * changes far less often than its styling does.
+     *
+     * The strategies find the CHIP; the × is then looked for inside it. Scoping
+     * the click to the chip is what makes clicking an unlabelled × safe — the
+     * only things inside a chip are its label and its dismiss button.
+     */
+    filterChipStrategies: [
+      {
+        /**
+         * Climb from the label to the nearest ancestor that actually CONTAINS a
+         * dismiss control. Stopping at the first div or span instead lands on
+         * the label's own wrapper, with the × as a sibling rather than a child
+         * — at which point the dismiss is nowhere to be found inside the "chip"
+         * and the filter never gets cleared. The offline fixture caught exactly
+         * that, which is why the axis is written this way.
+         */
+        name: "status-chip-by-text",
+        chip: p =>
+          p
+            .getByText(/^\s*(status|state|channel|tag)\s*:/i)
+            .first()
+            .locator('xpath=ancestor-or-self::*[.//button or .//*[@role="button"] or .//svg][1]'),
+      },
+      {
+        /** Same climb, for a chip whose dismiss is not a button at all. */
+        name: "status-chip-parent",
+        chip: p => p.getByText(/^\s*(status|state|channel|tag)\s*:/i).first().locator("xpath=.."),
+      },
+      {
+        name: "chip-class-with-status",
+        chip: p =>
+          p
+            .locator('[class*="chip" i], [class*="pill" i], [class*="filter" i], [data-testid*="chip" i]')
+            .filter({ hasText: /^\s*\w+\s*:\s*\w+/ })
+            .first(),
+      },
+    ],
+
+    /** The × inside a chip. Last, because the dismiss sits after the label. */
+    chipDismiss: chip =>
+      chip
+        .locator('button, [role="button"], [aria-label*="emove" i], [aria-label*="lear" i], [aria-label*="lose" i], svg')
+        .last(),
+
+    /** Tried before the chips, in case the view offers a single reset. */
     clearFilterStrategies: [
       { name: "clear-all-filters", locator: p => p.getByRole("button", { name: /clear (all )?filters?|reset filters?/i }).first() },
       { name: "clear-link", locator: p => p.getByRole("link", { name: /clear (all )?filters?|clear all/i }).first() },
-      { name: "clear-text", locator: p => p.getByText(/^clear (all )?filters?$/i).first() },
-      /** Braze renders each active filter as a chip with its own dismiss ×. */
-      { name: "filter-chip-dismiss", locator: p => p.locator('[class*="filter"] [aria-label*="emove" i], [class*="chip"] [aria-label*="emove" i]').first() },
-      /** Some views use tabs instead, where "All" is the unfiltered one. */
-      { name: "all-tab", locator: p => p.getByRole("tab", { name: /^all( campaigns)?$/i }).first() },
     ],
 
     /**
      * Evidence that a filter is still applied. Read AFTER clearing: if any of
      * these still matches, the list on screen is a subset and the sync must not
-     * claim to have seen the workspace.
+     * claim to have seen the workspace. The chip's own text is the reliable
+     * one — it is what the screenshot shows.
      */
     activeFilterStrategies: [
-      { name: "filter-chip", locator: p => p.locator('[class*="filter-chip"], [class*="FilterChip"], [data-testid*="filter-chip"]').first() },
-      { name: "selected-status-tab", locator: p => p.getByRole("tab", { selected: true }).filter({ hasText: /active|draft|stopped|archived/i }).first() },
+      { name: "status-chip", locator: p => p.getByText(/^\s*status\s*:/i).first() },
+      { name: "any-filter-chip", locator: p => p.getByText(/^\s*(state|channel|tag)\s*:/i).first() },
       { name: "filter-count-badge", locator: p => p.getByText(/\d+ filters? applied/i).first() },
     ],
 

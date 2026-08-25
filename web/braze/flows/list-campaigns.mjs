@@ -419,8 +419,9 @@ const DESTRUCTIVE = /delete|archive|send|launch|stop|pause|duplicate|create|new|
  * that quietly under-reports what is billable.
  */
 async function widenTheList(ctx, page) {
-  let cleared = null;
+  const cleared = [];
 
+  // A single reset, if the view has one.
   for (const strategy of braze.campaignList.clearFilterStrategies) {
     const control = strategy.locator(page);
     if (!(await control.isVisible({ timeout: 1_000 }).catch(() => false))) continue;
@@ -432,21 +433,48 @@ async function widenTheList(ctx, page) {
       ""
     ).trim().replace(/\s+/g, " ");
 
-    if (DESTRUCTIVE.test(label)) {
-      ctx.log(`refusing to click "${label}" while clearing filters — it is not a filter control`, "warn");
-      continue;
-    }
-    // A chip's dismiss button is usually an unlabelled ×, so an empty label is
-    // allowed for that strategy alone; every other candidate has to say what it
-    // is before it gets clicked.
-    if (!label && strategy.name !== "filter-chip-dismiss") continue;
-    if (label && !CLEAR_LABEL.test(label) && strategy.name !== "filter-chip-dismiss") continue;
-
+    if (!label || DESTRUCTIVE.test(label) || !CLEAR_LABEL.test(label)) continue;
     await control.click({ timeout: 5_000 }).catch(() => {});
     await page.waitForTimeout(2_500);
-    cleared = `${strategy.name}${label ? ` ("${label}")` : ""}`;
-    ctx.log(`cleared the list filter via ${cleared}`);
+    cleared.push(`${strategy.name} ("${label}")`);
+    ctx.log(`cleared the list filter via ${strategy.name} ("${label}")`);
     break;
+  }
+
+  // Then the chips, one × at a time. There can be more than one — status,
+  // channel, a tag — and each has to go, so this loops until no chip is left
+  // rather than clearing the first and calling it done. The bound is there
+  // because a × that does not actually remove its chip would otherwise be
+  // clicked forever.
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const found = await findFilterChip(page);
+    if (!found) break;
+
+    const { chip, text, strategy } = found;
+    if (DESTRUCTIVE.test(text)) {
+      ctx.log(`refusing to touch the chip "${text}" — it does not read like a filter`, "warn");
+      break;
+    }
+
+    const dismiss = braze.campaignList.chipDismiss(chip);
+    if (!(await dismiss.count().catch(() => 0))) {
+      ctx.log(`the filter chip "${text}" has no dismiss control inside it; leaving it alone`, "warn");
+      break;
+    }
+
+    await dismiss.click({ timeout: 5_000 }).catch(() => {});
+    await page.waitForTimeout(2_500);
+
+    // Only count it if the chip actually went. A × that was really something
+    // else leaves the chip on screen, and claiming the filter was cleared is
+    // precisely the lie that makes an Active-only read look complete.
+    const still = await findFilterChip(page);
+    if (still && still.text === text) {
+      ctx.log(`clicked the × on "${text}" but the chip is still there`, "warn");
+      break;
+    }
+    cleared.push(`${strategy} ("${text}")`);
+    ctx.log(`removed the filter chip "${text}"`);
   }
 
   const remaining = await firstMatchVisible(page, braze.campaignList.activeFilterStrategies, 1_500);
@@ -462,13 +490,28 @@ async function widenTheList(ctx, page) {
     ctx.log(`the view carries filter parameters: ${JSON.stringify(filterParams)} — pin these in braze/urls.mjs`);
   }
 
-  const note = cleared
+  const note = cleared.length
     ? remaining
-      ? `cleared via ${cleared} but "${remaining}" still looks like an applied filter`
-      : `cleared via ${cleared}`
-    : "no filter control matched — the saved view was read as-is";
+      ? `cleared ${cleared.join(", ")} but "${remaining}" still looks like an applied filter`
+      : `cleared ${cleared.join(", ")}`
+    : "no filter chip or reset control matched — the saved view was read as-is";
 
-  return { unfiltered: Boolean(cleared) && !remaining, note, pageSize, filterParams };
+  return { unfiltered: cleared.length > 0 && !remaining, note, pageSize, filterParams };
+}
+
+/**
+ * The first filter chip on screen, with its text, or null. Used both to find
+ * something to dismiss and to check afterwards that dismissing it worked.
+ */
+export async function findFilterChip(page) {
+  for (const strategy of braze.campaignList.filterChipStrategies) {
+    const chip = strategy.chip(page);
+    if (!(await chip.isVisible({ timeout: 1_000 }).catch(() => false))) continue;
+    const text = ((await chip.innerText().catch(() => "")) || "").replace(/\s+/g, " ").trim();
+    if (!text) continue;
+    return { chip, text, strategy: strategy.name };
+  }
+  return null;
 }
 
 /** The query parameters that are not ours — i.e. whatever the view added. */
