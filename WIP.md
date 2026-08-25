@@ -1,5 +1,20 @@
 # WIP
 
+## 2026-08-25 — main (billing platform A–D built, scraper UNVERIFIED)
+
+Ledger + invoicing built in one pass (plan in PLAN-BILLING.md): campaigns.json
+keyed by Braze campaign id, brazeStatus (sync-owned) and billing.state
+(ours) kept on separate axes at the type level; /campaigns, /invoices with a
+print stylesheet, shared-credential auth (Web Crypto in middleware, e2e signs in
+via e2e/helpers.mjs signIn()). No API key exists, so the scraper is the only
+source of truth. 89 unit tests + typecheck + build green.
+Braze's campaign index opens on a saved view showing ACTIVE only and everything
+billable is STOPPED — list-campaigns now clears the filter and maximises rows
+per page first, and refuses to claim `complete` unless it proved it.
+NOT DONE: every campaignList selector is a guess (VERIFIED.listCampaigns=false)
+and nothing has touched real Braze. Next: `npm run braze -- campaigns --limit 5`
+headed, watch which strategy matches, fix selectors.mjs. Then Phase B images.
+
 ## 2026-08-25 — main (test send unblocked by the draft, pill sizing)
 
 Test send now has its own lane and enables the moment the draft exists — it
