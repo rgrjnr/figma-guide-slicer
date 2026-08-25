@@ -9,13 +9,21 @@ import { isBillable, type BillingState, type BrazeStatus, type CampaignRecord } 
  * dropping the row, so an unknown one has to render as itself instead of as a
  * blank cell that looks like a bug in the ledger.
  */
+/**
+ * Braze's vocabulary translated into what these states actually mean for the
+ * work: a campaign Braze calls "active" is one still going out, and one it
+ * calls "stopped" is one that has finished going out — which is also the point
+ * at which it becomes billable. The stored `brazeStatus` keeps Braze's own
+ * words, because that is what the sync reads and what an invoice dispute would
+ * be argued from; only the screen says "enviando" and "enviado".
+ */
 const BRAZE_LABEL: Record<string, string> = {
   draft: "rascunho",
-  active: "ativa",
-  live: "ativa",
+  active: "enviando",
+  live: "enviando",
   scheduled: "agendada",
   paused: "pausada",
-  stopped: "parada",
+  stopped: "enviado",
   completed: "concluída",
   archived: "arquivada",
   unknown: "desconhecida",

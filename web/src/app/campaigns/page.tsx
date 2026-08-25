@@ -17,8 +17,10 @@ type Filter = "billable" | "all" | "stopped" | "active" | "draft" | "invoiced" |
 const FILTERS: { key: Filter; label: string; match: (c: CampaignRecord) => boolean }[] = [
   { key: "billable", label: "Faturáveis", match: isBillable },
   { key: "all", label: "Todas", match: () => true },
-  { key: "stopped", label: "Paradas", match: c => c.brazeStatus === "stopped" },
-  { key: "active", label: "Ativas", match: c => c.brazeStatus === "active" },
+  // Braze's "stopped" and "active" said the way the work is talked about: an
+  // email that has gone out, and one still going out.
+  { key: "stopped", label: "Enviadas", match: c => c.brazeStatus === "stopped" },
+  { key: "active", label: "Enviando", match: c => c.brazeStatus === "active" },
   { key: "draft", label: "Rascunhos", match: c => c.brazeStatus === "draft" },
   { key: "invoiced", label: "Faturadas", match: c => c.billing.state === "invoiced" },
   { key: "paid", label: "Pagas", match: c => c.billing.state === "paid" },

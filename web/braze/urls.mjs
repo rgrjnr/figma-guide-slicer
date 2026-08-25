@@ -5,6 +5,36 @@
 export const paths = {
   home: g => `/dashboard/app_usage/${g}?locale=en`,
   campaigns: g => `/engagement/campaigns/campaigns/${g}?locale=en`,
+  /**
+   * The campaign index with its view state spelled out, taken from a real URL
+   * off the dashboard:
+   *
+   *   /engagement/campaigns/campaigns/<group>?start=0&limit=96&globalFilter=
+   *     &sortby=last_edited&sortdir=-1&display=list
+   *
+   * This matters more than it looks. The index keeps its paging, sorting and
+   * filtering in the query string, so the ledger sync can ask for a window of
+   * rows outright instead of hunting for a "Next" button and clicking it — one
+   * navigation per page, nothing to mis-resolve, and a truncated read is
+   * arithmetic rather than a guess.
+   *
+   * `extra` carries whatever else the view needs; the status filter's parameter
+   * is not known yet, and the flow reads it back off the URL after clearing the
+   * filter by hand so it can be pinned here later.
+   */
+  campaignList: (g, { start = 0, limit = 100, sortby = "last_edited", sortdir = -1, display = "list", globalFilter = "", extra = {} } = {}) => {
+    const query = new URLSearchParams({
+      locale: "en",
+      start: String(start),
+      limit: String(limit),
+      globalFilter,
+      sortby,
+      sortdir: String(sortdir),
+      display,
+      ...extra,
+    });
+    return `/engagement/campaigns/campaigns/${g}?${query}`;
+  },
   /** The campaign wizard. page: 0 Compose, 1 Schedule, 2 Target, 3 Assign, 4 Review. */
   campaign: (id, g, page = 0) => `/engagement/campaigns/${id}/${g}?locale=en&page=${page}`,
   segments: g => `/engagement/segmenter/segmenter/${g}?locale=en`,

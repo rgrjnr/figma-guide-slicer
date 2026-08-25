@@ -19,6 +19,7 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { chromium } from "playwright";
 import { readRows, parseRow, mapColumns, normalizeStatus } from "./flows/list-campaigns.mjs";
+import { paths } from "./urls.mjs";
 
 const GROUP = "5f9a1b2c3d4e5f6a7b8c9d0e";
 const ID = n => `0123456789abcdef${String(n).padStart(8, "0")}`;
@@ -197,4 +198,33 @@ test("column mapping tolerates the labels being reworded or reordered", () => {
     scheduledFor: 3,
   });
   assert.deepEqual(mapColumns(["", "Something Else"]), {});
+});
+
+/**
+ * The index keeps paging, sorting and filtering in the query string — this URL
+ * is off the real dashboard:
+ *
+ *   ...?start=0&limit=96&globalFilter=&sortby=last_edited&sortdir=-1&display=list
+ *
+ * so the window can be asked for outright instead of hunting for a Next button.
+ * `extra` is how the status filter's parameter gets carried once a live run has
+ * shown us what it is called: without it, page two would quietly go back to the
+ * dashboard's Active-only default while page one was unfiltered.
+ */
+test("the campaign index URL carries the whole view state", () => {
+  const group = "60106fe73d519f17d1749fd6";
+  const first = new URL(`https://x.test${paths.campaignList(group)}`);
+  assert.equal(first.pathname, `/engagement/campaigns/campaigns/${group}`);
+  assert.equal(first.searchParams.get("start"), "0");
+  assert.equal(first.searchParams.get("limit"), "100");
+  assert.equal(first.searchParams.get("sortby"), "last_edited");
+  assert.equal(first.searchParams.get("display"), "list");
+  assert.equal(first.searchParams.get("globalFilter"), "");
+
+  const second = new URL(`https://x.test${paths.campaignList(group, { start: 200, limit: 200 })}`);
+  assert.equal(second.searchParams.get("start"), "200");
+  assert.equal(second.searchParams.get("limit"), "200");
+
+  const filtered = new URL(`https://x.test${paths.campaignList(group, { extra: { archived: "true" } })}`);
+  assert.equal(filtered.searchParams.get("archived"), "true");
 });

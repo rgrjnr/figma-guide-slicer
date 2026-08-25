@@ -201,18 +201,25 @@ export async function readRows(page) {
  * List every campaign in the workspace.
  *
  * @param {import("../runner.mjs").RunContext} ctx
- * @param {{status?: string, limit?: number, maxRounds?: number}} options
+ * @param {{status?: string, limit?: number, maxRounds?: number, pageSize?: number}} options
  *   `status` filters the *normalised* status locally rather than by driving the
  *   dashboard's own filter UI — one less control to click on a read-only flow,
  *   and the filter's wording is one more thing that could be wrong.
+ *   `pageSize` is the `limit` query parameter, i.e. how many rows one
+ *   navigation asks for. The dashboard's own UI uses 96; asking for more is
+ *   what makes most workspaces a single request, and if Braze caps it the flow
+ *   notices because the page comes back short and simply asks for the next
+ *   window.
  */
-export async function listCampaigns(ctx, { status = "", limit = 0, maxRounds = 60 } = {}) {
+export async function listCampaigns(ctx, { status = "", limit = 0, maxRounds = 60, pageSize = 200 } = {}) {
   warnIfUnverified(ctx, "listCampaigns");
   await login(ctx);
   const group = await appGroup(ctx);
 
   await ctx.step("open the campaigns index", async p => {
-    await p.goto(ctx.base + paths.campaigns(group), { waitUntil: "domcontentloaded" });
+    await p.goto(ctx.base + paths.campaignList(group, { start: 0, limit: pageSize }), {
+      waitUntil: "domcontentloaded",
+    });
     // The index is lazy-loaded and networkidle never fires on this dashboard,
     // so wait on the content. A missing anchor is reported, not thrown: the
     // page may simply be empty, and "found nothing" is a legitimate answer.
@@ -258,21 +265,39 @@ export async function listCampaigns(ctx, { status = "", limit = 0, maxRounds = 6
         break;
       }
 
-      // The list may paginate, infinite-scroll or virtualise, and which of the
-      // three it is cannot be known from here. Scrolling is tried first because
-      // it is inert — it cannot click anything — and only when scrolling stops
-      // producing new ids is a paging control looked for.
-      const grew = await scrollForMore(p, seen, seen.size);
-      if (grew.scrolled) scrolls++;
-      if (grew.more) continue;
-
-      const next = await clickNext(ctx, p);
-      if (!next) {
-        stopped = rounds === 1 ? "single page" : "no further page";
+      // Page by URL. The index keeps its window in the query string, so the
+      // next page is a navigation with a bigger `start` — deterministic, and
+      // with no control to mis-resolve. A page that comes back shorter than it
+      // was asked for is the last one.
+      if (batch.rows.length < pageSize) {
+        stopped = rounds === 1 ? "single page" : "end of list";
         break;
       }
+      const start = rounds * pageSize;
+      await p.goto(ctx.base + paths.campaignList(group, { start, limit: pageSize, extra: view.filterParams }), {
+        waitUntil: "domcontentloaded",
+      });
+      await firstMatchVisible(p, braze.campaignList.readyStrategies, 20_000);
+      await p.waitForTimeout(2_000);
       pagesClicked++;
-      await p.waitForTimeout(2_500);
+
+      // If the window moved but the rows did not, the parameters are being
+      // ignored — an older dashboard build, or a view that scrolls rather than
+      // pages. Fall back to the DOM: scrolling first, because it cannot click
+      // anything, and only then a paging control.
+      const fresh = await readRows(p);
+      const known = fresh.rows.filter(r => seen.has(r.id)).length;
+      if (fresh.rows.length && known === fresh.rows.length) {
+        ctx.log(`start=${start} returned the same rows — the URL window is being ignored, falling back to the DOM`, "warn");
+        const grew = await scrollForMore(p, seen, seen.size);
+        if (grew.scrolled) scrolls++;
+        if (grew.more) continue;
+        if (!(await clickNext(ctx, p))) {
+          stopped = "no further page";
+          break;
+        }
+        await p.waitForTimeout(2_500);
+      }
     }
     if (rounds > maxRounds) stopped = `stopped after ${maxRounds} rounds`;
   });
@@ -302,6 +327,21 @@ export async function listCampaigns(ctx, { status = "", limit = 0, maxRounds = 6
     );
   }
 
+  // The empirical check, and the one that does not depend on a single guessed
+  // selector: this workspace's campaigns are overwhelmingly finished ones, so a
+  // read that comes back entirely Active has almost certainly been served the
+  // saved view rather than the whole list.
+  const active = campaigns.filter(c => c.brazeStatus === "active").length;
+  if (campaigns.length >= 5 && active === campaigns.length) {
+    view.unfiltered = false;
+    view.note = `every one of the ${campaigns.length} rows read is Active, which means the list is still filtered`;
+    ctx.log(
+      `all ${campaigns.length} campaigns came back Active — the dashboard's default view is Active-only, ` +
+        `so the filter was not actually cleared. Nothing billable is Active, so this read is not usable.`,
+      "error"
+    );
+  }
+
   if (!view.unfiltered) {
     ctx.log(
       `the campaign list may still be filtered (${view.note}) — this run will NOT be treated as ` +
@@ -324,6 +364,8 @@ export async function listCampaigns(ctx, { status = "", limit = 0, maxRounds = 6
     unfiltered: view.unfiltered,
     filterNote: view.note,
     pageSize: view.pageSize,
+    /** Whatever the view added to the query string — the filter's parameter. */
+    filterParams: view.filterParams,
     stopped,
     unknownStatuses: unknown.length,
     syncedAt: new Date().toISOString(),
@@ -410,13 +452,38 @@ async function widenTheList(ctx, page) {
   const remaining = await firstMatchVisible(page, braze.campaignList.activeFilterStrategies, 1_500);
   const pageSize = await maximisePageSize(ctx, page);
 
+  // The index keeps its view state in the query string, so whatever clearing
+  // the filter did to the URL *is* the filter's parameter — the one thing about
+  // this page we cannot guess from here. It is captured, carried on every
+  // subsequent navigation so paging does not silently re-filter, and logged
+  // loudly so it can be pinned into paths.campaignList once seen for real.
+  const filterParams = viewParams(page.url());
+  if (Object.keys(filterParams).length) {
+    ctx.log(`the view carries filter parameters: ${JSON.stringify(filterParams)} — pin these in braze/urls.mjs`);
+  }
+
   const note = cleared
     ? remaining
       ? `cleared via ${cleared} but "${remaining}" still looks like an applied filter`
       : `cleared via ${cleared}`
     : "no filter control matched — the saved view was read as-is";
 
-  return { unfiltered: Boolean(cleared) && !remaining, note, pageSize };
+  return { unfiltered: Boolean(cleared) && !remaining, note, pageSize, filterParams };
+}
+
+/** The query parameters that are not ours — i.e. whatever the view added. */
+const OWN_PARAMS = new Set(["locale", "start", "limit", "globalFilter", "sortby", "sortdir", "display"]);
+
+function viewParams(url) {
+  const out = {};
+  try {
+    for (const [key, value] of new URL(url).searchParams) {
+      if (!OWN_PARAMS.has(key)) out[key] = value;
+    }
+  } catch {
+    // A URL we cannot parse tells us nothing; the caller carries on without it.
+  }
+  return out;
 }
 
 /**

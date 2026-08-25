@@ -90,7 +90,7 @@ export default function NewInvoicePage() {
 
           {campaigns !== null && campaigns.length === 0 && (
             <p className="hint">
-              Nenhuma campanha para faturar. Uma campanha entra nesta lista quando o Braze a marca como parada e
+              Nenhuma campanha para faturar. Uma campanha entra nesta lista quando o envio termina no Braze e
               ela ainda não foi faturada.
             </p>
           )}
