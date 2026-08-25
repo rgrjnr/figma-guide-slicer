@@ -1,5 +1,11 @@
 import { config } from "../config.mjs";
-import { freshTotp } from "../auth.mjs";
+import {
+  freshTotp,
+  acquireLoginLock,
+  releaseLoginLock,
+  loginLockHeld,
+  reloadSessionInto,
+} from "../auth.mjs";
 import { braze, okta, warnIfUnverified } from "../selectors.mjs";
 import { appGroupFromUrl } from "../urls.mjs";
 
@@ -71,13 +77,34 @@ export async function login(ctx) {
   // Redirect chains (Braze -> Okta -> SAML -> Braze) show nothing recognisable
   // for a few seconds; only a *sustained* unknown means we are actually stuck.
   let unknownStreak = 0;
+  // Parallel lanes must not log in at the same time: both would submit the
+  // same TOTP code and Okta refuses a code it has already seen. Whoever gets
+  // the lock signs in; everyone else waits and inherits the fresh session.
+  let holdingLock = false;
 
+  try {
   for (let i = 0; i < MAX_SCREENS; i++) {
     const screen = await classifyScreen(ctx.page, 1_000);
 
     if (screen === "signedIn") {
       ctx.log(i === 0 ? "already signed in — the stored session is still good" : "signed in");
       return;
+    }
+
+    if (screen !== null && !holdingLock) {
+      if (acquireLoginLock()) {
+        holdingLock = true;
+      } else {
+        await ctx.step("wait for the login already in progress", async p => {
+          const deadline = Date.now() + 5 * 60_000;
+          while (loginLockHeld() && Date.now() < deadline) await p.waitForTimeout(3_000);
+          // The context still holds the dead cookies it started with; adopt
+          // the session the other run just saved, then look again.
+          await reloadSessionInto(p.context());
+          await p.goto(entry, { waitUntil: "domcontentloaded" });
+        });
+        continue;
+      }
     }
 
     if (screen === null) {
@@ -106,6 +133,9 @@ export async function login(ctx) {
   throw new Error(
     `Still not inside Braze after ${MAX_SCREENS} screens — see the screenshots in the run directory.`
   );
+  } finally {
+    if (holdingLock) releaseLoginLock();
+  }
 }
 
 const handle = {

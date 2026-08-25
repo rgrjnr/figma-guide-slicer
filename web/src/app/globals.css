@@ -455,3 +455,21 @@ button.danger:hover:not(:disabled) { background: var(--danger); color: #fff; bor
 .status-pill.done { background: #e6f5ed; color: var(--ok); }
 .status-pill.failed { background: #fdecec; color: var(--danger); }
 .review-row .spacer { flex: 1; }
+
+/* --- Step-rail progress + result notes --- */
+
+.step-n.running { background: var(--accent-soft); }
+.step-n.done { background: #e6f5ed !important; color: var(--ok) !important; }
+.step-n.failed { background: #fdecec !important; color: var(--danger) !important; }
+.step-spin {
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid var(--accent); border-top-color: transparent;
+  animation: step-spin .8s linear infinite;
+}
+@keyframes step-spin { to { transform: rotate(360deg); } }
+
+.success-note { margin: 0; color: var(--ok); font-size: 13px; font-weight: 500; }
+.error-note {
+  margin: 0; padding: 10px 14px; border-radius: 8px;
+  background: #fdecec; color: var(--danger); font-size: 13px;
+}

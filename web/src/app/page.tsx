@@ -61,11 +61,19 @@ export default function Page() {
   });
 
   const [flowState, setFlowState] = useState<Record<string, FlowStatus>>({});
+  const [testSentTo, setTestSentTo] = useState(0);
   const [log, setLog] = useState<{ level: "info" | "error"; message: string }[]>([]);
   const cellsRef = useRef<ExportedCell[] | null>(null);
-  // Braze runs share one browser session, so they must not overlap; everything
-  // the pipeline starts goes through this queue.
-  const queueRef = useRef<Promise<unknown>>(Promise.resolve());
+  /**
+   * Two lanes, because the two slow jobs are independent: the audience import
+   * can grind through its wizard while the draft is being built. What must
+   * never overlap is *login* — two runs submitting the same TOTP code — and
+   * that is serialised server-side by a lock in braze/auth.mjs, not here.
+   */
+  const lanesRef = useRef<Record<string, Promise<unknown>>>({
+    audience: Promise.resolve(),
+    campaign: Promise.resolve(),
+  });
   // What was last shipped, so revisiting a step and moving on again only
   // re-runs Braze when something actually changed.
   const importedSig = useRef("");
@@ -96,6 +104,13 @@ export default function Page() {
   }, [api]);
 
   useEffect(() => { setDirty(true); }, [project.guides, project.rows, project.designWidth]);
+
+  // The visible download button is gone from the UI, but the ZIP-shape e2e
+  // checks are the strongest ones there are; dev builds keep a hook for them.
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") return;
+    (window as unknown as { __downloadZip?: () => void }).__downloadZip = () => void runFlow("download");
+  });
 
   const onFile = useCallback(async (file: File | undefined) => {
     if (!file) return;
@@ -141,6 +156,7 @@ export default function Page() {
       setFlow(statusKey, "running");
       setLog(l => [...l, { level: "info", message: `iniciando ${flow}…` }]);
       try {
+        if (flow === "test") setTestSentTo(0);
         if (flow === "download") {
           const zip = await buildZip();
           if (!zip) throw new Error("Adicione a arte primeiro.");
@@ -218,6 +234,9 @@ export default function Page() {
           }
         }
         setFlow(statusKey, ok ? "done" : "failed");
+        if (ok && flow === "test") {
+          setTestSentTo(String(extra.recipients ?? "").split(/[\n,;]+/).filter(Boolean).length);
+        }
         if (!ok) throw new Error(`${flow} falhou`);
       } catch (err) {
         setFlow(statusKey, "failed");
@@ -228,9 +247,9 @@ export default function Page() {
     [campaignName, subject, preheader, settings, segmentName, audience.csv, buildZip, setFlow]
   );
 
-  /** Queue a piece of pipeline work; failures stay in the log, not the queue. */
-  const enqueue = useCallback((work: () => Promise<unknown>) => {
-    queueRef.current = queueRef.current.then(work).catch(() => {});
+  /** Queue work on a lane; failures stay in the log, not the lane. */
+  const enqueue = useCallback((lane: "audience" | "campaign", work: () => Promise<unknown>) => {
+    lanesRef.current[lane] = lanesRef.current[lane].then(work).catch(() => {});
   }, []);
 
   /** Leaving Público: ship the list, unless the same list already went. */
@@ -239,7 +258,7 @@ export default function Page() {
     const sig = `${segmentName}:${audience.valid.length}:${audience.csv.length}`;
     if (importedSig.current === sig) return;
     importedSig.current = sig;
-    enqueue(() => runFlow("audience"));
+    enqueue("audience", () => runFlow("audience"));
   }, [audience, segmentName, enqueue, runFlow]);
 
   /** Leaving Arte: build the draft and hook it to the audience, in the background. */
@@ -253,7 +272,7 @@ export default function Page() {
     });
     if (preparedSig.current === sig) return;
     preparedSig.current = sig;
-    enqueue(async () => {
+    enqueue("campaign", async () => {
       await runFlow(recordRef.current?.braze.campaign ? "replace" : "draft", {}, "prepare");
       // Targeting and delivery time live on the campaign, so this is what
       // "connected to the audience" means; it saves a draft, nothing sends.
@@ -333,6 +352,19 @@ export default function Page() {
   const index = STEPS.findIndex(s => s.key === step);
   const anyRunning = Object.values(flowState).some(s => s === "running");
 
+  // What the step rail shows in place of each number: the Braze work that step
+  // set in motion. Arte owns the draft+schedule chain, so it stays "running"
+  // in the gap between the two.
+  const railStatus: Partial<Record<StepKey, FlowStatus>> = {
+    audience: flowState.audience,
+    design:
+      flowState.prepare === "running" || flowState.schedule === "running" ? "running"
+      : flowState.prepare === "failed" || flowState.schedule === "failed" ? "failed"
+      : flowState.schedule === "done" ? "done"
+      : flowState.prepare === "done" ? "running"
+      : undefined,
+  };
+
   return (
     <main>
       <header className="app-bar">
@@ -350,6 +382,7 @@ export default function Page() {
             setSegmentName(today);
             setSubject(""); setPreheader(""); setTestEmails([]); setAudienceRaw("");
             setFlowState({});
+            setTestSentTo(0);
             setLog([]);
             importedSig.current = "";
             preparedSig.current = "";
@@ -377,7 +410,12 @@ export default function Page() {
             className={`step${step === s.key ? " active" : ""}${i < index ? " done" : ""}`}
             onClick={() => goToStep(s.key)}
           >
-            <span className="step-n">{i + 1}</span>
+            <span className={`step-n${railStatus[s.key] ? ` ${railStatus[s.key]}` : ""}`}>
+              {railStatus[s.key] === "running" ? <span className="step-spin" />
+                : railStatus[s.key] === "done" ? "✓"
+                : railStatus[s.key] === "failed" ? "!"
+                : i + 1}
+            </span>
             {s.label}
           </button>
         ))}
@@ -422,8 +460,9 @@ export default function Page() {
           settings={settings}
           onSettings={patch => setSettings(s => ({ ...s, ...patch }))}
           flowState={flowState}
-          onRun={(flow, extra) => enqueue(() => runFlow(flow, extra))}
-          log={log}
+          onRun={(flow, extra) => enqueue("campaign", () => runFlow(flow, extra))}
+          testSentTo={testSentTo}
+          lastError={[...log].reverse().find(l => l.level === "error")?.message ?? null}
         />
       )}
 

@@ -25,8 +25,10 @@ interface Props {
   settings: SendSettings;
   onSettings: (patch: Partial<SendSettings>) => void;
   flowState: Record<string, FlowStatus>;
-  onRun: (flow: "test" | "schedule" | "download", extra?: Record<string, unknown>) => void;
-  log: { level: string; message: string }[];
+  onRun: (flow: "test" | "schedule", extra?: Record<string, unknown>) => void;
+  /** How many addresses the last successful test went to. */
+  testSentTo: number;
+  lastError: string | null;
 }
 
 const ZONES = timeZones();
@@ -39,7 +41,7 @@ const ZONES = timeZones();
  */
 export function SendStep({
   record, campaignName, subject, rowCount, hasImage, audienceCount, segmentName,
-  testEmails, onTestEmails, settings, onSettings, flowState, onRun, log,
+  testEmails, onTestEmails, settings, onSettings, flowState, onRun, testSentTo, lastError,
 }: Props) {
   const campaign = record?.braze.campaign;
   const segment = record?.braze.segment;
@@ -99,6 +101,11 @@ export function SendStep({
           >
             {flowState.test === "running" ? "Enviando…" : "Enviar e-mail de teste"}
           </button>
+          {flowState.test === "done" && testSentTo > 0 && (
+            <p className="success-note">
+              ✓ Teste enviado para {testSentTo} endereço{testSentTo === 1 ? "" : "s"} — confira a caixa de entrada.
+            </p>
+          )}
         </section>
 
         <section className="send-block">
@@ -131,31 +138,15 @@ export function SendStep({
           >
             {flowState.schedule === "running" ? "Agendando…" : "Agendar envio"}
           </button>
-          <p className="hint">
-            O agendamento salva como rascunho. O disparo continua sendo feito à
-            mão no Braze, depois de conferir.
-          </p>
+          {flowState.schedule === "done" && (
+            <p className="success-note">
+              ✓ Agendado — o disparo continua sendo feito à mão no Braze, depois de conferir.
+            </p>
+          )}
         </section>
 
-        <details className="escape-hatch">
-          <summary>Algo não funcionou?</summary>
-          <p className="hint">
-            Baixe o e-mail montado e suba no Braze à mão. É o mesmo ZIP que o robô
-            enviaria: <span className="mono">index.html</span> mais a pasta{" "}
-            <span className="mono">images</span>.
-          </p>
-          <button className="ghost" disabled={anyRunning} onClick={() => onRun("download")}>
-            {flowState.download === "running" ? "Montando…" : "Baixar o arquivo"}
-          </button>
-        </details>
 
-        {log.length > 0 && (
-          <pre className="braze-log">
-            {log.map((line, i) => (
-              <div key={i} className={line.level === "error" ? "err" : undefined}>{line.message}</div>
-            ))}
-          </pre>
-        )}
+        {lastError && <p className="error-note">{lastError}</p>}
       </div>
     </div>
   );

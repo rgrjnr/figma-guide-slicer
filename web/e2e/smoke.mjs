@@ -35,12 +35,13 @@ console.log("social row cells:", socialCells);
 // Give the first row a link, to prove <a> wrapping survives to the HTML.
 await setRowLink(page, 0, "example.com/hero");
 
-await goToStep(page, "Enviar ao Braze");
-await page.locator(".escape-hatch summary").click();
+
 const dir = mkdtempSync(join(tmpdir(), "studio-"));
+// The download button is gone from the UI; dev builds expose a hook so this
+// suite keeps checking the exact ZIP the robot would send.
 const [download] = await Promise.all([
-  page.waitForEvent("download", { timeout: 180_000 }),
-  page.getByRole("button", { name: /Baixar o arquivo/i }).click(),
+  page.waitForEvent("download", { timeout: 300_000 }),
+  page.evaluate(() => window.__downloadZip()),
 ]);
 const zipPath = join(dir, download.suggestedFilename());
 await download.saveAs(zipPath);

@@ -9,3 +9,5 @@ next-env.d.ts
 data/
 braze/.auth/
 braze/recordings/
+# Copied from node_modules on install; see scripts/copy-tesseract.mjs.
+public/tesseract/

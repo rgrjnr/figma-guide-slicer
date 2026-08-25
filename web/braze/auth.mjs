@@ -1,5 +1,6 @@
 import { TOTP, NobleCryptoPlugin, ScureBase32Plugin, createGuardrails } from "otplib";
-import { mkdirSync, existsSync } from "node:fs";
+import { mkdirSync, existsSync, rmSync, statSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { AUTH_DIR, STORAGE_STATE, config, requireConfig } from "./config.mjs";
 
 const PERIOD_SECONDS = 30;
@@ -85,4 +86,62 @@ export async function saveSession(context) {
 /** Reuse a stored session when there is one. */
 export function contextOptions(extra = {}) {
   return { ...(hasStoredSession() ? { storageState: STORAGE_STATE } : {}), ...extra };
+}
+
+
+/**
+ * Flows now run in parallel lanes (the audience import beside the draft
+ * build), and two of them logging in at once is the one thing that cannot be
+ * allowed: both would submit the same TOTP code, and Okta rejects a code it
+ * has already seen. So login is a critical section, guarded by a directory —
+ * mkdir is atomic, which is the whole trick.
+ */
+const LOGIN_LOCK = join(AUTH_DIR, "login.lock");
+const LOCK_STALE_MS = 4 * 60_000;
+
+export function acquireLoginLock() {
+  mkdirSync(AUTH_DIR, { recursive: true });
+  try {
+    mkdirSync(LOGIN_LOCK);
+    return true;
+  } catch {
+    // A crashed run must not deadlock everyone after it.
+    try {
+      if (Date.now() - statSync(LOGIN_LOCK).mtimeMs > LOCK_STALE_MS) {
+        rmSync(LOGIN_LOCK, { recursive: true, force: true });
+        mkdirSync(LOGIN_LOCK);
+        return true;
+      }
+    } catch {
+      /* lost the race to another waiter — that is fine */
+    }
+    return false;
+  }
+}
+
+export function releaseLoginLock() {
+  rmSync(LOGIN_LOCK, { recursive: true, force: true });
+}
+
+export function loginLockHeld() {
+  return existsSync(LOGIN_LOCK);
+}
+
+/**
+ * After waiting out another run's login, this run's context still holds the
+ * dead cookies it started with — storageState is read once, at creation. Pull
+ * the fresh ones the other run saved.
+ */
+export async function reloadSessionInto(context) {
+  if (!existsSync(STORAGE_STATE)) return false;
+  try {
+    const state = JSON.parse(readFileSync(STORAGE_STATE, "utf8"));
+    if (state.cookies?.length) {
+      await context.addCookies(state.cookies);
+      return true;
+    }
+  } catch {
+    /* an unreadable state file just means a full login */
+  }
+  return false;
 }

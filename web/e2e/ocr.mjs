@@ -18,12 +18,11 @@ await page.goto(process.env.BASE_URL || "http://localhost:3737");
 await upload(page);
 await autoDetect(page);
 
-await goToStep(page, "Enviar ao Braze");
-await page.locator(".escape-hatch summary").click();
+
 const dir = mkdtempSync(join(tmpdir(), "ocr-"));
 const [download] = await Promise.all([
   page.waitForEvent("download", { timeout: 300_000 }),
-  page.getByRole("button", { name: /Baixar o arquivo/i }).click(),
+  page.evaluate(() => window.__downloadZip()),
 ]);
 const path = join(dir, download.suggestedFilename());
 await download.saveAs(path);

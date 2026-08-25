@@ -1,5 +1,24 @@
 # WIP
 
+## 2026-08-25 — main (parallel lanes, progress in the rail, offline OCR)
+
+Feedback round: test send now shows "✓ Teste enviado para N endereços" (and
+schedule shows its own ✓ note); the step rail replaces the number with a
+spinner while that step's Braze work runs and a ✓/! when it lands (Público ↔
+audience, Arte ↔ prepare+schedule chain); the log pane + "Algo não funcionou?"
+section are gone from Enviar (last error shows as one red line; e2e keeps the
+ZIP checks via a dev-only window.__downloadZip hook).
+Parallelised: audience and campaign lanes run concurrently. The one thing that
+must not overlap is login (two runs would submit the same TOTP code and Okta
+rejects a replay) — mkdir-based login lock in braze/auth.mjs; waiters adopt
+the fresh session via addCookies then re-classify.
+Offline OCR: tesseract.js was silently loading worker+core from jsdelivr at
+runtime (flaked in e2e); postinstall copies worker, wasm cores and por+eng
+traineddata from npm into public/tesseract/ (gitignored). Zero external
+requests verified.
+Review-box render bug Roger saw: not reproducible on fresh load — likely a
+stale hot-reload chunk; asked for hard refresh.
+
 ## 2026-08-24 — main (pipelined steps, no waiting on Braze)
 
 Reordered to Público → Detalhes → Arte → Enviar, with Braze work started in

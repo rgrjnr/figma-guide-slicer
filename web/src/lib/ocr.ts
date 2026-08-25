@@ -18,7 +18,13 @@ async function getWorker(): Promise<Worker> {
   if (!workerPromise) {
     workerPromise = (async () => {
       const { createWorker } = await import("tesseract.js");
-      return (await createWorker(OCR_LANGS)) as unknown as Worker;
+      // Worker and wasm core are served from public/ (see scripts/
+      // copy-tesseract.mjs) so OCR does not lean on a CDN at run time.
+      return (await createWorker(OCR_LANGS, 1, {
+        workerPath: "/tesseract/worker.min.js",
+        corePath: "/tesseract/",
+        langPath: "/tesseract/lang",
+      })) as unknown as Worker;
     })();
   }
   return workerPromise;

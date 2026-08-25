@@ -12,7 +12,8 @@
     "braze:totp": "node braze/totp.mjs",
     "braze": "node braze/run.mjs",
     "test": "node --test braze/",
-    "braze:probe": "node braze/probe.mjs"
+    "braze:probe": "node braze/probe.mjs",
+    "postinstall": "node scripts/copy-tesseract.mjs"
   },
   "dependencies": {
     "jszip": "^3.10.1",
@@ -24,6 +25,8 @@
     "tesseract.js": "^5.1.1"
   },
   "devDependencies": {
+    "@tesseract.js-data/eng": "^1.0.0",
+    "@tesseract.js-data/por": "^1.0.0",
     "@types/luxon": "^3.7.5",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
