@@ -12,6 +12,14 @@ export const FLOW_TOTALS: Record<string, number> = {
   schedule: 11,
   test: 5,
   refresh: 6,
+  /**
+   * Two steps of its own plus the two login contributes on a warm session. The
+   * gauge is coarse here in a way it is not elsewhere, and unavoidably so: the
+   * second step walks the entire campaign list, so the bar sits at half for as
+   * long as the sync takes. The `round N: X campaigns so far` lines are the
+   * real progress, which is why /campaigns prints the last log line under it.
+   */
+  campaigns: 4,
 };
 
 /** The flows speak English into their run logs; the UI speaks pt-BR. */
@@ -39,6 +47,13 @@ const STEP_LABELS: [RegExp, string][] = [
   [/^fill subject/, "preenchendo o assunto"],
   [/^set subject/, "preenchendo o assunto"],
   [/^save as draft/, "salvando o rascunho"],
+  /**
+   * Both of these must stay above `/^open the campaign/`: the list is walked in
+   * order and that pattern is a prefix of "open the campaigns index", so the
+   * ledger sync would otherwise narrate itself as "abrindo a campanha".
+   */
+  [/^open the campaigns index/, "abrindo o catálogo"],
+  [/^read every row/, "lendo as campanhas"],
   [/^open the campaign/, "abrindo a campanha"],
   [/^add a blank variant/, "criando a variante nova"],
   [/^save the new variant/, "salvando a variante"],
