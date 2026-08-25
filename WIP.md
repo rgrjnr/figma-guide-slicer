@@ -1,5 +1,23 @@
 # WIP
 
+## 2026-08-25 — main (sync verified against real Braze, 96 campaigns)
+
+The scraper ran for real: chip "Status: Active" dismissed, rows/page 96, 96
+campaigns in the ledger, all unbilled, no invoice issued yet. Its log gave up
+the true header row and killed three bugs — "Created by"/"Last edited by" hold
+PEOPLE (was storing "Roger Junior" as a date), "Sent" is a COUNT and
+Date.parse("0") is 2000-01-01 (every campaign stamped as sent that day), and
+there is NO created-date column (now falls back to the YYYYMMDD in our names;
+stop date stands in for the send date). Paging now uses the window actually in
+effect — Braze clamps to 96, so asking for 200 and getting 96 read as "last
+page" and stopped while claiming completeness.
+Prices are R$ 150,00 (pt-BR), qty column gone. Long forms scroll again
+(.form-inner children were shrinking, not overflowing — measured 2898px→740px).
+NOTE TO SELF: never `npm run build` while his dev server runs — it clobbers
+.next and the app dies with "Cannot find module './873.js'". Use build:check.
+Next: re-sync to fill the dates, then issue the first invoice end to end.
+Still unbuilt: Phase B (artwork capture) — captureCampaignPreview has no caller.
+
 ## 2026-08-25 — main (billing platform A–D built, scraper UNVERIFIED)
 
 Ledger + invoicing built in one pass (plan in PLAN-BILLING.md): campaigns.json
