@@ -6,7 +6,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 const PORT = 3737;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
-const SUITES = ["smoke.mjs", "links.mjs", "audience.mjs", "projects.mjs", "undo.mjs", "braze-wiring.mjs", "ocr.mjs"];
+const SUITES = ["smoke.mjs", "links.mjs", "progress.mjs", "audience.mjs", "projects.mjs", "undo.mjs", "braze-wiring.mjs", "ocr.mjs"];
 
 async function alive() {
   try {

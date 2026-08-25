@@ -473,3 +473,25 @@ button.danger:hover:not(:disabled) { background: var(--danger); color: #fff; bor
   margin: 0; padding: 10px 14px; border-radius: 8px;
   background: #fdecec; color: var(--danger); font-size: 13px;
 }
+
+/* --- Determinate progress --- */
+
+.step-ring {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: conic-gradient(var(--accent) var(--p), #ddd6fe 0);
+  /* A ring, not a disc: punch the middle out. */
+  -webkit-mask: radial-gradient(circle 5px, transparent 96%, #000 100%);
+  mask: radial-gradient(circle 5px, transparent 96%, #000 100%);
+}
+.step-doing { font-size: 11px; color: var(--dim); max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.review-doing {
+  display: flex; align-items: center; gap: 8px; margin-top: 5px;
+  font-size: 12px; color: var(--dim);
+}
+.review-bar {
+  width: 130px; height: 5px; border-radius: 99px; background: var(--panel-2);
+  overflow: hidden; flex-shrink: 0;
+}
+.review-bar span { display: block; height: 100%; background: var(--accent); transition: width .4s; border-radius: 99px; }
+.review-value { display: flex; flex-direction: column; }

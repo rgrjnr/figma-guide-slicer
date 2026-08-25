@@ -13,6 +13,7 @@ import { DEFAULT_SEND_TIME, DEFAULT_TIME_ZONE, combineSendAt, defaultSendDate, s
 import { createProject, loadProject, saveProject } from "@/lib/projects";
 import type { ProjectRecord } from "@/lib/types";
 import { useProject } from "@/lib/useProject";
+import { FLOW_TOTALS, progressOf, type FlowProgress } from "@/lib/flowLabels";
 
 /** The opening line of the email, for use as preview text. */
 function firstSentence(alts: string[]): string {
@@ -61,6 +62,8 @@ export default function Page() {
   });
 
   const [flowState, setFlowState] = useState<Record<string, FlowStatus>>({});
+  // Which numbered step each flow is on, parsed from its own narration.
+  const [flowProgress, setFlowProgress] = useState<Record<string, FlowProgress & { flow: string }>>({});
   const [testSentTo, setTestSentTo] = useState(0);
   const [log, setLog] = useState<{ level: "info" | "error"; message: string }[]>([]);
   const cellsRef = useRef<ExportedCell[] | null>(null);
@@ -154,6 +157,7 @@ export default function Page() {
   const runFlow = useCallback(
     async (flow: string, extra: Record<string, unknown> = {}, statusKey = flow) => {
       setFlow(statusKey, "running");
+      setFlowProgress(fp => ({ ...fp, [statusKey]: { n: 0, label: "iniciando…", flow } }));
       setLog(l => [...l, { level: "info", message: `iniciando ${flow}…` }]);
       try {
         if (flow === "test") setTestSentTo(0);
@@ -220,7 +224,14 @@ export default function Page() {
             const data = /^data: (.+)$/m.exec(chunk)?.[1];
             if (!event || !data) continue;
             const payload = JSON.parse(data);
-            if (event === "log") setLog(l => [...l, payload]);
+            if (event === "log") {
+              setLog(l => [...l, payload]);
+              // Runner steps arrive as "NN what it is doing"; that is the gauge.
+              const m = /^(\d{2}) (.+)$/.exec(String(payload.message ?? "").trim());
+              if (m && !/failed/.test(m[2])) {
+                setFlowProgress(fp => ({ ...fp, [statusKey]: { n: Number(m[1]), label: m[2], flow } }));
+              }
+            }
             if (event === "done") {
               ok = payload.ok;
               setLog(l => [...l, {
@@ -355,6 +366,34 @@ export default function Page() {
   // What the step rail shows in place of each number: the Braze work that step
   // set in motion. Arte owns the draft+schedule chain, so it stays "running"
   // in the gap between the two.
+  // Combined gauge for Arte, whose work is two flows back to back.
+  const designProgress = (() => {
+    const prep = flowProgress.prepare;
+    const sched = flowProgress.schedule;
+    const prepTotal = FLOW_TOTALS[prep?.flow ?? "draft"] ?? 8;
+    const schedTotal = FLOW_TOTALS.schedule;
+    const total = prepTotal + schedTotal;
+    if (flowState.schedule === "running" && sched) {
+      const p = progressOf("schedule", sched);
+      return p ? { n: prepTotal + p.n, total, pct: Math.round(((prepTotal + p.n) / total) * 100), label: p.label } : null;
+    }
+    if (flowState.prepare === "running" && prep) {
+      const p = progressOf(prep.flow, prep);
+      return p ? { n: p.n, total, pct: Math.round((p.n / total) * 100), label: p.label } : null;
+    }
+    if (flowState.prepare === "done" && flowState.schedule !== "done") {
+      return { n: prepTotal, total, pct: Math.round((prepTotal / total) * 100), label: "preparando o agendamento" };
+    }
+    return null;
+  })();
+
+  const railProgress: Partial<Record<StepKey, { pct: number; label: string } | null>> = {
+    audience: flowState.audience === "running"
+      ? progressOf("audience", flowProgress.audience)
+      : null,
+    design: designProgress,
+  };
+
   const railStatus: Partial<Record<StepKey, FlowStatus>> = {
     audience: flowState.audience,
     design:
@@ -382,6 +421,7 @@ export default function Page() {
             setSegmentName(today);
             setSubject(""); setPreheader(""); setTestEmails([]); setAudienceRaw("");
             setFlowState({});
+            setFlowProgress({});
             setTestSentTo(0);
             setLog([]);
             importedSig.current = "";
@@ -410,13 +450,22 @@ export default function Page() {
             className={`step${step === s.key ? " active" : ""}${i < index ? " done" : ""}`}
             onClick={() => goToStep(s.key)}
           >
-            <span className={`step-n${railStatus[s.key] ? ` ${railStatus[s.key]}` : ""}`}>
-              {railStatus[s.key] === "running" ? <span className="step-spin" />
-                : railStatus[s.key] === "done" ? "✓"
+            <span
+              className={`step-n${railStatus[s.key] ? ` ${railStatus[s.key]}` : ""}`}
+              title={railProgress[s.key]?.label}
+            >
+              {railStatus[s.key] === "running" ? (
+                railProgress[s.key] ? (
+                  <span className="step-ring" style={{ "--p": `${railProgress[s.key]!.pct}%` } as React.CSSProperties} />
+                ) : <span className="step-spin" />
+              ) : railStatus[s.key] === "done" ? "✓"
                 : railStatus[s.key] === "failed" ? "!"
                 : i + 1}
             </span>
             {s.label}
+            {railStatus[s.key] === "running" && railProgress[s.key] && (
+              <span className="step-doing">{railProgress[s.key]!.label}</span>
+            )}
           </button>
         ))}
       </nav>
@@ -461,6 +510,9 @@ export default function Page() {
           onSettings={patch => setSettings(s => ({ ...s, ...patch }))}
           flowState={flowState}
           onRun={(flow, extra) => enqueue("campaign", () => runFlow(flow, extra))}
+          flowProgress={Object.fromEntries(
+            Object.entries(flowProgress).map(([k, v]) => [k, progressOf(v.flow, v)])
+          )}
           testSentTo={testSentTo}
           lastError={[...log].reverse().find(l => l.level === "error")?.message ?? null}
         />

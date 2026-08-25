@@ -1,5 +1,18 @@
 # WIP
 
+## 2026-08-25 — main (determinate progress + waiting explained)
+
+The rail spinners are now gauges: runner steps stream as "NN doing x", the UI
+parses the number, divides by the flow's happy-path total (clamped, so login
+detours never read >100%), and shows a conic-gradient ring + the current step
+translated to pt-BR (src/lib/flowLabels.ts). Arte combines draft+schedule into
+one gauge. Send-step status rows get a progress bar + n/total pill, and the
+disabled test button now says it is waiting for the art to finish uploading
+(or that Arte was never visited). New e2e/progress.mjs fakes the SSE stream
+with a slow local HTTP server routed over /api/braze/run — asserts the ring,
+the translated label, and the final ✓ without touching Braze.
+8 e2e suites + 39 unit green.
+
 ## 2026-08-25 — main (parallel lanes, progress in the rail, offline OCR)
 
 Feedback round: test send now shows "✓ Teste enviado para N endereços" (and

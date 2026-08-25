@@ -25,6 +25,8 @@ interface Props {
   settings: SendSettings;
   onSettings: (patch: Partial<SendSettings>) => void;
   flowState: Record<string, FlowStatus>;
+  /** Determinate progress per flow: step n of total, plus what it is doing. */
+  flowProgress: Record<string, { n: number; total: number; pct: number; label: string } | null>;
   onRun: (flow: "test" | "schedule", extra?: Record<string, unknown>) => void;
   /** How many addresses the last successful test went to. */
   testSentTo: number;
@@ -41,7 +43,7 @@ const ZONES = timeZones();
  */
 export function SendStep({
   record, campaignName, subject, rowCount, hasImage, audienceCount, segmentName,
-  testEmails, onTestEmails, settings, onSettings, flowState, onRun, testSentTo, lastError,
+  testEmails, onTestEmails, settings, onSettings, flowState, flowProgress, onRun, testSentTo, lastError,
 }: Props) {
   const campaign = record?.braze.campaign;
   const segment = record?.braze.segment;
@@ -54,6 +56,7 @@ export function SendStep({
           <StatusRow
             label="Público"
             status={flowState.audience}
+            progress={flowState.audience === "running" ? flowProgress.audience : null}
             value={
               audienceCount === 0 ? <em>nenhum endereço ainda</em> : (
                 <>
@@ -65,7 +68,17 @@ export function SendStep({
           />
           <StatusRow
             label="Campanha"
-            status={flowState.prepare}
+            status={
+              flowState.prepare === "running" || flowState.schedule === "running" ? "running"
+              : flowState.prepare === "failed" || flowState.schedule === "failed" ? "failed"
+              : flowState.schedule === "done" ? "done"
+              : flowState.prepare
+            }
+            progress={
+              flowState.prepare === "running" ? flowProgress.prepare
+              : flowState.schedule === "running" ? flowProgress.schedule
+              : null
+            }
             value={
               !hasImage ? <em>a arte ainda não foi adicionada</em>
               : !subject ? <em>falta o assunto (etapa Detalhes)</em>
@@ -101,6 +114,13 @@ export function SendStep({
           >
             {flowState.test === "running" ? "Enviando…" : "Enviar e-mail de teste"}
           </button>
+          {!campaign && (
+            <p className="hint">
+              {flowState.prepare === "running" || flowState.schedule === "running"
+                ? "Aguardando a arte terminar de subir no Braze — o teste libera assim que a campanha estiver pronta."
+                : "A campanha ainda não foi criada — passe pela etapa Arte primeiro."}
+            </p>
+          )}
           {flowState.test === "done" && testSentTo > 0 && (
             <p className="success-note">
               ✓ Teste enviado para {testSentTo} endereço{testSentTo === 1 ? "" : "s"} — confira a caixa de entrada.
@@ -159,17 +179,30 @@ const STATUS_LABEL: Record<FlowStatus, string> = {
   failed: "falhou",
 };
 
-function StatusRow({ label, value, status = "idle" }: {
+function StatusRow({ label, value, status = "idle", progress }: {
   label: string;
   value: React.ReactNode;
   status?: FlowStatus;
+  progress?: { n: number; total: number; pct: number; label: string } | null;
 }) {
   return (
     <div className={`review-row status-${status}`}>
       <span className="review-label">{label}</span>
-      <span className="review-value">{value}</span>
+      <span className="review-value">
+        {value}
+        {status === "running" && progress && (
+          <span className="review-doing">
+            <span className="review-bar"><span style={{ width: `${progress.pct}%` }} /></span>
+            {progress.n}/{progress.total} · {progress.label}
+          </span>
+        )}
+      </span>
       <span className="spacer" />
-      {status !== "idle" && <span className={`status-pill ${status}`}>{STATUS_LABEL[status]}</span>}
+      {status !== "idle" && (
+        <span className={`status-pill ${status}`}>
+          {status === "running" && progress ? `${progress.n}/${progress.total}` : STATUS_LABEL[status]}
+        </span>
+      )}
     </div>
   );
 }
