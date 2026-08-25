@@ -47,7 +47,9 @@ export function SendStep({
 }: Props) {
   const campaign = record?.braze.campaign;
   const segment = record?.braze.segment;
-  const anyRunning = Object.values(flowState).some(s => s === "running");
+  // The campaign exists the moment the draft lands, which is all a test needs —
+  // the schedule still running is no reason to hold the proof back.
+  const campaignBusy = flowState.prepare === "running" || flowState.schedule === "running";
 
   return (
     <div className="step-body form wide">
@@ -105,7 +107,7 @@ export function SendStep({
           />
           <button
             className="primary"
-            disabled={anyRunning || !campaign || testEmails.length === 0}
+            disabled={flowState.test === "running" || !campaign || testEmails.length === 0}
             onClick={() => {
               if (confirm(`Enviar um teste real para ${testEmails.length} endereço(s)?\n\n${testEmails.join("\n")}`)) {
                 onRun("test", { recipients: testEmails.join("\n"), confirmSend: true });
@@ -116,8 +118,8 @@ export function SendStep({
           </button>
           {!campaign && (
             <p className="hint">
-              {flowState.prepare === "running" || flowState.schedule === "running"
-                ? "Aguardando a arte terminar de subir no Braze — o teste libera assim que a campanha estiver pronta."
+              {campaignBusy
+                ? "Aguardando a arte terminar de subir no Braze — o teste libera assim que o rascunho existir, mesmo com o agendamento ainda em andamento."
                 : "A campanha ainda não foi criada — passe pela etapa Arte primeiro."}
             </p>
           )}
@@ -153,7 +155,7 @@ export function SendStep({
           </div>
           <button
             className="primary"
-            disabled={anyRunning || !campaign || !settings.sendDate}
+            disabled={campaignBusy || !campaign || !settings.sendDate}
             onClick={() => onRun("schedule")}
           >
             {flowState.schedule === "running" ? "Agendando…" : "Agendar envio"}

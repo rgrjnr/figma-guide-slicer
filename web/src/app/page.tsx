@@ -76,6 +76,9 @@ export default function Page() {
   const lanesRef = useRef<Record<string, Promise<unknown>>>({
     audience: Promise.resolve(),
     campaign: Promise.resolve(),
+    // Test sends only read the campaign and fire a proof — they never save it —
+    // so they can run beside the schedule instead of queueing behind it.
+    test: Promise.resolve(),
   });
   // What was last shipped, so revisiting a step and moving on again only
   // re-runs Braze when something actually changed.
@@ -259,7 +262,7 @@ export default function Page() {
   );
 
   /** Queue work on a lane; failures stay in the log, not the lane. */
-  const enqueue = useCallback((lane: "audience" | "campaign", work: () => Promise<unknown>) => {
+  const enqueue = useCallback((lane: "audience" | "campaign" | "test", work: () => Promise<unknown>) => {
     lanesRef.current[lane] = lanesRef.current[lane].then(work).catch(() => {});
   }, []);
 
@@ -509,7 +512,7 @@ export default function Page() {
           settings={settings}
           onSettings={patch => setSettings(s => ({ ...s, ...patch }))}
           flowState={flowState}
-          onRun={(flow, extra) => enqueue("campaign", () => runFlow(flow, extra))}
+          onRun={(flow, extra) => enqueue(flow === "test" ? "test" : "campaign", () => runFlow(flow, extra))}
           flowProgress={Object.fromEntries(
             Object.entries(flowProgress).map(([k, v]) => [k, progressOf(v.flow, v)])
           )}

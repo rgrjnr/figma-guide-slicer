@@ -1,5 +1,14 @@
 # WIP
 
+## 2026-08-25 — main (test send unblocked by the draft, pill sizing)
+
+Test send now has its own lane and enables the moment the draft exists — it
+only reads the campaign and fires a proof, so it runs beside the schedule
+instead of queueing behind it (Agendar stays gated on the campaign lane).
+Waiting hint updated to say exactly that. Pill blob fixed: flex items stretch
+by default, so the pills were filling the taller progress rows and ballooning
+into ovals — align-items:center + align-self, measured 21px in e2e.
+
 ## 2026-08-25 — main (determinate progress + waiting explained)
 
 The rail spinners are now gauges: runner steps stream as "NN doing x", the UI
