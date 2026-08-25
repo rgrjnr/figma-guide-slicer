@@ -1,9 +1,13 @@
 import { chromium } from "playwright";
+import { signIn } from "./helpers.mjs";
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
 const errors = [];
 page.on("pageerror", e => errors.push(String(e)));
+
+// The middleware redirects every page to /login; seed the cookie first.
+await signIn(page);
 
 await page.goto(process.env.BASE_URL || "http://localhost:3737");
 

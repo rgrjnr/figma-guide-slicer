@@ -2,10 +2,13 @@
 // on the artwork are the way in, and a row stays listed once it has a link or
 // is social. Listing every row buried the handful that matter.
 import { chromium } from "playwright";
-import { autoDetect, upload } from "./helpers.mjs";
+import { signIn, autoDetect, upload } from "./helpers.mjs";
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 1500, height: 950 } });
 const errs = []; p.on("pageerror", e => errs.push(String(e)));
+// The middleware redirects every page to /login; seed the cookie first.
+await signIn(p);
+
 await p.goto(process.env.BASE_URL || "http://localhost:3737");
 await upload(p);
 await autoDetect(p);

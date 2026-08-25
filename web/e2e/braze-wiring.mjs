@@ -4,7 +4,7 @@
 // strays had to be deleted by hand). The flows themselves are exercised by real
 // use; what regresses silently is the gating, so that is what is pinned here.
 import { chromium } from "playwright";
-import { goToStep } from "./helpers.mjs";
+import { signIn, goToStep } from "./helpers.mjs";
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
@@ -15,6 +15,9 @@ await page.route("**/api/braze/run", route => {
   errors.push("a real Braze run was triggered by the test");
   route.abort();
 });
+
+// The middleware redirects every page to /login; seed the cookie first.
+await signIn(page);
 
 await page.goto(process.env.BASE_URL || "http://localhost:3737");
 await page.waitForTimeout(800);

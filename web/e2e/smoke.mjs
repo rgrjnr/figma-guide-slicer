@@ -6,7 +6,7 @@ import { readFileSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import JSZip from "jszip";
-import { autoDetect, goToStep, setRowLink, upload } from "./helpers.mjs";
+import { signIn, autoDetect, goToStep, setRowLink, upload } from "./helpers.mjs";
 
 const URL_BASE = process.env.BASE_URL || "http://localhost:3737";
 const FIXTURE = process.argv[2] || "../packages/slicer-core/test/fixtures/hbomax-moments-emkt.jpg";
@@ -16,6 +16,9 @@ const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
 const errors = [];
 page.on("pageerror", e => errors.push(String(e)));
 page.on("console", m => m.type() === "error" && errors.push(m.text()));
+
+// The middleware redirects every page to /login; seed the cookie first.
+await signIn(page);
 
 await page.goto(URL_BASE);
 await upload(page, FIXTURE);

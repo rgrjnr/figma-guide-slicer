@@ -1,12 +1,15 @@
 // Undo has to step back whole gestures, not individual pointer events — a guide
 // drag fires continuously, and one undo per pixel would be useless.
 import { chromium } from "playwright";
-import { upload } from "./helpers.mjs";
+import { signIn, upload } from "./helpers.mjs";
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
 const errors = [];
 page.on("pageerror", e => errors.push(String(e)));
+// The middleware redirects every page to /login; seed the cookie first.
+await signIn(page);
+
 await page.goto(process.env.BASE_URL || "http://localhost:3737");
 await upload(page);
 

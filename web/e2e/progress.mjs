@@ -4,6 +4,7 @@
 // events arrive slowly, which is what lets the in-flight state be asserted.
 import { chromium } from "playwright";
 import { createServer } from "node:http";
+import { signIn } from "./helpers.mjs";
 
 const STEPS = [
   [400, "01 open the entry point"],
@@ -29,6 +30,9 @@ page.on("pageerror", e => errors.push(String(e)));
 // Same-origin as far as the page can tell; the network layer goes to the stub.
 await page.route("**/api/braze/run", route => route.continue({ url: `http://127.0.0.1:${port}/` }));
 // The project save that runFlow does first can hit the real store; harmless.
+
+// The middleware redirects every page to /login; seed the cookie first.
+await signIn(page);
 
 await page.goto(process.env.BASE_URL || "http://localhost:3737");
 await page.locator(".field textarea").first().fill("ana@wbd.com\nbruno@wbd.com");

@@ -1,12 +1,15 @@
 // Markup must survive a save and a reopen, because that is the whole point of
 // the store: a design gets revised days after the campaign was created.
 import { chromium } from "playwright";
-import { goToStep, upload } from "./helpers.mjs";
+import { signIn, goToStep, upload } from "./helpers.mjs";
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
 const errors = [];
 page.on("pageerror", e => errors.push(String(e)));
+// The middleware redirects every page to /login; seed the cookie first.
+await signIn(page);
+
 await page.goto(process.env.BASE_URL || "http://localhost:3737");
 await upload(page);
 
