@@ -13,9 +13,11 @@ export type BillingState = "unbilled" | "invoiced" | "paid";
 
 export type CampaignOrigin = "studio" | "braze";
 
-/** 150 hays per email. Copied onto every invoice line at issue time. */
+/** R$ 150,00 per e-mail. Copied onto every invoice line at issue time. */
 export const RATE_PER_EMAIL = 150;
-export const CURRENCY = "hay";
+/** Reais. Stored on every invoice so a record always says what its figures
+ *  are denominated in, rather than relying on this constant never changing. */
+export const CURRENCY = "BRL";
 
 export interface CampaignBilling {
   state: BillingState;

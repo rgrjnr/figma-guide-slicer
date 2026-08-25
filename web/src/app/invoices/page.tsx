@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { InvoiceRecord } from "@/lib/billing";
-import { emailCount, formatDate, formatHays, listInvoices, markInvoicePaid } from "@/components/InvoiceLines";
+import { emailCount, formatCount, formatDate, formatMoney, listInvoices, markInvoicePaid } from "@/components/InvoiceLines";
 import "./print.css";
 
 /** The ledger of issued invoices, newest first — the API already sorts. */
@@ -60,10 +60,10 @@ export default function InvoicesPage() {
                     <Link className="inv-id mono" href={`/invoices/${invoice.id}`}>{invoice.id}</Link>
                     <span className="dim inv-when">{formatDate(invoice.issuedAt)}</span>
                     <span className="dim inv-count">
-                      {formatHays(emails)} e-mail{emails === 1 ? "" : "s"}
+                      {formatCount(emails)} e-mail{emails === 1 ? "" : "s"}
                     </span>
                     <span className="spacer" />
-                    <strong className="inv-amount">{formatHays(invoice.total)} {invoice.currency}</strong>
+                    <strong className="inv-amount">{formatMoney(invoice.total)}</strong>
                     {/* Three tints exist and no more: accent for in flight,
                         green for settled. Issued is the "waiting on someone"
                         state, which is what the running tint means everywhere

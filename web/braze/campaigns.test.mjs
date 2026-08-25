@@ -197,11 +197,65 @@ test("a row without a campaign link parses to nothing", () => {
 
 test("empty and placeholder dates are null rather than a bogus timestamp", () => {
   const record = parseRow(
-    { href: href(9), cells: ["20260101", "Draft", "Email", "—", ""] },
+    { href: href(9), cells: ["Campanha sem data", "Draft", "Email", "—", ""] },
     { name: 0, status: 1, channel: 2, createdAt: 3, firstSentAt: 4 }
   );
   assert.equal(record.createdAt, null);
   assert.equal(record.firstSentAt, null);
+});
+
+/**
+ * The campaign table has no creation-date column at all — the closest it comes
+ * is "Created by", which is a person. Our own campaigns carry the date in the
+ * name, and that is the date the invoice line needs.
+ */
+test("a YYYYMMDD name supplies the creation date the table does not have", () => {
+  const named = parseRow(
+    { href: href(9), cells: ["20260101 OSCARS 2026", "Draft", "Email", "—", ""] },
+    { name: 0, status: 1, channel: 2, createdAt: 3, firstSentAt: 4 }
+  );
+  assert.equal(named.createdAt, "2026-01-01T00:00:00.000Z");
+
+  // Nothing is invented for a campaign that does not follow the convention.
+  const other = parseRow(
+    { href: href(8), cells: ["Always-on welcome", "Active", "Email", "—", ""] },
+    { name: 0, status: 1, channel: 2, createdAt: 3, firstSentAt: 4 }
+  );
+  assert.equal(other.createdAt, null);
+});
+
+/**
+ * The real header row, read off the dashboard. Three of its columns are traps:
+ * "Created by" and "Last edited by" hold people, and "Sent" is a count that
+ * reads 0 — and Date.parse("0") is the first of January 2000, which is how
+ * every campaign in the workspace came to be stamped as sent that day.
+ */
+test("the real header row maps to dates, not to people or counts", () => {
+  const headers = ["", "Name", "", "Status", "Stop date", "Campaign type", "Entry schedule",
+    "Sent", "Teams", "Last edited by", "Last edited", "Created by", ""];
+  const columns = mapColumns(headers);
+
+  assert.equal(columns.name, 1);
+  assert.equal(columns.status, 3);
+  assert.equal(columns.stoppedAt, 4);
+  assert.equal(columns.scheduledFor, 6);
+  assert.equal(columns.sentCount, 7);
+  assert.equal(columns.lastEditedAt, 10, '"Last edited", not "Last edited by"');
+  assert.equal(columns.createdAt, undefined, "there is no creation-date column to map");
+
+  const record = parseRow({
+    href: href(9),
+    cells: ["", "20260323 OSCARS 2026", "", "Stopped", "2026-03-24 10:00", "Email",
+      "2026-03-23 09:30", "0", "", "Roger Junior", "2026-03-24 11:00", "Roger Junior", ""],
+  }, columns);
+
+  assert.equal(record.brazeStatus, "stopped");
+  assert.equal(record.sentCount, 0);
+  assert.equal(Date.parse(record.stoppedAt), Date.parse("2026-03-24 10:00"));
+  // The stop date stands in for a send date: the table has no "sent on" column.
+  assert.equal(Date.parse(record.firstSentAt), Date.parse("2026-03-24 10:00"));
+  assert.equal(record.createdAt, "2026-03-23T00:00:00.000Z", "from the name");
+  assert.ok(!Object.values(record).includes("Roger Junior"), "a person is never a date");
 });
 
 test("a date the parser cannot read survives as its own text", () => {

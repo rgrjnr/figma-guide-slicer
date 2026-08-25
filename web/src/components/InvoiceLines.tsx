@@ -36,10 +36,12 @@ export async function listBillableCampaigns(): Promise<CampaignRecord[]> {
   return (await call<{ campaigns: CampaignRecord[] }>("/api/campaigns?status=billable")).campaigns;
 }
 
-export async function createInvoice(campaignIds: string[], qty: Record<string, number>): Promise<InvoiceRecord> {
+/** One campaign is one e-mail at the standing rate, so nothing but the ids is
+ *  sent. The API still accepts a qty for a hand-driven call, and validates it. */
+export async function createInvoice(campaignIds: string[]): Promise<InvoiceRecord> {
   return (await call<{ invoice: InvoiceRecord }>("/api/invoices", {
     method: "POST",
-    body: JSON.stringify({ campaignIds, qty }),
+    body: JSON.stringify({ campaignIds }),
   })).invoice;
 }
 
@@ -51,20 +53,30 @@ export async function markInvoicePaid(id: string): Promise<InvoiceRecord> {
 }
 
 /**
- * Money never leaves the integer domain here, and that is deliberate: a hay is
- * the whole unit, the rate is 150 of them and the quantity is a count of
- * e-mails, so nothing in this app ever divides an amount and there are no cents
- * to carry. Multiplying and adding integers in a double is exact well past any
- * plausible invoice, so no float artifact can be produced by our own arithmetic.
+ * Money never leaves the integer domain here, and that is deliberate: the rate
+ * is a whole number of reais and the quantity is a count of e-mails, so nothing
+ * in this app ever divides an amount and there are no centavos of our own to
+ * carry. Multiplying and adding integers in a double is exact well past any
+ * plausible invoice, so no float artifact can come out of our own arithmetic —
+ * the centavos on screen are the formatter's, always ",00".
  *
  * The rounding is the seatbelt for the other input: invoices.json is meant to
  * be hand-edited, and a `qty` typed as 1.5 would otherwise print
- * 224.99999999999997 on a document that gets sent to a client. Rounding first
- * and then formatting with no fraction digits guarantees the printed figure is
- * the same integer the reader would get by adding up the column.
+ * R$ 224,999999... on a document that gets sent to a client.
  */
-export function formatHays(amount: number): string {
-  return Math.round(amount).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+export function formatMoney(amount: number): string {
+  return Math.round(amount).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/** A plain count — e-mails, campaigns — which is not money and must not be
+ *  printed with a currency symbol. */
+export function formatCount(value: number): string {
+  return Math.round(value).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
 }
 
 /** ISO stamps come out of the store, but a scrape that could not read a date
@@ -104,9 +116,7 @@ export function InvoiceLines({
             <th>E-mail</th>
             <th>Criado</th>
             <th>Enviado</th>
-            <th className="num">Qtd.</th>
-            <th className="num">Valor unitário</th>
-            <th className="num">Subtotal</th>
+            <th className="num">Valor</th>
           </tr>
         </thead>
         <tbody>
@@ -115,11 +125,12 @@ export function InvoiceLines({
               <td>{line.name}</td>
               <td className="dim">{formatDate(line.createdAt)}</td>
               <td className="dim">{formatDate(line.sentAt)}</td>
-              <td className="num">{formatHays(line.qty)}</td>
-              <td className="num">{formatHays(line.rate)} {currency}</td>
               {/* The rate is read off the line, never off RATE_PER_EMAIL, so a
-                  price change does not rewrite an invoice already printed. */}
-              <td className="num">{formatHays(line.qty * line.rate)} {currency}</td>
+                  price change does not rewrite an invoice already printed. A
+                  line is one e-mail, so there is no quantity column to show;
+                  a hand-edited qty still multiplies, and shows here as a
+                  larger amount rather than silently as one e-mail's worth. */}
+              <td className="num">{formatMoney(line.qty * line.rate)}</td>
             </tr>
           ))}
         </tbody>
@@ -129,11 +140,11 @@ export function InvoiceLines({
           on a three-page invoice reads as three charges. */}
       <div className="inv-total">
         <span className="dim">
-          {formatHays(emails)} e-mail{emails === 1 ? "" : "s"}
-          {uniformRate !== undefined && <> · {formatHays(uniformRate)} {currency} cada</>}
+          {formatCount(emails)} e-mail{emails === 1 ? "" : "s"}
+          {uniformRate !== undefined && <> · {formatMoney(uniformRate)} cada</>}
         </span>
         <span className="spacer" />
-        <strong>{formatHays(total)} {currency}</strong>
+        <strong>{formatMoney(total)}</strong>
       </div>
     </>
   );

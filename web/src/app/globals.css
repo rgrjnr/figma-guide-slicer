@@ -262,6 +262,14 @@ button.danger:hover:not(:disabled) { background: var(--danger); color: #fff; bor
 .step-body.form { overflow-y: auto; justify-content: center; padding: 36px 24px 60px; }
 
 .form-inner { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 22px; }
+/* Without this a long form does not scroll — it gets crushed. .form-inner is a
+   flex item stretched to the height of .step-body, and its own children are
+   flex items too, so they shrink to fit rather than overflow. A list of forty
+   invoice rows was being squeezed into the viewport and clipped by
+   .review{overflow:hidden}, and because nothing ever overflowed the scroll
+   container, .step-body.form{overflow-y:auto} had nothing to scroll. Measured:
+   forty rows go from 740px crushed to their real 2898px, and the wheel works. */
+.form-inner > * { flex-shrink: 0; }
 .step-body.wide .form-inner { max-width: 680px; }
 
 .field { display: flex; flex-direction: column; gap: 7px; }

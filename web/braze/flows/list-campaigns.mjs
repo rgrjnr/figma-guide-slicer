@@ -40,15 +40,38 @@ const STATUS = new Map([
   ["archived", "archived"],
 ]);
 
-/** Header label -> field, applied to whatever the table's header row says. */
+/**
+ * Header label -> field. Written against the real header row, which is:
+ *
+ *   "" | Name | "" | Status | Stop date | Campaign type | Entry schedule |
+ *   Sent | Teams | Last edited by | Last edited | Created by | ""
+ *
+ * Three things in there are traps, and the first version of this map fell into
+ * all three:
+ *
+ * - "Created by" and "Last edited by" hold a PERSON, not a date. A loose
+ *   /created/ matched "Created by" and the ledger recorded "Roger Junior" as
+ *   the campaign's creation date. Every pattern here is therefore anchored to
+ *   the whole label, and the two `by` columns are mapped explicitly so they are
+ *   claimed before a date pattern can reach them.
+ * - "Sent" is a COUNT, not a date — it reads 0 on a campaign that has not gone
+ *   out. `Date.parse("0")` happily returns the first of January 2000, so every
+ *   campaign was being stamped with a send date in the year 2000.
+ * - There is no creation-date column at all. The dates this table actually
+ *   offers are the stop date and the entry schedule.
+ */
 const COLUMNS = [
   ["name", /^(name|campaign|campaign name|title)$/i],
   ["status", /^(status|state)$/i],
-  ["channel", /^(channel|channels|message type|type)$/i],
-  ["createdAt", /created|added/i],
-  ["lastEditedAt", /modified|updated|last edit/i],
-  ["firstSentAt", /sent|delivered|last send/i],
-  ["scheduledFor", /start|scheduled|launch|send (date|time)/i],
+  ["channel", /^(channel|channels|message type|campaign type|type)$/i],
+  ["stoppedAt", /^stop date$/i],
+  ["scheduledFor", /^(entry schedule|start( date| time)?|scheduled|launch|send (date|time))$/i],
+  ["sentCount", /^sent$/i],
+  ["createdBy", /^created by$/i],
+  ["lastEditedBy", /^last edited by$/i],
+  ["createdAt", /^(created|created at|date created)$/i],
+  ["lastEditedAt", /^(last edited|last modified|modified|updated)$/i],
+  ["firstSentAt", /^(last sent|delivered|send date)$/i],
 ];
 
 const CHANNELS = /email|push|in-app|in app|webhook|sms|whatsapp|content card/i;
@@ -92,16 +115,30 @@ export function parseRow(row, columns) {
 
   const { brazeStatus, statusRaw } = normalizeStatus(status);
 
+  const cleanName = name.replace(/\s+/g, " ").trim();
+  const stoppedAt = date(at("stoppedAt"));
+
   return {
     id,
-    name: name.replace(/\s+/g, " ").trim(),
+    name: cleanName,
     href: row.href,
     brazeStatus,
     statusRaw,
     channel: channelCell.match(CHANNELS)?.[0].toLowerCase() ?? channelCell,
-    createdAt: date(at("createdAt")),
+    // No creation-date column exists, so this falls back to the date in our own
+    // naming convention — which is the date the email was for, and the one that
+    // belongs on the invoice.
+    createdAt: date(at("createdAt")) || dateFromName(cleanName),
     scheduledFor: date(at("scheduledFor")),
-    firstSentAt: date(at("firstSentAt")),
+    stoppedAt,
+    /**
+     * When it went out. The table has no "sent on" column: "Sent" is a count.
+     * A campaign stops when its sending is done, so the stop date is the
+     * closest thing to a send date the list offers, and the entry schedule —
+     * when it was set to go — stands in when there is no stop date yet.
+     */
+    firstSentAt: date(at("firstSentAt")) || stoppedAt || date(at("scheduledFor")),
+    sentCount: Number.parseInt(at("sentCount").replace(/[^\d]/g, ""), 10) || 0,
     lastEditedAt: date(at("lastEditedAt")),
     /**
      * Every cell, keyed by its header. The parsed dates above are a best
@@ -122,9 +159,37 @@ export function parseRow(row, columns) {
  */
 function date(text) {
   const value = String(text ?? "").replace(/\s+/g, " ").trim();
-  if (!value || /^(—|-|n\/a|never)$/i.test(value)) return null;
+  if (!value || /^(—|-|–|n\/a|never)$/i.test(value)) return null;
+
+  // Date.parse is far too willing: "0" becomes the first of January 2000 and a
+  // bare year becomes that January. The Sent column is a count and reads 0 on
+  // anything unsent, so without this guard every campaign in the workspace was
+  // stamped as having been sent in the year 2000. A cell has to LOOK like a
+  // date — a separator or a month name — before it is read as one.
+  const looksLikeDate = /\d{1,4}[/.-]\d{1,2}/.test(value) ||
+    /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(value) ||
+    /\d{4}-\d{2}-\d{2}/.test(value);
+  if (!looksLikeDate) return value;
+
   const parsed = Date.parse(value);
   return Number.isNaN(parsed) ? value : new Date(parsed).toISOString();
+}
+
+/**
+ * Our own campaigns are named `YYYYMMDD …`, which is the date the email was
+ * for. The campaign table has no creation-date column at all, so for anything
+ * following that convention the name is the only date available — and it is
+ * the one that belongs on the invoice line. Anything else gets nothing rather
+ * than a guess.
+ */
+function dateFromName(name) {
+  const found = String(name ?? "").match(/^(\d{4})(\d{2})(\d{2})\b/);
+  if (!found) return null;
+  const [, y, m, d] = found;
+  const month = Number(m);
+  const day = Number(d);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return `${y}-${m}-${d}T00:00:00.000Z`;
 }
 
 /** Map the table's header labels onto field names. */
@@ -269,17 +334,34 @@ export async function listCampaigns(ctx, { status = "", limit = 0, maxRounds = 6
       // next page is a navigation with a bigger `start` — deterministic, and
       // with no control to mis-resolve. A page that comes back shorter than it
       // was asked for is the last one.
-      if (batch.rows.length < pageSize) {
+      // The window that is actually in effect, not the one that was asked for.
+      // The dashboard offers 12/24/48/96 and clamps anything larger, so a run
+      // that requested 200 and got 96 rows would otherwise read "fewer than
+      // asked for, therefore the last page" and stop dead on a workspace with
+      // more than 96 campaigns — having declared the read complete.
+      const window = view.pageSize || pageSize;
+      if (batch.rows.length < window) {
         stopped = rounds === 1 ? "single page" : "end of list";
         break;
       }
-      const start = rounds * pageSize;
-      await p.goto(ctx.base + paths.campaignList(group, { start, limit: pageSize, extra: view.filterParams }), {
+      const start = rounds * window;
+      await p.goto(ctx.base + paths.campaignList(group, { start, limit: window, extra: view.filterParams }), {
         waitUntil: "domcontentloaded",
       });
       await firstMatchVisible(p, braze.campaignList.readyStrategies, 20_000);
       await p.waitForTimeout(2_000);
       pagesClicked++;
+
+      // Clearing the chip left no trace in the URL, so the filter is client
+      // state — which means a fresh navigation can restore it. Re-check on
+      // every page: page one unfiltered and page two Active-only would be a
+      // ledger that is silently missing most of its billable campaigns.
+      const chip = await findFilterChip(p);
+      if (chip) {
+        ctx.log(`the "${chip.text}" filter came back on page ${rounds + 1}; clearing it again`, "warn");
+        await braze.campaignList.chipDismiss(chip.chip).click({ timeout: 5_000 }).catch(() => {});
+        await p.waitForTimeout(2_500);
+      }
 
       // If the window moved but the rows did not, the parameters are being
       // ignored — an older dashboard build, or a view that scrolls rather than

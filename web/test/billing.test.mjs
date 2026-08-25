@@ -186,7 +186,7 @@ test("an invoice copies the rate onto every line and totals them", () => {
 
   assert.equal(invoice.id, "INV-202608-01");
   assert.equal(invoice.total, 450);
-  assert.equal(invoice.currency, "hay");
+  assert.equal(invoice.currency, "BRL");
   assert.equal(invoice.state, "issued");
   assert.equal(invoice.paidAt, null);
   assert.deepEqual(invoice.lines.map(l => l.rate), [150, 150, 150]);

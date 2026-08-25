@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CURRENCY, RATE_PER_EMAIL, type CampaignRecord } from "@/lib/billing";
-import { createInvoice, formatDate, formatHays, listBillableCampaigns } from "@/components/InvoiceLines";
+import { RATE_PER_EMAIL, type CampaignRecord } from "@/lib/billing";
+import { createInvoice, formatCount, formatDate, formatMoney, listBillableCampaigns } from "@/components/InvoiceLines";
 import "../print.css";
 
 /**
@@ -19,7 +19,6 @@ export default function NewInvoicePage() {
   const router = useRouter();
   const [campaigns, setCampaigns] = useState<CampaignRecord[] | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
-  const [qty, setQty] = useState<Record<string, number>>({});
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,28 +42,17 @@ export default function NewInvoicePage() {
     setConfirming(false);
   }
 
-  function setQuantity(id: string, raw: string) {
-    const parsed = Number.parseInt(raw, 10);
-    // An empty or half-typed field must not become NaN and poison the total;
-    // one is the floor because a line charging for nothing is not a line.
-    setQty(current => ({ ...current, [id]: Number.isFinite(parsed) && parsed > 0 ? parsed : 1 }));
-    setConfirming(false);
-  }
-
+  // One campaign is one e-mail at one price; there is no quantity to enter.
+  // Integers throughout — see the note on formatMoney. This is the same
+  // multiplication the server does when it freezes the lines.
   const selected = (campaigns || []).filter(campaign => picked.has(campaign.id));
-  const emails = selected.reduce((sum, campaign) => sum + (qty[campaign.id] ?? 1), 0);
-  // Integers throughout — see the note on formatHays. The figure shown here is
-  // the same multiplication the server does when it freezes the lines.
-  const total = emails * RATE_PER_EMAIL;
+  const total = selected.length * RATE_PER_EMAIL;
 
   async function issue() {
     setBusy(true);
     setError(null);
     try {
-      const invoice = await createInvoice(
-        selected.map(campaign => campaign.id),
-        Object.fromEntries(selected.map(campaign => [campaign.id, qty[campaign.id] ?? 1])),
-      );
+      const invoice = await createInvoice(selected.map(campaign => campaign.id));
       router.push(`/invoices/${invoice.id}`);
     } catch (err) {
       // A 409 is a rule the selection broke, worded for the reader by the API.
@@ -101,10 +89,7 @@ export default function NewInvoicePage() {
                 {campaigns.map(campaign => {
                   const on = picked.has(campaign.id);
                   return (
-                    // The row is one big <label> so the whole line toggles, and
-                    // the quantity field can live inside it because a click
-                    // landing on interactive content is not forwarded to the
-                    // label's control — typing a number does not untick the box.
+                    // The row is one big <label> so the whole line toggles.
                     <label className={`inv-pick${on ? "" : " off"}`} key={campaign.id}>
                       <input type="checkbox" checked={on} onChange={() => toggle(campaign.id)} />
                       <span className="inv-pick-name">
@@ -114,35 +99,20 @@ export default function NewInvoicePage() {
                         </small>
                       </span>
                       <span className="spacer" />
-                      <input
-                        className="inv-pick-qty"
-                        type="number"
-                        min={1}
-                        value={qty[campaign.id] ?? 1}
-                        disabled={!on}
-                        onChange={e => setQuantity(campaign.id, e.target.value)}
-                      />
-                      <span className="dim">
-                        {formatHays((qty[campaign.id] ?? 1) * RATE_PER_EMAIL)} {CURRENCY}
-                      </span>
+                      <span className="dim">{formatMoney(RATE_PER_EMAIL)}</span>
                     </label>
                   );
                 })}
 
                 <div className="inv-sum">
                   <span className="dim">
-                    {formatHays(selected.length)} campanha{selected.length === 1 ? "" : "s"} ·{" "}
-                    {formatHays(emails)} e-mail{emails === 1 ? "" : "s"} · {formatHays(RATE_PER_EMAIL)}{" "}
-                    {CURRENCY} cada
+                    {formatCount(selected.length)} campanha{selected.length === 1 ? "" : "s"} ·{" "}
+                    {formatMoney(RATE_PER_EMAIL)} cada
                   </span>
                   <span className="spacer" />
-                  <strong>{formatHays(total)} {CURRENCY}</strong>
+                  <strong>{formatMoney(total)}</strong>
                 </div>
               </div>
-
-              <p className="hint">
-                A quantidade é o número de e-mails cobrados na campanha — deixe em 1 quando houve uma única peça.
-              </p>
 
               {!confirming && (
                 <div className="inv-actions">
@@ -155,7 +125,7 @@ export default function NewInvoicePage() {
               {confirming && (
                 <div className="inv-confirm">
                   <p>
-                    Gerar a fatura de {formatHays(total)} {CURRENCY} com {formatHays(selected.length)} campanha
+                    Gerar a fatura de {formatMoney(total)} com {formatCount(selected.length)} campanha
                     {selected.length === 1 ? "" : "s"}.
                   </p>
                   <p className="dim">
