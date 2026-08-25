@@ -3,6 +3,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getProject, updateProject } from "@/lib/server/store";
+import { upsertFromSync } from "@/lib/server/campaigns";
 import type { ProjectRecord, StepRecord } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -12,7 +13,7 @@ export const maxDuration = 900;
 const WEB_ROOT = process.cwd();
 
 interface RunRequest {
-  flow: "login" | "draft" | "replace" | "audience" | "schedule" | "refresh" | "test";
+  flow: "login" | "draft" | "replace" | "audience" | "schedule" | "refresh" | "test" | "campaigns";
   /** When given, the run's outcome is recorded against this project. */
   projectId?: string;
   campaignId?: string;
@@ -32,6 +33,9 @@ interface RunRequest {
   csv?: string;
   /** Braze names the segment after the file, so the name matters. */
   csvName?: string;
+  /** Campaign sync: cap the scrape, and keep only one normalised status. */
+  limit?: number;
+  status?: string;
 }
 
 function argsFor(body: RunRequest, dir: string): string[] {
@@ -75,6 +79,12 @@ function argsFor(body: RunRequest, dir: string): string[] {
       push(out, "--preheader", body.preheader);
       push(out, "--from", body.fromAddress);
       push(out, "--reply-to", body.replyTo);
+      return out;
+    }
+    case "campaigns": {
+      const out = ["campaigns"];
+      push(out, "--limit", body.limit ? String(body.limit) : undefined);
+      push(out, "--status", body.status);
       return out;
     }
     case "audience": {
@@ -143,6 +153,17 @@ export async function POST(request: Request) {
       });
       child.on("close", code => {
         const ok = code === 0;
+        // The campaign sync belongs to no project — it is the whole workspace —
+        // so it writes to the ledger instead, and before the done event, so the
+        // UI's refresh on done always reads post-write state.
+        if (body.flow === "campaigns" && ok) {
+          try {
+            const written = recordCampaigns(output, Boolean(body.status || body.limit));
+            send("log", { level: "info", message: `  ${written} campanhas gravadas no catálogo` });
+          } catch (err) {
+            send("log", { level: "error", message: `não foi possível gravar o catálogo: ${String(err)}` });
+          }
+        }
         // Record the outcome against the project so the links survive the run.
         if (body.projectId) {
           try {
@@ -168,6 +189,91 @@ export async function POST(request: Request) {
   });
 }
 
+
+/**
+ * The campaign sync's result, out of the one JSON line the flow logs. Nothing
+ * else crosses the process boundary: `runFlow`'s return value stays in the
+ * child, so the log line is the transport.
+ *
+ * The upsert only ever touches the Braze-owned half of a record — PLAN-BILLING
+ * keeps `billing` on a separate axis precisely so a re-sync cannot overwrite
+ * "invoiced" with "stopped" and bill the same campaign twice.
+ */
+function recordCampaigns(output: string, filtered: boolean): number {
+  const json = output.split("\n").map(l => l.trim()).reverse().find(l => l.startsWith("{") && l.endsWith("}"));
+  if (!json) throw new Error("a sincronização não reportou nenhuma campanha");
+
+  const result = JSON.parse(json) as {
+    campaigns?: ScrapedCampaign[];
+    stopped?: string;
+    syncedAt?: string;
+    /** False when Braze's own saved filter could not be proven cleared. */
+    unfiltered?: boolean;
+    filterNote?: string;
+    pageSize?: number | null;
+  };
+  if (!Array.isArray(result.campaigns)) throw new Error("a sincronização não reportou nenhuma campanha");
+
+  // Only the fields the ledger owns are handed over. The scrape also carries
+  // the raw status word and the row's original cells, which are diagnostics for
+  // the run log, not something to bury in a file meant to be hand-edited.
+  const rows = result.campaigns.map(c => ({
+    id: c.id,
+    name: c.name,
+    url: c.url,
+    brazeStatus: c.brazeStatus,
+    createdAt: c.createdAt ?? undefined,
+    scheduledFor: c.scheduledFor ?? undefined,
+    firstSentAt: c.firstSentAt ?? undefined,
+  }));
+
+  // A scrape that could not read the status column reads every row as
+  // "unknown", and every one of those rows is a campaign that stops looking
+  // billable. One or two unknowns are a genuinely new Braze status word; a
+  // whole page of them means we read the wrong column, and the right response
+  // is to write nothing and say so, because a sync that half-lands is harder to
+  // notice than one that fails.
+  const unknown = rows.filter(r => !r.brazeStatus || r.brazeStatus === "unknown").length;
+  if (rows.length && unknown > rows.length / 2) {
+    throw new Error(
+      `a sincronização não conseguiu ler o status de ${unknown} de ${rows.length} campanhas — ` +
+        `nada foi gravado. A tabela do Braze provavelmente mudou.`,
+    );
+  }
+
+  // "Complete" is a claim about the whole workspace, and it is what lets the
+  // store flag records it stopped seeing — so it is made only when the flow
+  // says it walked to the end of an unfiltered, uncapped list.
+  //
+  // An empty result can never make that claim. "single page" is reported both
+  // when the list genuinely has one page and when no paging control matched,
+  // and with the selectors still unverified the second is the likelier of the
+  // two: zero rows plus "single page" would otherwise flag the entire ledger
+  // as missing on the strength of a scrape that found nothing at all.
+  //
+  // It also requires the flow to have cleared Braze's OWN filter. The campaign
+  // index opens on a saved view that lists active campaigns only, and a sync
+  // that read that view has seen a slice of the workspace, not the workspace.
+  const complete = !filtered && rows.length > 0 && result.unfiltered === true &&
+    (result.stopped === "end of list" || result.stopped === "single page" ||
+      result.stopped === "no further page");
+  const summary = upsertFromSync(rows, { complete, syncedAt: result.syncedAt });
+  if (summary.missing) {
+    console.warn(`sync: ${summary.missing} campanha(s) não apareceram mais no Braze`);
+  }
+  return rows.length;
+}
+
+/** One record as braze/flows/list-campaigns.mjs reports it. */
+interface ScrapedCampaign {
+  id: string;
+  name: string;
+  url: string;
+  brazeStatus: string;
+  createdAt: string | null;
+  scheduledFor: string | null;
+  firstSentAt: string | null;
+}
 
 /** The step each flow advances, for the project's progress record. */
 const STEP_FOR: Partial<Record<RunRequest["flow"], keyof ProjectRecord["steps"]>> = {

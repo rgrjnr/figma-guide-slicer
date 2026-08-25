@@ -27,6 +27,19 @@ export const VERIFIED = {
   scheduleCampaign: true,
   importAudience: true,
   login: true,
+  /**
+   * Written blind, from how the campaigns index is normally laid out — nobody
+   * has watched it run. Four things still need checking against the real DOM,
+   * and the flow logs each of them so one run is enough to settle all four:
+   * (1) which row strategy matched, and whether it picked up the header row as
+   * a campaign; (2) the exact header labels, since the column map keys off
+   * them; (3) the distinct status words Braze actually prints, because
+   * anything outside the known table is passed through as "unknown" rather
+   * than guessed — a mislabelled status here becomes a wrong invoice; (4)
+   * whether the list paginates, infinite-scrolls or virtualises, which decides
+   * whether `moreStrategies` or `scrollStrategies` is the one doing the work.
+   */
+  listCampaigns: false,
 };
 
 /**
@@ -120,6 +133,154 @@ export const braze = {
     chooseEmail: p => p.getByRole("button", { name: /^Email$/i }).first(),
     search: p => p.getByPlaceholder(/^Search$/i).first(),
     byName: (p, name) => p.getByRole("link", { name }).first(),
+  },
+
+  /**
+   * The campaigns index, read as a ledger rather than as a way in to one
+   * campaign. Nothing here has been checked against the live DOM, so every
+   * locator is a *list* of candidates tried in order and the flow logs which
+   * one matched: on the first real run the log names the winner, and the ones
+   * above it can then be deleted. A single guessed selector would only tell us
+   * that it timed out.
+   *
+   * Ordered role-first, then table semantics, then hrefs, because the
+   * accessible role survives Braze's styled-components churn and the class
+   * names do not. The href candidate is last but is the safety net: whatever
+   * else changes, a campaign row has to link to the campaign.
+   */
+  campaignList: {
+    /**
+     * Something that proves the list has painted. Braze lazy-loads this view,
+     * and `networkidle` never fires on the dashboard, so the flow waits on one
+     * of these instead of on the network.
+     */
+    readyStrategies: [
+      { name: "role-table", locator: p => p.getByRole("table").first() },
+      { name: "table-row", locator: p => p.locator("table tbody tr").first() },
+      { name: "role-grid", locator: p => p.locator('[role="grid"], [role="table"]').first() },
+      { name: "campaign-link", locator: p => p.locator('a[href*="/engagement/campaigns/"]').first() },
+    ],
+
+    /**
+     * The rows themselves. `role=row` is filtered by `has` a campaign link so
+     * the header row cannot come back as a campaign — an off-by-one there
+     * would invent a campaign called "Name" and bill someone for it.
+     */
+    rowStrategies: [
+      { name: "table-tbody-tr", rows: p => p.locator("table tbody tr") },
+      {
+        name: "role-row-with-link",
+        rows: p =>
+          p.locator('[role="row"]').filter({ has: p.locator('a[href*="/engagement/campaigns/"]') }),
+      },
+      { name: "rowgroup-row", rows: p => p.locator('[role="rowgroup"] [role="row"]') },
+      {
+        name: "listitem-with-link",
+        rows: p => p.locator("li").filter({ has: p.locator('a[href*="/engagement/campaigns/"]') }),
+      },
+      /**
+       * Last resort for a virtualised list that renders neither table nor grid
+       * semantics: take each campaign link's nearest block ancestor as the row.
+       * Cruder — the "cells" then come out as whatever that ancestor contains —
+       * but it still yields id, name and the row's text.
+       */
+      {
+        name: "link-ancestor",
+        rows: p =>
+          p
+            .locator('a[href*="/engagement/campaigns/"]')
+            .locator("xpath=ancestor::*[self::tr or self::li or self::div][1]"),
+      },
+    ],
+
+    /**
+     * Sub-selectors used inside a single `evaluateAll` over the matched rows.
+     * They are CSS strings rather than locator factories because the extraction
+     * runs in the page: one round trip for the whole table instead of four per
+     * row, which on a few hundred campaigns is the difference between seconds
+     * and minutes.
+     */
+    cellSelector: 'td, [role="gridcell"], [role="cell"]',
+    linkSelector: 'a[href*="/engagement/campaigns/"]',
+
+    /** Header labels drive the column map, so they are read the same way. */
+    headerStrategies: [
+      { name: "thead-th", headers: p => p.locator("thead th") },
+      { name: "role-columnheader", headers: p => p.locator('[role="columnheader"]') },
+      { name: "th", headers: p => p.locator("th") },
+    ],
+
+    /**
+     * The campaign index does NOT open unfiltered — it opens on the workspace's
+     * saved view, which in this account shows Active campaigns only. Everything
+     * this project bills for is *stopped*, so a sync that accepts the default
+     * view sees precisely the campaigns that can never be invoiced, reports
+     * success, and leaves the ledger looking as though there is nothing to bill.
+     *
+     * So the filter is cleared before a single row is read, and if it cannot be
+     * proven cleared the run refuses to call itself complete.
+     */
+    clearFilterStrategies: [
+      { name: "clear-all-filters", locator: p => p.getByRole("button", { name: /clear (all )?filters?|reset filters?/i }).first() },
+      { name: "clear-link", locator: p => p.getByRole("link", { name: /clear (all )?filters?|clear all/i }).first() },
+      { name: "clear-text", locator: p => p.getByText(/^clear (all )?filters?$/i).first() },
+      /** Braze renders each active filter as a chip with its own dismiss ×. */
+      { name: "filter-chip-dismiss", locator: p => p.locator('[class*="filter"] [aria-label*="emove" i], [class*="chip"] [aria-label*="emove" i]').first() },
+      /** Some views use tabs instead, where "All" is the unfiltered one. */
+      { name: "all-tab", locator: p => p.getByRole("tab", { name: /^all( campaigns)?$/i }).first() },
+    ],
+
+    /**
+     * Evidence that a filter is still applied. Read AFTER clearing: if any of
+     * these still matches, the list on screen is a subset and the sync must not
+     * claim to have seen the workspace.
+     */
+    activeFilterStrategies: [
+      { name: "filter-chip", locator: p => p.locator('[class*="filter-chip"], [class*="FilterChip"], [data-testid*="filter-chip"]').first() },
+      { name: "selected-status-tab", locator: p => p.getByRole("tab", { selected: true }).filter({ hasText: /active|draft|stopped|archived/i }).first() },
+      { name: "filter-count-badge", locator: p => p.getByText(/\d+ filters? applied/i).first() },
+    ],
+
+    /**
+     * Rows per page. The default is a small page, and every extra page is
+     * another click that can fail halfway and truncate the ledger — so the
+     * largest option is chosen and the flow reports which one it got.
+     * `numericOptions` is used to pick the biggest number offered rather than
+     * assuming Braze still offers the same sizes it does today.
+     */
+    pageSizeStrategies: [
+      { name: "select-per-page", locator: p => p.locator("select").filter({ hasText: /\d/ }).last() },
+      { name: "labelled-per-page", locator: p => p.getByLabel(/per page|rows per page|page size/i).first() },
+      { name: "combobox-per-page", locator: p => p.getByRole("combobox", { name: /per page|rows|show/i }).first() },
+    ],
+
+    /** Pagination, if this list paginates at all. */
+    moreStrategies: [
+      { name: "role-next", locator: p => p.getByRole("button", { name: /^next( page)?$/i }).first() },
+      { name: "aria-next", locator: p => p.locator('[aria-label="Next page"], [aria-label="Next"]').first() },
+      { name: "link-next", locator: p => p.getByRole("link", { name: /^next( page)?$/i }).first() },
+      { name: "load-more", locator: p => p.getByRole("button", { name: /load more|show more/i }).first() },
+    ],
+
+    /**
+     * The scroll container, for the infinite/virtualised shape. Braze usually
+     * scrolls the window, but a virtualised grid scrolls its own viewport, so
+     * both are tried and the flow reports which one moved.
+     */
+    scrollStrategies: [
+      { name: "grid-viewport", locator: p => p.locator('[role="grid"], [role="table"]').first() },
+      { name: "table-scroller", locator: p => p.locator("table").first() },
+    ],
+
+    /**
+     * The read-only tripwire. This flow must never create, edit, send or
+     * archive anything, and the only clicking it does is paging — so the
+     * accessible name of whatever it is about to click is matched against this
+     * first and the click is abandoned if it hits. Cheap insurance against a
+     * "Next" candidate resolving to a wizard's Next button on some other view.
+     */
+    neverClick:
+      /create|new|delete|remove|archive|duplicate|copy|send|launch|edit|save|stop|pause|resume/i,
   },
 
   /**

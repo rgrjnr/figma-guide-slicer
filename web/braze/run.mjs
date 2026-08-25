@@ -6,6 +6,7 @@
  *   node braze/run.mjs replace  --id <campaignId> --zip ../new-build.zip --subject "..."
  *   node braze/run.mjs test     --id <campaignId> --to "a@x.com,b@x.com" [--confirm true]
  *   node braze/run.mjs audience --csv ./20260901.csv
+ *   node braze/run.mjs campaigns [--limit 500] [--status stopped]
  *   node braze/run.mjs schedule --id <campaignId> --at "2026-09-01 09:30" \
  *                               --zone America/Sao_Paulo --segment 20260901.csv
  *
@@ -19,6 +20,7 @@ import { scheduleCampaign } from "./flows/schedule-campaign.mjs";
 import { replaceMessage } from "./flows/replace-message.mjs";
 import { refreshCampaign } from "./flows/refresh.mjs";
 import { sendTest } from "./flows/send-test.mjs";
+import { listCampaigns } from "./flows/list-campaigns.mjs";
 
 const [command, ...rest] = process.argv.slice(2);
 const args = {};
@@ -56,6 +58,13 @@ const flows = {
     }),
   /** Read-only: re-read what Braze actually has, for the local record. */
   refresh: ctx => refreshCampaign(ctx, { campaignId: args.id }),
+  /**
+   * Read-only: enumerate every campaign in the workspace for the billing
+   * ledger. There is no Braze API key on this account, so this scrape is the
+   * only source of truth `data/campaigns.json` has.
+   */
+  campaigns: ctx =>
+    listCampaigns(ctx, { status: args.status, limit: Number(args.limit) || 0 }),
   audience: ctx =>
     importAudience(ctx, { csvPath: args.csv, createSegment: args["no-segment"] !== "true" }),
   schedule: ctx =>
