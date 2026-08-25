@@ -1,5 +1,8 @@
 node_modules/
 .next/
+# Output of `npm run build:check`, kept apart so a verification build cannot
+# clobber the chunks a running `next dev` is serving.
+.next-verify/
 next-env.d.ts
 *.tsbuildinfo
 .env.local
