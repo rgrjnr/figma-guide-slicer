@@ -1,5 +1,17 @@
 # WIP
 
+## 2026-08-25 — main (launch built, UNTESTED against real Braze)
+
+"Lançar campanha" on the Envio step: dialog reads Braze live (alcançáveis,
+assunto, horário), confirming re-runs the same flow with those values as
+expectations and clicks Launch. Guards = SENDING.md's four rules, as pure
+launchBlockers() with offline tests (braze/launch.test.mjs, 109 tests green).
+NOT YET RUN FOR REAL — no campaign has been launched by it. The read path
+(compose/schedule/review) reuses verified selectors; the CLICK on
+braze.review.launch has never executed. First real use should be a campaign
+scheduled well in the future, watched headed, so the click can be aborted.
+CLI: npm run braze -- launch --id X   (read-only without --confirm true)
+
 ## 2026-08-25 — main (sync verified against real Braze, 96 campaigns)
 
 The scraper ran for real: chip "Status: Active" dismissed, rows/page 96, 96
