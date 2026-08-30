@@ -24,6 +24,13 @@ export const FLOW_TOTALS: Record<string, number> = {
 
 /** The flows speak English into their run logs; the UI speaks pt-BR. */
 const STEP_LABELS: [RegExp, string][] = [
+  // The launch steps sit at the top for the same first-match-wins reason as the
+  // campaigns ones below: "read the campaign and its subject" would otherwise
+  // be claimed by a broader "read the ..." entry further down.
+  [/^read the campaign and its subject/, "lendo a campanha"],
+  [/^read the reachable-user count/, "lendo o público alcançável"],
+  [/^click Launch Campaign/, "lançando a campanha"],
+  [/^confirm Braze accepted/, "confirmando o lançamento"],
   [/^open the entry point/, "abrindo o Braze"],
   [/^wait for the login/, "aguardando outro login"],
   [/^enter the email/, "login: e-mail"],

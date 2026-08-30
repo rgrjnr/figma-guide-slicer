@@ -15,6 +15,28 @@ export interface RunHandlers {
 }
 
 /**
+ * The structured result a flow logs as its last brace-wrapped line, or null.
+ *
+ * The flows print one JSON object when they have a machine-readable answer, and
+ * it arrives through `onLog` like any other line — so a caller that needs the
+ * numbers collects the lines and hands them here. The scan runs from the end
+ * because the CLI's trailing "OK — artifacts in …" is not JSON, and neither is
+ * anything the flow logged on its way there.
+ */
+export function flowResult<T = Record<string, unknown>>(lines: readonly string[]): T | null {
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    if (!line.startsWith("{") || !line.endsWith("}")) continue;
+    try {
+      return JSON.parse(line) as T;
+    } catch {
+      // Not ours — a log line that merely happens to be brace-wrapped.
+    }
+  }
+  return null;
+}
+
+/**
  * One Braze flow, streamed.
  *
  * `EventSource` cannot POST and the run has to carry a body, so the frames are

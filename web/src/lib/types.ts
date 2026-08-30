@@ -81,7 +81,11 @@ export interface ProjectRecord {
     /** Read off the Review step. The number of people who would receive it. */
     reachableUsers?: number;
     controlGroupRemoved?: boolean;
-    /** Never set by automation — recorded if a human launches it. */
+    /**
+     * When the campaign was committed. Set only by the launch flow, and only
+     * after it actually clicked Launch Campaign — a preflight that merely read
+     * the review page never writes it.
+     */
     launchedAt?: string;
   };
 

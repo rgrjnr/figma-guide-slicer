@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { EmailChips } from "@/components/EmailChips";
+import { LaunchDialog } from "@/components/LaunchDialog";
 import type { ProjectRecord } from "@/lib/types";
 import { timeZones } from "@/lib/defaults";
 
@@ -31,6 +33,13 @@ interface Props {
   /** How many addresses the last successful test went to. */
   testSentTo: number;
   lastError: string | null;
+  /**
+   * The launch dialog drives its own run rather than going through `onRun`,
+   * because it is two runs with a human decision in between and the second one
+   * carries what the first one showed. This is how the page hears about it and
+   * re-reads the record afterwards.
+   */
+  onLaunched?: () => void;
 }
 
 const ZONES = timeZones();
@@ -44,12 +53,14 @@ const ZONES = timeZones();
 export function SendStep({
   record, campaignName, subject, rowCount, hasImage, audienceCount, segmentName,
   testEmails, onTestEmails, settings, onSettings, flowState, flowProgress, onRun, testSentTo, lastError,
+  onLaunched,
 }: Props) {
   const campaign = record?.braze.campaign;
   const segment = record?.braze.segment;
   // The campaign exists the moment the draft lands, which is all a test needs —
   // the schedule still running is no reason to hold the proof back.
   const campaignBusy = flowState.prepare === "running" || flowState.schedule === "running";
+  const [launching, setLaunching] = useState(false);
 
   return (
     <div className="step-body form wide">
@@ -161,14 +172,49 @@ export function SendStep({
             {flowState.schedule === "running" ? "Agendando…" : "Agendar envio"}
           </button>
           {flowState.schedule === "done" && (
+            <p className="success-note">✓ Agendado.</p>
+          )}
+        </section>
+
+        <section className="send-block">
+          <h3>Lançar</h3>
+          {record?.braze.launchedAt ? (
             <p className="success-note">
-              ✓ Agendado — o disparo continua sendo feito à mão no Braze, depois de conferir.
+              ✓ Campanha lançada em {new Date(record.braze.launchedAt).toLocaleString("pt-BR")}.
             </p>
+          ) : (
+            <>
+              <p className="hint">
+                Abre a conferência final — quantas pessoas serão alcançadas, o assunto e o horário,
+                lidos do Braze na hora. O envio só acontece depois que você confirmar.
+              </p>
+              <button
+                className="primary"
+                disabled={!campaign || campaignBusy}
+                onClick={() => setLaunching(true)}
+              >
+                Lançar campanha
+              </button>
+              {!campaign && <p className="hint">A campanha ainda não foi criada.</p>}
+            </>
           )}
         </section>
 
 
         {lastError && <p className="error-note">{lastError}</p>}
+
+        {launching && campaign && record && (
+          <LaunchDialog
+            campaignId={campaign.id}
+            projectId={record.id}
+            timeZone={settings.timeZone}
+            onClose={() => setLaunching(false)}
+            onLaunched={() => {
+              setLaunching(false);
+              onLaunched?.();
+            }}
+          />
+        )}
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ export const maxDuration = 900;
 const WEB_ROOT = process.cwd();
 
 interface RunRequest {
-  flow: "login" | "draft" | "replace" | "audience" | "schedule" | "refresh" | "test" | "campaigns" | "details";
+  flow: "login" | "draft" | "replace" | "audience" | "schedule" | "refresh" | "test" | "campaigns" | "details" | "launch";
   /** When given, the run's outcome is recorded against this project. */
   projectId?: string;
   campaignId?: string;
@@ -38,6 +38,14 @@ interface RunRequest {
   status?: string;
   /** Details: re-read every campaign, including ones already read. */
   force?: boolean;
+  /**
+   * Launch guards. Without confirmLaunch the run is a read-only preflight that
+   * fills the confirmation dialog; with it, the flow re-reads these values off
+   * Braze and refuses unless they still match — see braze/SENDING.md.
+   */
+  confirmLaunch?: boolean;
+  expectReachable?: number;
+  expectName?: string;
 }
 
 function argsFor(body: RunRequest, dir: string): string[] {
@@ -100,6 +108,26 @@ function argsFor(body: RunRequest, dir: string): string[] {
       const pending = campaignsNeedingDetail({ limit: body.limit ?? 0, force: Boolean(body.force) });
       if (!pending.length) throw new Error("Todas as campanhas já têm data de envio.");
       return ["details", "--ids", pending.map(c => c.id).join(",")];
+    }
+    /**
+     * The only flow that can commit a send. Two phases over one code path: no
+     * confirmLaunch means read-and-report, which is what the dialog shows;
+     * with it, the expectations a person just said yes to are passed down and
+     * verified against a fresh read before anything is clicked.
+     */
+    case "launch": {
+      if (!body.campaignId) throw new Error("Nada para lançar — a campanha ainda não existe.");
+      const out = ["launch", "--id", body.campaignId];
+      push(out, "--zone", body.timeZone);
+      if (!body.confirmLaunch) return out;
+
+      if (!body.expectName) throw new Error("Falta o nome confirmado da campanha.");
+      if (typeof body.expectReachable !== "number" || !Number.isFinite(body.expectReachable)) {
+        throw new Error("Falta o número de pessoas alcançadas que foi confirmado.");
+      }
+      out.push("--confirm", "true", "--expect-name", body.expectName);
+      out.push("--expect-reachable", String(body.expectReachable));
+      return out;
     }
     case "audience": {
       if (!body.csv) throw new Error("No audience CSV — add addresses first.");
@@ -375,6 +403,12 @@ function recordRun(body: RunRequest, ok: boolean, output: string): void {
       if (typeof live.controlGroupPresent === "boolean") braze.controlGroupRemoved = !live.controlGroupPresent;
       if (typeof live.url === "string" && braze.campaign) braze.campaign.url = live.url;
       if (typeof live.name === "string" && braze.campaign) braze.campaign.name = live.name;
+      // The launch flow is the only one that reports this, and only when it
+      // actually clicked. A preflight reports launched:false and must not
+      // leave a record saying the campaign went out.
+      if (live.launched === true && typeof live.launchedAt === "string") {
+        braze.launchedAt = live.launchedAt;
+      }
     } catch {
       /* the last brace-wrapped line was not ours */
     }

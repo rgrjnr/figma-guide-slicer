@@ -1,8 +1,15 @@
 # Sending
 
-**Nothing in this project sends a campaign.** The flows stop at a saved draft
-with the schedule and audience set. This file records what the remaining step
-is, so the last decision stays a human one.
+**One flow in this project sends a campaign: `launch`.** Every other flow stops
+at a saved draft with the schedule and audience set.
+
+`launch` was added on 2026-08-25, at Roger's request, and it implements the
+conditions this file already set out for automating the send — they are in
+`launchBlockers` in `braze/flows/launch-campaign.mjs`, as a pure function with
+its own offline tests in `braze/launch.test.mjs`. The decision is still a human
+one: the flow reads the campaign, a person is shown the audience size, subject
+and send time, and only an explicit confirmation carries those numbers back
+down for the flow to verify before it clicks.
 
 ## What was verified
 
@@ -44,10 +51,24 @@ button. Check the Review page says what you expect before clicking.
 4. Use **Preview and test** on the compose step to send yourself a proof first.
 5. Click **Launch Campaign**.
 
-## If you ever automate it
+## Doing it from the app
 
-Don't do it silently. The button is already in `selectors.mjs` as
-`braze.review.launch`, unused. Anything that clicks it should at minimum:
+The **Lançar campanha** button on the Envio step opens a dialog that reads the
+campaign live — reachable users, subject, send date — and confirming it runs the
+same flow again with those values as expectations.
+
+    npm run braze -- launch --id <campaignId>                    # read only
+    npm run braze -- launch --id <campaignId> --confirm true \
+      --expect-name "20260901 WBD" --expect-reachable 7509       # sends
+
+Without `--confirm true` nothing is clicked. With it, and without the two
+`--expect-*` values, the flow refuses: the guards are not optional, because
+their whole purpose is comparing against numbers a person actually looked at.
+
+## The conditions it enforces
+
+These were written before the flow existed; it implements them literally.
+Anything that clicks that button must at minimum:
 
 - refuse to run unless the campaign's schedule is a designated future time;
 - read back the reachable-user count and require it to match an expected value

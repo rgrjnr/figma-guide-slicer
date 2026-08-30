@@ -518,6 +518,11 @@ export default function Page() {
           )}
           testSentTo={testSentTo}
           lastError={[...log].reverse().find(l => l.level === "error")?.message ?? null}
+          onLaunched={() => {
+            // The launch writes launchedAt server-side; re-read so the step
+            // shows it instead of offering to launch again.
+            if (record) void loadProject(record.id).then(setRecord).catch(() => {});
+          }}
         />
       )}
 

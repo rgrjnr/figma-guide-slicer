@@ -10,7 +10,8 @@
  *   node braze/run.mjs schedule --id <campaignId> --at "2026-09-01 09:30" \
  *                               --zone America/Sao_Paulo --segment 20260901.csv
  *
- * Nothing here ever sends a campaign. Draft and schedule only.
+ * Every command here is draft-and-schedule only, except `launch`, which is the
+ * send and is guarded accordingly — see braze/SENDING.md.
  */
 import { runFlow } from "./runner.mjs";
 import { login } from "./flows/login.mjs";
@@ -22,6 +23,7 @@ import { refreshCampaign } from "./flows/refresh.mjs";
 import { sendTest } from "./flows/send-test.mjs";
 import { listCampaigns } from "./flows/list-campaigns.mjs";
 import { detailCampaigns } from "./flows/campaign-detail.mjs";
+import { launchCampaign } from "./flows/launch-campaign.mjs";
 
 const [command, ...rest] = process.argv.slice(2);
 const args = {};
@@ -56,6 +58,21 @@ const flows = {
       campaignId: args.id,
       recipients: args.to,
       confirm: args.confirm === "true",
+    }),
+  /**
+   * THE SEND. Read-only without --confirm true, which is how the app fills its
+   * confirmation dialog; with it, this is the one command in the project that
+   * commits a campaign. --expect-reachable and --expect-name are not optional
+   * niceties: they are the guards from braze/SENDING.md, and launching refuses
+   * without them.
+   */
+  launch: ctx =>
+    launchCampaign(ctx, {
+      campaignId: args.id,
+      confirm: args.confirm === "true",
+      expectName: args["expect-name"],
+      expectReachable: args["expect-reachable"] === undefined ? undefined : Number(args["expect-reachable"]),
+      timeZone: args.zone,
     }),
   /** Read-only: re-read what Braze actually has, for the local record. */
   refresh: ctx => refreshCampaign(ctx, { campaignId: args.id }),
