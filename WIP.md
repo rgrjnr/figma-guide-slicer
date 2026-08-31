@@ -1,5 +1,19 @@
 # WIP
 
+## 2026-08-31 — main (LIVE at spicy.rogerjunior.com, two passwords working)
+
+Deployed: Coolify app "Email Studio" (uuid xvxdk05oefmpo751rvbl230h, project
+Home Server, Dockerfile build from repo root, port 3000, GitHub App source,
+auto-deploys on push to main). Volumes spicy-data (/app/web/data, seeded with
+today's campaigns/invoices/projects JSON — 97 campaigns live), spicy-braze-auth,
+spicy-runs. Env vars copied from web/.env.local via API. DNS: spicy CNAME
+vpn.rogerjunior.com (Cloudflare, via the ddns container's token, server-side).
+LE cert issued. Verified live: anon→login, admin sees billing, client
+(CLIENT_USER=cliente, password in web/.env.local) gets studio only.
+Note: Coolify API token "claude-deploy" lives in ~/.coolify-claude-token on
+homeserver (0600) — revoke in Coolify UI if unwanted. Braze robot on the server
+is UNTESTED (headless, fresh .auth volume — first run will do full Okta login).
+
 ## 2026-08-31 — main (two passwords + Docker image ready; Coolify app not yet created)
 
 Auth now has two doors: ADMIN_* (billing incl. invoices) and CLIENT_* (studio
