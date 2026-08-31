@@ -1,6 +1,7 @@
 import {
   SESSION_COOKIE,
   SESSION_TTL_MS,
+  type Role,
   type Session,
   secureEquals,
   signSession,
@@ -16,40 +17,63 @@ import {
  */
 
 export { SESSION_COOKIE, SESSION_TTL_MS, verifySession };
-export type { Session };
+export type { Role, Session };
+
+type Credential = { user: string; password: string; role: Role };
 
 /**
  * A misconfigured box must fail closed. If `SESSION_SECRET` is missing every
  * cookie fails to verify — which is the safe direction — and `/api/auth`
  * refuses to sign anything rather than signing with the string "undefined",
  * which would be a well-known key.
+ *
+ * Two doors now: `ADMIN_USER`/`ADMIN_PASSWORD` (billing included) and
+ * `CLIENT_USER`/`CLIENT_PASSWORD` (studio only). Admin plus the secret are
+ * still required to start; the client pair is optional so a box without it
+ * simply has one door, not a broken lock.
  */
-export function authConfig(): { user: string; password: string; secret: string } | null {
-  const user = process.env.ADMIN_USER;
-  const password = process.env.ADMIN_PASSWORD;
+export function authConfig(): { credentials: Credential[]; secret: string } | null {
+  const admin = process.env.ADMIN_USER;
+  const adminPassword = process.env.ADMIN_PASSWORD;
   const secret = process.env.SESSION_SECRET;
-  if (!user || !password || !secret) return null;
-  return { user, password, secret };
+  if (!admin || !adminPassword || !secret) return null;
+  const credentials: Credential[] = [{ user: admin, password: adminPassword, role: "admin" }];
+  const client = process.env.CLIENT_USER;
+  const clientPassword = process.env.CLIENT_PASSWORD;
+  if (client && clientPassword) credentials.push({ user: client, password: clientPassword, role: "client" });
+  return { credentials, secret };
 }
 
 /**
- * Checks the submitted pair against the configured one without branching on
- * either. Both fields are compared even when the first already failed, so the
- * response time does not distinguish "wrong user" from "wrong password" — the
- * same thing the login page's single generic message is protecting.
+ * Checks the submitted pair against every configured one without branching on
+ * any of them. All comparisons run even after a match is found, so the
+ * response time does not distinguish "wrong user" from "wrong password" from
+ * "that was the other role's password" — the same thing the login page's
+ * single generic message is protecting.
  */
-export async function checkCredentials(user: unknown, password: unknown): Promise<string | null> {
+export async function checkCredentials(
+  user: unknown,
+  password: unknown,
+): Promise<{ user: string; role: Role } | null> {
   const config = authConfig();
   if (!config) return null;
-  const [userOk, passwordOk] = await Promise.all([
-    secureEquals(String(user ?? ""), config.user, config.secret),
-    secureEquals(String(password ?? ""), config.password, config.secret),
-  ]);
-  return userOk && passwordOk ? config.user : null;
+  const results = await Promise.all(
+    config.credentials.map(async credential => {
+      const [userOk, passwordOk] = await Promise.all([
+        secureEquals(String(user ?? ""), credential.user, config.secret),
+        secureEquals(String(password ?? ""), credential.password, config.secret),
+      ]);
+      return userOk && passwordOk ? credential : null;
+    }),
+  );
+  // Admin is listed first, so if both pairs are somehow identical the session
+  // that comes out is deterministic rather than an accident of Promise order.
+  const match = results.find(Boolean);
+  return match ? { user: match.user, role: match.role } : null;
 }
 
-export async function issueSession(user: string, secret: string): Promise<string> {
-  return signSession(user, secret);
+export async function issueSession(user: string, role: Role, secret: string): Promise<string> {
+  return signSession(user, role, secret);
 }
 
 /**

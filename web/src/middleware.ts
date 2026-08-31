@@ -17,12 +17,35 @@ import { SESSION_COOKIE, verifySession } from "@/lib/server/auth";
  * knowledge of ADMIN_PASSWORD rather than the value of a variable, and it also
  * means every browser suite is a smoke test for this file.
  */
+/**
+ * The rooms only the admin key opens: the billing ledger and the invoices,
+ * pages and APIs both. `/campaigns` is in the list because it is not a
+ * campaign tool — it is the price-per-campaign ledger that invoice generation
+ * reads from. The studio and the Braze flows stay open to both roles.
+ */
+const ADMIN_PREFIXES = ["/invoices", "/campaigns", "/api/invoices", "/api/campaigns"];
+
 export async function middleware(request: NextRequest) {
   const cookie = request.cookies.get(SESSION_COOKIE)?.value;
   const session = await verifySession(cookie, process.env.SESSION_SECRET);
-  if (session) return NextResponse.next();
-
   const { pathname, search } = request.nextUrl;
+
+  if (session) {
+    const needsAdmin = ADMIN_PREFIXES.some(prefix => pathname === prefix || pathname.startsWith(`${prefix}/`));
+    if (!needsAdmin || session.role === "admin") return NextResponse.next();
+
+    // A signed-in client on an admin path: a 403 for an API call (same JSON
+    // shape as the 401 below, so the fetch helpers surface a sentence, not a
+    // SyntaxError), and a bounce to the studio for a page — there is no
+    // "ask for access" story here, the other password IS the access.
+    if (pathname.startsWith("/api/")) {
+      return Response.json({ error: "Somente o administrador pode acessar o faturamento." }, { status: 403 });
+    }
+    const home = request.nextUrl.clone();
+    home.pathname = "/";
+    home.search = "";
+    return NextResponse.redirect(home);
+  }
 
   /**
    * An unauthenticated API call must be a 401 with a JSON body, never a

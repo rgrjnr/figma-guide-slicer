@@ -31,26 +31,40 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const user = await checkCredentials(body.user, body.password);
-  if (!user) {
+  const match = await checkCredentials(body.user, body.password);
+  if (!match) {
     await sleep(FAILURE_DELAY_MS);
     // One message for both failures. Telling someone the user name was right
     // hands them half the credential.
     return Response.json({ error: "Usuário ou senha inválidos." }, { status: 401 });
   }
 
-  const value = await issueSession(user, config.secret);
-  return Response.json(
-    { ok: true },
-    { headers: { "Set-Cookie": sessionCookieHeader(value, request, Math.floor(SESSION_TTL_MS / 1000)) } },
-  );
+  const value = await issueSession(match.user, match.role, config.secret);
+  const maxAge = Math.floor(SESSION_TTL_MS / 1000);
+  const headers = new Headers();
+  headers.append("Set-Cookie", sessionCookieHeader(value, request, maxAge));
+  // A second, readable cookie carrying only the role, so the nav can decide
+  // which links to draw without a round trip. It is decoration, not a lock —
+  // anyone can edit it and all they get is a link to a page the middleware
+  // will bounce them off, because enforcement only ever reads the signed one.
+  headers.append("Set-Cookie", roleHintCookieHeader(match.role, request, maxAge));
+  return Response.json({ ok: true, role: match.role }, { headers });
 }
 
 /** Sign out. `Max-Age=0` with the same Path/SameSite, which is what makes the
  *  browser drop it — a differing Path would leave the old cookie in place. */
 export async function DELETE(request: Request) {
-  return Response.json(
-    { ok: true },
-    { headers: { "Set-Cookie": sessionCookieHeader("", request, 0) } },
-  );
+  const headers = new Headers();
+  headers.append("Set-Cookie", sessionCookieHeader("", request, 0));
+  headers.append("Set-Cookie", roleHintCookieHeader("", request, 0));
+  return Response.json({ ok: true }, { headers });
+}
+
+/** Same attributes as the session cookie except `HttpOnly` — being readable
+ *  from the page is this cookie's entire reason to exist. */
+function roleHintCookieHeader(role: string, request: Request, maxAgeSeconds: number): string {
+  const secure = new URL(request.url).protocol === "https:";
+  return [`studio_role=${role}`, "Path=/", "SameSite=Lax", `Max-Age=${maxAgeSeconds}`, secure ? "Secure" : null]
+    .filter(Boolean)
+    .join("; ");
 }

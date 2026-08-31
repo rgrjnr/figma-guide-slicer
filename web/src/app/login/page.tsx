@@ -66,7 +66,7 @@ export default function LoginPage() {
           <button className="primary big-btn" type="submit" disabled={busy || !user || !password}>
             {busy ? "Entrando…" : "Entrar"}
           </button>
-          <p className="hint">Acesso restrito. A credencial é única e compartilhada pela equipe.</p>
+          <p className="hint">Acesso restrito. Use a credencial que você recebeu.</p>
         </form>
       </div>
     </main>

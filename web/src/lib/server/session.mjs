@@ -28,6 +28,14 @@ const decoder = new TextDecoder();
  */
 export const SESSION_COOKIE = "studio_session";
 
+/**
+ * The two doors. "admin" is Roger (can issue invoices); "client" is the shared
+ * team credential (studio only). The role is a closed set and it is part of the
+ * signed payload — a cookie with any other word in that slot fails verification
+ * before anyone gets to ask what it means.
+ */
+export const ROLES = Object.freeze(["admin", "client"]);
+
 /** A week. Long enough that nobody signs in twice a day, short enough that a
  *  cookie copied off a machine stops working on its own. */
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -69,19 +77,21 @@ async function keyFor(secret) {
 }
 
 /**
- * `user|expiry|HMAC-SHA256`, in the plan's words, encoded so that it survives a
- * cookie jar: the two payload fields are joined with `.` and the user is
- * base64url'd, because a cookie value may not contain `;`, `,`, whitespace or
- * `=` and the admin user name comes from an env var we do not control.
+ * `user|role|expiry|HMAC-SHA256`, encoded so that it survives a cookie jar:
+ * the payload fields are joined with `.` and the user is base64url'd, because
+ * a cookie value may not contain `;`, `,`, whitespace or `=` and the user
+ * names come from env vars we do not control. The role needs no encoding — it
+ * is one of two fixed ASCII words, enforced right here.
  *
  * The expiry is part of the signed string, never a separate attribute. A cookie
  * `Max-Age` is a request from the server that the browser is free to ignore, so
  * it can only ever be a convenience; the expiry that is enforced is this one.
  */
-export async function signSession(user, secret, { now = Date.now(), ttlMs = SESSION_TTL_MS } = {}) {
+export async function signSession(user, role, secret, { now = Date.now(), ttlMs = SESSION_TTL_MS } = {}) {
   if (typeof user !== "string" || user.length === 0) throw new AuthError("user is empty");
+  if (!ROLES.includes(role)) throw new AuthError(`unknown role: ${role}`);
   const expiresAt = now + ttlMs;
-  const payload = `${toBase64Url(encoder.encode(user))}.${expiresAt}`;
+  const payload = `${toBase64Url(encoder.encode(user))}.${role}.${expiresAt}`;
   const signature = await crypto.subtle.sign("HMAC", await keyFor(secret), encoder.encode(payload));
   return `${payload}.${toBase64Url(new Uint8Array(signature))}`;
 }
@@ -99,8 +109,12 @@ export async function verifySession(value, secret, now = Date.now()) {
   try {
     if (typeof value !== "string") return null;
     const parts = value.split(".");
-    if (parts.length !== 3) return null;
-    const [userPart, expiryPart, signaturePart] = parts;
+    if (parts.length !== 4) return null;
+    const [userPart, rolePart, expiryPart, signaturePart] = parts;
+    // A closed set, checked before the signature so nothing downstream ever has
+    // to wonder what a third role would mean. (Pre-role three-part cookies fall
+    // at the length check above — deploying this signs everyone out once.)
+    if (!ROLES.includes(rolePart)) return null;
     // Anchored digits only: `Number("12e99")` and `Number(" 1")` both parse, and
     // either would be a way to smuggle an expiry past a looser check.
     if (!/^[0-9]+$/.test(expiryPart)) return null;
@@ -110,7 +124,7 @@ export async function verifySession(value, secret, now = Date.now()) {
       "HMAC",
       await keyFor(secret),
       signature,
-      encoder.encode(`${userPart}.${expiryPart}`),
+      encoder.encode(`${userPart}.${rolePart}.${expiryPart}`),
     );
     if (!ok) return null;
 
@@ -119,7 +133,7 @@ export async function verifySession(value, secret, now = Date.now()) {
 
     const user = decoder.decode(fromBase64Url(userPart));
     if (user.length === 0) return null;
-    return { user, expiresAt };
+    return { user, role: rolePart, expiresAt };
   } catch {
     // A malformed base64 body, a zero-length secret, a runtime that dislikes the
     // key — all of it is just "not signed in".
