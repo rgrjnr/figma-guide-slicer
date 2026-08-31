@@ -1,0 +1,14 @@
+# Keep the context small and the image free of anything local or secret.
+.git
+node_modules
+**/node_modules
+web/.next
+web/.next-verify
+web/.runs
+web/data
+web/braze/.auth
+web/braze/recordings
+web/.env.local
+web/public/tesseract
+dist
+.DS_Store
