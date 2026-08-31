@@ -1,5 +1,18 @@
 # WIP
 
+## 2026-08-31 — main (two passwords + Docker image ready; Coolify app not yet created)
+
+Auth now has two doors: ADMIN_* (billing incl. invoices) and CLIENT_* (studio
+only) — role rides inside the signed cookie; middleware 403s/redirects client
+off /invoices,/campaigns + their APIs. 112 unit + 8 e2e green, live-verified.
+CLIENT_USER=cliente + generated password appended to web/.env.local.
+Dockerfile at repo root (Playwright base, BRAZE_HEADLESS=1), image builds and
+serves — xlsx was missing from package.json, now pinned. Pushed to GitHub.
+BLOCKED on: creating the Coolify app + spicy CNAME (permissions denied in
+session). SSH trick when LAN is dead: `ssh -b 10.8.0.2 homeserver`.
+Next: create Coolify app (project Home Server, Dockerfile, port 3000, volumes
+/app/web/{data,braze/.auth,.runs}, env from web/.env.local), CNAME spicy→vpn.
+
 ## 2026-08-25 — main (launch built, UNTESTED against real Braze)
 
 "Lançar campanha" on the Envio step: dialog reads Braze live (alcançáveis,
