@@ -36,18 +36,16 @@ const listed = await page.locator(".project-row").count();
 check("the saved project is listed", listed >= 1, `${listed} rows`);
 
 await page.locator(".project-row .link-btn").first().click();
-await page.waitForTimeout(1500);
+await page.waitForTimeout(2500);
 const status = await page.locator(".app-bar .status").innerText();
-check("opening says the design has to be added again", /novamente/i.test(status), status);
+// The artwork is stored with the project now, so opening one is complete on its
+// own. It used to say "adicione a arte novamente" and that was the whole reason
+// a revision days later meant hunting for the original file.
+check("opening does not ask for the art again", !/novamente/i.test(status), status);
 
-// Re-upload and confirm the guides came back from the store.
-await upload(page);
-await page.locator(".project-bar").getByRole("button", { name: "Abrir", exact: true }).click();
-await page.waitForTimeout(600);
-await page.locator(".project-row .link-btn").first().click();
-await page.waitForTimeout(1500);
-// Reopening lands on Público; the guides are only rendered on the Arte canvas.
+// Reopening lands on Público; the design and the guides are on the Arte canvas.
 await goToStep(page, "Arte");
+check("the artwork came back without re-uploading", await page.locator(".surface img").isVisible());
 const guidesAfter = await page.locator(".guide:not(.proposed)").count();
 const regionsAfter = await page.locator(".region").count();
 check("guides survived the round trip", guidesAfter === guides, `${guides} -> ${guidesAfter}`);

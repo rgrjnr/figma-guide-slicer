@@ -45,6 +45,14 @@ export interface ProjectRecord {
   /** The slicer state, so markup can be reopened and changed. */
   markup: {
     imageName?: string;
+    /**
+     * The artwork itself, as `source.<ext>` under the project's asset dir. The
+     * marks are meaningless without the image they were drawn on, and the image
+     * is the one thing in a project that cannot be typed again — so it is kept
+     * next to them rather than left on whoever's laptop uploaded it. Absent on
+     * every project saved before this existed, which reads as "ask for the file".
+     */
+    imageFile?: string;
     imageWidth?: number;
     imageHeight?: number;
     designWidth: number;

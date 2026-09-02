@@ -71,6 +71,12 @@ export interface ProjectApi {
   setStatus: (s: string) => void;
 
   loadFile: (file: File) => Promise<void>;
+  /**
+   * Put an artwork back under marks that already exist — reopening a saved
+   * project, where `loadFile` would be wrong: that one starts a new piece of
+   * work and resets the guides, the rows and the undo history to match.
+   */
+  restoreImage: (blob: Blob, name: string) => Promise<void>;
   reset: () => void;
 
   addGuide: (y: number) => void;
@@ -211,6 +217,30 @@ export function useProject(): ProjectApi {
       },
     }));
     setStatus("");
+  }, []);
+
+  /**
+   * The mirror of `loadFile` for a project being reopened: it decodes and
+   * installs the image and touches nothing else, so the guides, rows and work
+   * area that were just restored from the record survive it. The undo history
+   * is cleared all the same — the state before an open belongs to whatever was
+   * on screen before, and stepping back into it would mix two projects.
+   */
+  const restoreImage = useCallback(async (blob: Blob, name: string) => {
+    const loaded = await decodeImage(blob);
+    rasterRef.current = toRasterImage(loaded);
+    setImage(loaded);
+    historyRef.current = { past: [], future: [] };
+    setProject(p => ({
+      ...p,
+      image: {
+        name,
+        url: URL.createObjectURL(blob),
+        blob,
+        width: loaded.width,
+        height: loaded.height,
+      },
+    }));
   }, []);
 
   const reset = useCallback(() => {
@@ -423,6 +453,7 @@ export function useProject(): ProjectApi {
     status,
     setStatus,
     loadFile,
+    restoreImage,
     reset,
     addGuide,
     moveGuide,

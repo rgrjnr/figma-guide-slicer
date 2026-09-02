@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync, renameSync, existsSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, writeFileSync, renameSync, existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { emptySteps, type ProjectRecord } from "@/lib/types";
@@ -122,12 +122,54 @@ export function deleteProject(id: string): boolean {
   const next = db.projects.filter(p => p.id !== id);
   if (next.length === db.projects.length) return false;
   write({ ...db, projects: next });
+  // The record is the only thing that knows this directory exists, so it goes
+  // with it — otherwise every deleted project leaves its artwork on the volume
+  // with nothing left able to name it. The JSON is written first: an asset that
+  // outlives its record wastes space, a record pointing at a deleted file
+  // renders an error.
+  removeAssets(id);
   return true;
 }
 
-/** Where a project's ZIP and CSV live. Kept out of the JSON to stay readable. */
+/** Where a project's ZIP, CSV and source artwork live. Kept out of the JSON to
+ *  stay readable — a base64 PNG in there would end hand-editing. */
 export function assetDir(projectId: string): string {
   const dir = join(ASSETS_DIR, projectId);
   mkdirSync(dir, { recursive: true });
   return dir;
+}
+
+/**
+ * Write a project's source artwork, replacing whatever was there.
+ *
+ * `fileName` is always one this app generated (`source.<ext>` from a closed
+ * table in `artwork.mjs`) and never the uploaded file's own name, so nothing
+ * user-controlled reaches `join`. Any previous artwork in another format is
+ * removed first, because the record can only point at one of them and the loser
+ * would be unreachable for the rest of the project's life.
+ */
+export function writeArtwork(projectId: string, fileName: string, bytes: Uint8Array): string {
+  const dir = assetDir(projectId);
+  for (const name of readdirSync(dir)) {
+    if (name !== fileName && /^source\.[a-z0-9]+$/.test(name)) rmSync(join(dir, name), { force: true });
+  }
+  // Same temp-and-rename as the JSON: a half-written PNG that a reload would
+  // try to decode is worse than the previous one still being there.
+  const target = join(dir, fileName);
+  const tmp = `${target}.${process.pid}.tmp`;
+  writeFileSync(tmp, bytes);
+  renameSync(tmp, target);
+  return target;
+}
+
+/** The bytes of a project's artwork, or undefined if it was never stored. */
+export function readArtwork(projectId: string, fileName: string): Buffer | undefined {
+  const path = join(ASSETS_DIR, projectId, fileName);
+  if (!existsSync(path)) return undefined;
+  return readFileSync(path);
+}
+
+/** Everything a project keeps on disk outside the JSON. */
+export function removeAssets(projectId: string): void {
+  rmSync(join(ASSETS_DIR, projectId), { recursive: true, force: true });
 }

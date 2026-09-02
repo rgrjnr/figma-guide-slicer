@@ -10,7 +10,7 @@ import { buildHtml, downloadBlob, packageZip, sliceProject, type ExportedCell } 
 import { processEmailContent } from "@/lib/emails";
 import { readAltText } from "@/lib/ocr";
 import { DEFAULT_SEND_TIME, DEFAULT_TIME_ZONE, combineSendAt, defaultSendDate, stamp } from "@/lib/defaults";
-import { createProject, loadProject, saveProject } from "@/lib/projects";
+import { createProject, loadProject, loadProjectArtwork, saveProject, saveProjectArtwork } from "@/lib/projects";
 import type { ProjectRecord } from "@/lib/types";
 import { useProject } from "@/lib/useProject";
 import { FLOW_TOTALS, progressOf, type FlowProgress } from "@/lib/flowLabels";
@@ -38,6 +38,32 @@ const STEPS = [
   { key: "send", label: "Enviar ao Braze" },
 ] as const;
 type StepKey = (typeof STEPS)[number]["key"];
+
+/**
+ * What "this design has already been pushed to Braze" means: everything that
+ * would change the ZIP, the sending info or the schedule, and nothing else.
+ *
+ * A named function because two callers have to agree on it exactly — the one
+ * that decides whether leaving Arte should run a flow, and the one that opens a
+ * saved campaign and seeds it, so reopening a campaign and clicking through
+ * without editing anything does not replace its message in Braze with an
+ * identical one.
+ */
+function prepareSignature(fields: {
+  guides: number[];
+  rows: unknown;
+  subject: string;
+  preheader: string;
+  designWidth: number;
+  emailWidth: number;
+  addFooter: boolean;
+  campaignName: string;
+  segmentName: string;
+  sendAt: string;
+  zone: string;
+}): string {
+  return JSON.stringify(fields);
+}
 
 export default function Page() {
   const api = useProject();
@@ -278,7 +304,7 @@ export default function Page() {
   /** Leaving Arte: build the draft and hook it to the audience, in the background. */
   const startPrepareIfNeeded = useCallback(() => {
     if (!image || !subject) return;
-    const sig = JSON.stringify({
+    const sig = prepareSignature({
       guides: project.guides, rows: project.rows, subject, preheader,
       designWidth: project.designWidth, emailWidth: project.emailWidth,
       addFooter: project.addFooter, campaignName, segmentName,
@@ -327,7 +353,26 @@ export default function Page() {
 
   const handleSave = useCallback(async () => {
     try {
-      const saved = record ? await saveProject(record.id, snapshot()) : await createProject(snapshot());
+      let saved = record ? await saveProject(record.id, snapshot()) : await createProject(snapshot());
+
+      /**
+       * The artwork goes up with the first save that has one, and again
+       * whenever a different file has been dropped in — compared by name and by
+       * size, because those are what a project record can hold; the bytes
+       * themselves are never on both sides at once to diff.
+       *
+       * It is a second request rather than part of the JSON so that an autosave
+       * of the guides does not re-send several megabytes. If it fails the save
+       * itself still stands, and the message says which half is missing.
+       */
+      const artwork = project.image;
+      const changed =
+        artwork && (saved.markup.imageFile === undefined || saved.markup.imageName !== artwork.name);
+      if (artwork && changed) {
+        api.setStatus("Salvando a arte…");
+        saved = await saveProjectArtwork(saved.id, artwork.blob);
+      }
+
       setRecord(saved);
       recordRef.current = saved;
       setDirty(false);
@@ -335,7 +380,7 @@ export default function Page() {
     } catch (err) {
       api.setStatus(err instanceof Error ? err.message : "Não foi possível salvar.");
     }
-  }, [record, snapshot, api]);
+  }, [record, snapshot, project.image, api]);
 
   const handleOpen = useCallback(async (id: string) => {
     try {
@@ -346,7 +391,38 @@ export default function Page() {
       setSubject(loaded.email.subject ?? "");
       setPreheader(loaded.email.preheader ?? "");
       setAudienceRaw(loaded.audience.csv ?? "");
-      if (loaded.audience.fileName) setSegmentName(loaded.audience.fileName.replace(/\.csv$/i, ""));
+      const segment = loaded.audience.fileName
+        ? loaded.audience.fileName.replace(/\.csv$/i, "")
+        : segmentName;
+      if (loaded.audience.fileName) setSegmentName(segment);
+
+      /**
+       * A campaign that already exists in Braze is reopened to be *changed*, so
+       * the state it is being opened at counts as already pushed. Without this,
+       * merely walking through the steps would fire `replace` — a several-minute
+       * browser run that swaps the live variant for an identical one, and that
+       * removes the old variant to do it.
+       *
+       * Only when there is a campaign: a project saved but never drafted still
+       * has to be able to produce its draft by being walked through, which is
+       * the only way that ever happens.
+       */
+      if (loaded.braze.campaign) {
+        preparedSig.current = prepareSignature({
+          guides: loaded.markup.guides,
+          rows: loaded.markup.rows,
+          subject: loaded.email.subject ?? "",
+          preheader: loaded.email.preheader ?? "",
+          designWidth: loaded.markup.designWidth,
+          emailWidth: loaded.markup.emailWidth,
+          addFooter: loaded.markup.addFooter,
+          campaignName: loaded.name,
+          segmentName: segment,
+          sendAt: combineSendAt(settings.sendDate, settings.sendTime),
+          zone: settings.timeZone,
+        });
+      }
+
       api.patchProject({
         designWidth: loaded.markup.designWidth,
         emailWidth: loaded.markup.emailWidth,
@@ -355,13 +431,43 @@ export default function Page() {
         rows: loaded.markup.rows as never,
         addFooter: loaded.markup.addFooter,
       });
+      /**
+       * The marks are meaningless without the art they were drawn on, so the
+       * art comes back with them. `restoreImage`, not `loadFile`: the latter
+       * treats a new image as a new piece of work and would reset everything
+       * that was just restored above.
+       *
+       * A project saved before artwork was stored answers `null`, and then the
+       * old instruction still applies — the file only ever existed on the
+       * machine that uploaded it.
+       */
+      let restored = false;
+      try {
+        const artwork = await loadProjectArtwork(id);
+        if (artwork) {
+          await api.restoreImage(artwork, loaded.markup.imageName ?? "arte");
+          restored = true;
+        }
+      } catch {
+        // The record opened; only its artwork did not. Fall through to the
+        // message below, which asks for the file — the same position as a
+        // project that never had one stored.
+      }
+
       setDirty(false);
       setStep("audience");
-      api.setStatus(image ? "Aberto." : `Aberto — adicione ${loaded.markup.imageName ?? "a arte"} novamente para ver.`);
+      api.setStatus(
+        restored || image
+          ? "Aberto."
+          : `Aberto — adicione ${loaded.markup.imageName ?? "a arte"} novamente para ver.`,
+      );
     } catch (err) {
       api.setStatus(err instanceof Error ? err.message : "Não foi possível abrir.");
     }
-  }, [api, image]);
+    // `segmentName` and `settings` are read for the signature above, so they
+    // belong here — a stale `settings` would seed a signature the next check
+    // could never match, and the guard would stop guarding.
+  }, [api, image, segmentName, settings]);
 
   const index = STEPS.findIndex(s => s.key === step);
   const anyRunning = Object.values(flowState).some(s => s === "running");

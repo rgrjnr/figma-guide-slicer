@@ -1,3 +1,19 @@
+## 2026-09-02 — claude/cliente-sem-pagar — a arte fica guardada; editar depois funciona
+
+Reabrir um projecto passa a trazer **a arte junto com as marcas**. Era o único
+bloqueio: o `projects.json` só guardava `imageName`, e o app dizia "adicione a
+arte novamente" — sem o ficheiro original não havia edição nenhuma. Agora
+`PUT/GET /api/projects/<id>/artwork` guarda os bytes em `data/assets/<id>/source.<ext>`
+(fora do JSON, que continua legível e é reenviado a cada autosave), o `handleSave`
+sobe-a quando muda e o `handleOpen` chama `restoreImage` — irmão do `loadFile`
+que **não** limpa guias e rows. Re-empurrar já usava `replace` sozinho; o que
+faltava era não disparar à toa: `preparedSig` é semeada ao abrir uma campanha que
+já existe no Braze, senão passear pelos passos trocava a variante viva por uma
+igual. Provado em browser (7/7 em `e2e/projects.mjs`, dois checks novos) e por
+API: bytes idênticos, jpeg substitui png, 415/400/404/401, DELETE limpa a pasta.
+Só serve os projectos locais, por construção — as 95 campanhas vindas do scrape
+não têm projecto. **Por empurrar.**
+
 ## 2026-09-02 — claude/cliente-sem-pagar — cliente ganha tudo menos liquidar
 
 Os dois papéis passam a abrir o mesmo prédio: o `cliente` já vê `/campaigns`
