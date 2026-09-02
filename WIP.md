@@ -12,7 +12,11 @@ já existe no Braze, senão passear pelos passos trocava a variante viva por uma
 igual. Provado em browser (7/7 em `e2e/projects.mjs`, dois checks novos) e por
 API: bytes idênticos, jpeg substitui png, 415/400/404/401, DELETE limpa a pasta.
 Só serve os projectos locais, por construção — as 95 campanhas vindas do scrape
-não têm projecto. **Por empurrar.**
+não têm projecto. **✅ EM PRODUÇÃO** — deploy #31 do commit `6128ba7`, 2026-09-02.
+Verificado ao vivo em spicy.rogerjunior.com: cliente 200 em /campaigns e /invoices,
+409 ao emitir sem campanhas, **403 no PATCH** (id inexistente de propósito — 403 prova
+a ACL, 404 provaria que passou), rota da arte viva a 404 nos projectos antigos, que
+ainda não têm bytes guardados. As 7 faturas continuam 1 paga.
 
 ## 2026-09-02 — claude/cliente-sem-pagar — cliente ganha tudo menos liquidar
 
@@ -24,7 +28,7 @@ de path não distingue `GET /api/invoices/<id>` — o documento imprimível — 
 `PATCH` no mesmo URL, que é o pagamento; agora casa por método. 5 testes novos
 em `test/access.test.mjs`, typecheck e build limpos, matriz exercitada contra
 um servidor local: cliente GET/POST 200-409, PATCH **403**; admin PATCH passa a
-ACL; anónimo 401. **Por empurrar** — `main` auto-deploya para spicy.rogerjunior.com.
+ACL; anónimo 401. **✅ EM PRODUÇÃO** desde 2026-09-02 (deploy #31).
 Nota: `npm test` já não corre neste Node (22.23) — `node --test <dir>` deixou de
 resolver; usar globs. 5 falhas em `braze/` são pré-existentes (Playwright).
 
