@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { InvoiceRecord } from "@/lib/billing";
 import { InvoiceLines, formatDate, loadInvoice, markInvoicePaid } from "@/components/InvoiceLines";
+import { useRole } from "@/lib/useRole";
 import "../print.css";
 
 /**
@@ -19,6 +20,8 @@ export default function InvoicePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
+  // See /invoices: the client reads and prints the document, the admin settles it.
+  const canSettle = useRole() === "admin";
 
   useEffect(() => {
     loadInvoice(id)
@@ -53,7 +56,7 @@ export default function InvoicePage() {
                 on screen is already the document, so there is nothing to
                 re-render and no second URL to keep in step with this one. */}
             <button onClick={() => window.print()}>Imprimir</button>
-            {!paid && (
+            {!paid && canSettle && (
               <button className="primary" onClick={pay} disabled={busy}>
                 {busy ? "Marcando…" : "Marcar como paga"}
               </button>

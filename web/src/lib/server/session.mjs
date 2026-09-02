@@ -29,8 +29,9 @@ const decoder = new TextDecoder();
 export const SESSION_COOKIE = "studio_session";
 
 /**
- * The two doors. "admin" is Roger (can issue invoices); "client" is the shared
- * team credential (studio only). The role is a closed set and it is part of the
+ * The two doors. "admin" is Roger; "client" is the shared team credential. Both
+ * work the studio, read the ledger and issue invoices — only settling one is
+ * the admin's, see `access.mjs`. The role is a closed set and it is part of the
  * signed payload — a cookie with any other word in that slot fails verification
  * before anyone gets to ask what it means.
  */

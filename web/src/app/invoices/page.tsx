@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { InvoiceRecord } from "@/lib/billing";
 import { emailCount, formatCount, formatDate, formatMoney, listInvoices, markInvoicePaid } from "@/components/InvoiceLines";
+import { useRole } from "@/lib/useRole";
 import "./print.css";
 
 /** The ledger of issued invoices, newest first — the API already sorts. */
@@ -14,6 +15,9 @@ export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceRecord[] | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Only the admin settles a fatura. The middleware is what enforces it; this
+  // is here so the client is never shown a button that answers 403.
+  const canSettle = useRole() === "admin";
 
   useEffect(() => {
     listInvoices().then(setInvoices).catch(() => setInvoices([]));
@@ -69,7 +73,7 @@ export default function InvoicesPage() {
                         state, which is what the running tint means everywhere
                         else in the app. */}
                     <span className={`status-pill ${paid ? "done" : "running"}`}>{paid ? "paga" : "emitida"}</span>
-                    {!paid && (
+                    {!paid && canSettle && (
                       <button onClick={() => pay(invoice)} disabled={busyId === invoice.id}>
                         {busyId === invoice.id ? "Marcando…" : "Marcar como paga"}
                       </button>

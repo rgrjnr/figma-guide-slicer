@@ -1,3 +1,17 @@
+## 2026-09-02 — claude/cliente-sem-pagar — cliente ganha tudo menos liquidar
+
+Os dois papéis passam a abrir o mesmo prédio: o `cliente` já vê `/campaigns`
+(o histórico do que foi enviado) e `/invoices`, e **emite** faturas. Só
+"Marcar como paga" continua a ser do admin. A regra saiu do middleware para
+`src/lib/server/access.mjs` (ESM puro, como o `session.mjs`) porque um prefixo
+de path não distingue `GET /api/invoices/<id>` — o documento imprimível — de
+`PATCH` no mesmo URL, que é o pagamento; agora casa por método. 5 testes novos
+em `test/access.test.mjs`, typecheck e build limpos, matriz exercitada contra
+um servidor local: cliente GET/POST 200-409, PATCH **403**; admin PATCH passa a
+ACL; anónimo 401. **Por empurrar** — `main` auto-deploya para spicy.rogerjunior.com.
+Nota: `npm test` já não corre neste Node (22.23) — `node --test <dir>` deixou de
+resolver; usar globs. 5 falhas em `braze/` são pré-existentes (Playwright).
+
 # WIP
 
 ## 2026-08-31 — main (LIVE at spicy.rogerjunior.com, two passwords working)

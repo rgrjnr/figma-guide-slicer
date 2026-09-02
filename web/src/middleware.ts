@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, verifySession } from "@/lib/server/auth";
+import { mayAccess } from "@/lib/server/access.mjs";
 
 /**
  * The lock on the door (PLAN-BILLING.md phase C). One shared credential, so
@@ -18,12 +19,16 @@ import { SESSION_COOKIE, verifySession } from "@/lib/server/auth";
  * means every browser suite is a smoke test for this file.
  */
 /**
- * The rooms only the admin key opens: the billing ledger and the invoices,
- * pages and APIs both. `/campaigns` is in the list because it is not a
- * campaign tool — it is the price-per-campaign ledger that invoice generation
- * reads from. The studio and the Braze flows stay open to both roles.
+ * What each role may do lives in `lib/server/access.mjs`, on its own, so it can
+ * be unit-tested and read without Next in the way. The short version: the two
+ * keys open the same building — studio, campaign ledger, invoices, issuing an
+ * invoice — and only marking a fatura as **paga** is the admin's.
+ *
+ * It used to be a list of admin-only path prefixes, and that could not express
+ * this: `/api/invoices/<id>` is the printable document on GET and the payment
+ * on PATCH, so a prefix rule had to lock away the reading to lock away the
+ * paying. The rule is now method-aware instead.
  */
-const ADMIN_PREFIXES = ["/invoices", "/campaigns", "/api/invoices", "/api/campaigns"];
 
 export async function middleware(request: NextRequest) {
   const cookie = request.cookies.get(SESSION_COOKIE)?.value;
@@ -31,15 +36,16 @@ export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   if (session) {
-    const needsAdmin = ADMIN_PREFIXES.some(prefix => pathname === prefix || pathname.startsWith(`${prefix}/`));
-    if (!needsAdmin || session.role === "admin") return NextResponse.next();
+    if (mayAccess(session, pathname, request.method)) return NextResponse.next();
 
-    // A signed-in client on an admin path: a 403 for an API call (same JSON
-    // shape as the 401 below, so the fetch helpers surface a sentence, not a
-    // SyntaxError), and a bounce to the studio for a page — there is no
-    // "ask for access" story here, the other password IS the access.
+    // A signed-in client on the one action that is not theirs. Today that is
+    // only ever the payment API, so this is a 403 with the same JSON shape as
+    // the 401 below — the fetch helpers surface a sentence, not a SyntaxError.
+    // The page branch under it is the fallback for a future admin-only screen:
+    // a bounce to the studio, because there is no "ask for access" story here,
+    // the other password IS the access.
     if (pathname.startsWith("/api/")) {
-      return Response.json({ error: "Somente o administrador pode acessar o faturamento." }, { status: 403 });
+      return Response.json({ error: "Somente o administrador pode marcar uma fatura como paga." }, { status: 403 });
     }
     const home = request.nextUrl.clone();
     home.pathname = "/";

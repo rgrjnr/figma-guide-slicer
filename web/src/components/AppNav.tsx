@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 
+/**
+ * Both keys see all three. The ledger is the history of what has been sent and
+ * the client is the one who sent it; invoices are drawn for both because the
+ * client issues them, and only the "marcar como paga" button inside is the
+ * admin's — see `lib/server/access.mjs`.
+ */
 const ITEMS = [
   { href: "/", label: "Estúdio" },
-  { href: "/campaigns", label: "Campanhas", adminOnly: true },
-  { href: "/invoices", label: "Faturas", adminOnly: true },
+  { href: "/campaigns", label: "Campanhas" },
+  { href: "/invoices", label: "Faturas" },
 ];
 
 /**
@@ -24,16 +29,6 @@ const ITEMS = [
 export function AppNav() {
   const pathname = usePathname();
 
-  // The role hint is a readable cookie set at login, and it is only that — a
-  // hint for which links to draw. The middleware enforces on the signed
-  // session cookie, so editing this one buys a link to a closed door. Read in
-  // an effect because the server render has no document; until it runs the
-  // admin links are simply absent, which is the right default for a client.
-  const [isAdmin, setIsAdmin] = useState(false);
-  useEffect(() => {
-    setIsAdmin(/(?:^|;\s*)studio_role=admin(?:;|$)/.test(document.cookie));
-  }, [pathname]);
-
   // The lock on the door has no way in if the door is decorated with links to
   // rooms behind it; /login renders its own bare header instead.
   if (pathname === "/login") return null;
@@ -44,7 +39,7 @@ export function AppNav() {
 
   return (
     <nav className="site-nav">
-      {ITEMS.filter(item => isAdmin || !item.adminOnly).map(item => (
+      {ITEMS.map(item => (
         <Link key={item.href} href={item.href} className={current(item.href) ? "current" : ""}>
           {item.label}
         </Link>

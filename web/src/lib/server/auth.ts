@@ -27,10 +27,12 @@ type Credential = { user: string; password: string; role: Role };
  * refuses to sign anything rather than signing with the string "undefined",
  * which would be a well-known key.
  *
- * Two doors now: `ADMIN_USER`/`ADMIN_PASSWORD` (billing included) and
- * `CLIENT_USER`/`CLIENT_PASSWORD` (studio only). Admin plus the secret are
- * still required to start; the client pair is optional so a box without it
- * simply has one door, not a broken lock.
+ * Two doors: `ADMIN_USER`/`ADMIN_PASSWORD` and `CLIENT_USER`/`CLIENT_PASSWORD`.
+ * They open the same building — studio, ledger, invoices, issuing an invoice —
+ * and differ in exactly one action, marking a fatura as paga; the rule itself
+ * is in `access.mjs`. Admin plus the secret are still required to start; the
+ * client pair is optional so a box without it simply has one door, not a
+ * broken lock.
  */
 export function authConfig(): { credentials: Credential[]; secret: string } | null {
   const admin = process.env.ADMIN_USER;
