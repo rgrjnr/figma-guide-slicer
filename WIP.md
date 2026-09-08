@@ -1,4 +1,4 @@
-## 2026-09-08 — main (uncommitted) — social row found under a light streak (Emmy26)
+## 2026-09-08 — main — social row found under a light streak (Emmy26) ✅ EM PRODUÇÃO
 
 `wbd-email-emmy26.png` não partia os ícones sociais: um risco de luz diagonal
 na margem esquerda toca a fila de ícones e, na máscara solta, funde-se com ela
@@ -8,7 +8,8 @@ a aplicar-se também a bandas **não isoladas**; o padding passa a ignorar banda
 de speckle como o isolamento já fazia (baseline hbomax padTop 798→790, glow).
 Fixture PNG nova + teste (28/28, typecheck limpo; `@types/pngjs` adicionado).
 Nota: `scratchpad/harness.ts` só corre de dentro de `packages/slicer-core`
-(jpeg-js/pngjs vivem lá). Próximo: commit; opcional — template do ícone "globo".
+(jpeg-js/pngjs vivem lá). Commit `ffc2595` → deploy Coolify #35, spicy.rogerjunior.com
+a servir a imagem nova (verificado 2026-09-08). Opcional: template do ícone "globo".
 
 ## 2026-09-02 — claude/cliente-sem-pagar — a arte fica guardada; editar depois funciona
 
