@@ -20,7 +20,9 @@ describe("hbomax-moments (600x924)", () => {
     const band = detectSocialBand(img, 1, img.width, img.height)!;
     expect(band.found).toBe(true);
     expect([band.top, band.bottom]).toEqual([800, 834]);
-    expect([band.padTop, band.padBottom]).toEqual([798, 868]);
+    // padTop was 798 until padding learnt to look past speckle bands the
+    // way isolation already did; the 8px above are decorative glow.
+    expect([band.padTop, band.padBottom]).toEqual([790, 868]);
     expect(band.cells.map(c => (c.isIcon ? c.platform : "gap"))).toEqual([
       "gap", "facebook", "linkedin", "instagram", "gap",
     ]);
@@ -55,6 +57,25 @@ describe("wbd-fandoms (1080x2857)", () => {
     // retype a cell's platform, and this is the case that needs it.
     expect(band.cells.map(c => (c.isIcon ? c.platform : "gap"))).toEqual([
       "gap", "linkedin", "facebook", "instagram", "linkedin", "gap",
+    ]);
+  });
+});
+
+describe("wbd-emmy26 (600x1908)", () => {
+  const img = loadFixture("wbd-email-emmy26.png");
+
+  // A diagonal light streak hugs the left edge and touches the icon row, so
+  // on the loose mask the row and the streak form one 72px band that sits
+  // too close to the CTA button above to count as isolated. The strict-mask
+  // re-split has to kick in for non-isolated bands, not only oversized ones.
+  it("finds the four-icon social row under the CTA despite the light streak", () => {
+    const band = detectSocialBand(img, 1, img.width, img.height)!;
+    expect(band.found).toBe(true);
+    expect([band.top, band.bottom]).toEqual([1690, 1728]);
+    expect([band.padTop, band.padBottom]).toEqual([1664, 1763]);
+    // First icon is a globe, which has no template yet, so it mis-matches.
+    expect(band.cells.map(c => (c.isIcon ? c.platform : "gap"))).toEqual([
+      "gap", "linkedin", "facebook", "linkedin", "instagram", "gap",
     ]);
   });
 });

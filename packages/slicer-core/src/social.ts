@@ -307,17 +307,22 @@ function chainToCells(best: Chain, imageWidth: number, scale: number, frameWidth
 // paragraph does not. Demand clear space above and below the band.
 const ISOLATION_RATIO = 0.35;
 
-function bandIsIsolated(bands: Band[], i: number, scale: number): boolean {
-  const b = bands[i];
-  const needed = Math.max(3 * scale, (b.y1 - b.y0) * ISOLATION_RATIO);
-  // Sub-MIN_BAND_H neighbours are speckle, not content; look past them.
+// Sub-MIN_BAND_H neighbours are speckle, not content; look past them.
+function contentNeighbours<T extends Band>(bands: T[], i: number, scale: number): { prev?: T; next?: T } {
   const noise = MIN_BAND_H * scale;
   let p = i - 1;
   while (p >= 0 && bands[p].y1 - bands[p].y0 < noise) p--;
   let n = i + 1;
   while (n < bands.length && bands[n].y1 - bands[n].y0 < noise) n++;
-  const gapAbove = p >= 0 ? b.y0 - bands[p].y1 : b.y0 + needed;
-  const gapBelow = n < bands.length ? bands[n].y0 - b.y1 : needed;
+  return { prev: p >= 0 ? bands[p] : undefined, next: n < bands.length ? bands[n] : undefined };
+}
+
+function bandIsIsolated(bands: Band[], i: number, scale: number): boolean {
+  const b = bands[i];
+  const needed = Math.max(3 * scale, (b.y1 - b.y0) * ISOLATION_RATIO);
+  const { prev, next } = contentNeighbours(bands, i, scale);
+  const gapAbove = prev ? b.y0 - prev.y1 : b.y0 + needed;
+  const gapBelow = next ? next.y0 - b.y1 : needed;
   return gapAbove >= needed && gapBelow >= needed;
 }
 
@@ -338,15 +343,20 @@ export function detectSocialBand(
   const yStart = bounds ? clamp(Math.round(bounds.y0 * scale), 0, height) : 0;
   const yEnd = bounds ? clamp(Math.round(bounds.y1 * scale), yStart, height) : height;
 
-  // Decorative art (rings, glows) can bridge separate rows into one giant
-  // band. Re-segment any oversized band with a stricter mask the art does
-  // not survive, and detect inside those pieces on the strict mask too so
-  // the art cannot pollute the column profiles either.
+  // Decorative art (rings, glows, light streaks) can bridge separate rows
+  // into one band: either a giant one, or a modest one that now sits too
+  // close to its neighbour to count as a row of its own. Re-segment those
+  // with a stricter mask the art does not survive, and detect inside the
+  // pieces on the strict mask too so the art cannot pollute the column
+  // profiles either.
   let strongMask: Uint8Array | null = null;
   const maxBandPx = MAX_BAND_H * scale;
+  const weak: MaskedBand[] = findBands(mask, width, 0, height).map(b => ({ ...b, mask }));
   const bands: MaskedBand[] = [];
-  for (const b of findBands(mask, width, 0, height)) {
-    if (b.y1 - b.y0 <= maxBandPx) { bands.push({ ...b, mask }); continue; }
+  for (let i = 0; i < weak.length; i++) {
+    const b = weak[i];
+    const oversized = b.y1 - b.y0 > maxBandPx;
+    if (!oversized && bandIsIsolated(weak, i, scale)) { bands.push(b); continue; }
     if (!strongMask) strongMask = buildInkMask(imageData, INK_STRONG_THRESHOLD);
     for (const sub of findBands(strongMask, width, b.y0, b.y1)) {
       bands.push({ ...sub, mask: strongMask });
@@ -368,7 +378,7 @@ export function detectSocialBand(
     const center = (b.y0 + b.y1) / 2;
     const score = hit.score + (center > height * 0.7 ? BOTTOM_PRIOR_BONUS : 0);
     if (!bestBand || score > bestBand.score) {
-      bestBand = { score, hit, band: b, prev: bands[i - 1], next: bands[i + 1] };
+      bestBand = { score, hit, band: b, ...contentNeighbours(bands, i, scale) };
     }
   }
   if (!bestBand) return null;
@@ -387,7 +397,8 @@ export function detectSocialBand(
   }
 
   // Pad the tight band out toward its neighbours so the row has some
-  // breathing room, without reaching into adjacent content.
+  // breathing room, without reaching into adjacent content. Speckle bands
+  // are skipped here for the same reason they are skipped for isolation.
   const bandH = b.y1 - b.y0;
   const gapAbove = bestBand.prev ? b.y0 - bestBand.prev.y1 : b.y0;
   const gapBelow = bestBand.next ? bestBand.next.y0 - b.y1 : height - b.y1;

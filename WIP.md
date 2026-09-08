@@ -1,3 +1,15 @@
+## 2026-09-08 — main (uncommitted) — social row found under a light streak (Emmy26)
+
+`wbd-email-emmy26.png` não partia os ícones sociais: um risco de luz diagonal
+na margem esquerda toca a fila de ícones e, na máscara solta, funde-se com ela
+numa banda de 72px colada ao botão CTA — falha o teste de isolamento. Em
+`social.ts` o re-split com a máscara forte (antes só para bandas >240px) passa
+a aplicar-se também a bandas **não isoladas**; o padding passa a ignorar bandas
+de speckle como o isolamento já fazia (baseline hbomax padTop 798→790, glow).
+Fixture PNG nova + teste (28/28, typecheck limpo; `@types/pngjs` adicionado).
+Nota: `scratchpad/harness.ts` só corre de dentro de `packages/slicer-core`
+(jpeg-js/pngjs vivem lá). Próximo: commit; opcional — template do ícone "globo".
+
 ## 2026-09-02 — claude/cliente-sem-pagar — a arte fica guardada; editar depois funciona
 
 Reabrir um projecto passa a trazer **a arte junto com as marcas**. Era o único
