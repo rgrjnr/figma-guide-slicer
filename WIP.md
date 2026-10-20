@@ -1,3 +1,14 @@
+## 2026-10-20 — claude/audience-import-menu — import de audiência partido pelo Braze
+
+**Causa:** o Braze trocou a página Import Users: os cartões de tipo + drop zone saíram,
+o tipo escolhe-se agora no menu "Import users ▾" (`data-cy="import-users-menu-button"`),
+que abre um modal com o `input[type=file]`. O `getByText("Attributes")` antigo casava a
+célula "Type" da tabela → o passo 02 passava, o 03 morria com `setInputFiles` timeout
+(runs 16:34 e 16:39 de hoje). **Corrigido** em `selectors.mjs` + `import-audience.mjs`.
+Ensaio em prod (container) até "Start Import" visível, sem clicar: passos todos OK.
+**Não está deployado** — branch por fazer push/merge (main auto-deploya no Coolify).
+**Próximo passo:** merge para main, depois reenviar a audiência pela app.
+
 ## 2026-09-08 — main — social row found under a light streak (Emmy26) ✅ EM PRODUÇÃO
 
 `wbd-email-emmy26.png` não partia os ícones sociais: um risco de luz diagonal

@@ -20,11 +20,12 @@ export async function importAudience(ctx, { csvPath, createSegment = true, timeo
 
   await ctx.step("open Import Users", async p => {
     await p.goto(ctx.base + paths.userImport(group), { waitUntil: "domcontentloaded" });
-    await braze.userImport.chooseAttributes(p).waitFor({ state: "visible", timeout: 45_000 });
+    await braze.userImport.menu(p).waitFor({ state: "visible", timeout: 45_000 });
   });
 
   await ctx.step("choose Attributes and upload the CSV", async p => {
-    // Browse files stays disabled until an import type is picked.
+    // The type is picked from the "Import users" menu, which opens the upload modal.
+    await braze.userImport.menu(p).click();
     await braze.userImport.chooseAttributes(p).click();
     await p.waitForTimeout(1_500);
     await braze.userImport.csvInput(p).setInputFiles(csvPath);

@@ -444,9 +444,15 @@ export const braze = {
   saveDraft: p => p.getByRole("button", { name: /^Save Draft$/i }).first(),
 
   userImport: {
-    /** "Browse files" stays disabled until an import type is chosen. */
-    chooseAttributes: p => p.getByText("Attributes", { exact: true }).first(),
-    csvInput: p => p.locator('input[type="file"]').first(),
+    /**
+     * Since 2026-10 the import type is a dropdown in the page header, not cards
+     * on the page; picking one opens a modal with the drop zone. The old
+     * `getByText("Attributes")` still matched — the Type cell of the history
+     * table — so the page looked ready while there was nothing to upload into.
+     */
+    menu: p => p.locator('[data-cy="import-users-menu-button"]'),
+    chooseAttributes: p => p.getByRole("menuitem", { name: /^Attributes$/ }),
+    csvInput: p => p.getByRole("dialog").locator('input[type="file"]').first(),
     next: p => p.getByRole("button", { name: /^Next$/i }).first(),
     /**
      * The default is "Don't create a targeting filter", which imports the users
