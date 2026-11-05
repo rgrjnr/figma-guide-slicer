@@ -1,4 +1,4 @@
-import type { DetectedBand } from "@slicer/core";
+import { isLinkReusable, type DetectedBand } from "@slicer/core";
 
 export type RowKind = "image" | "button" | "social";
 
@@ -10,6 +10,8 @@ export interface Cell {
   platform: string | null;
   link: string;
   alt: string;
+  /** Empty space beside a social row's icons: exported, but nothing to link. */
+  gap?: boolean;
 }
 
 export interface Row {
@@ -97,7 +99,8 @@ export function cellsFromBand(band: DetectedBand, linkCache: Record<string, stri
     x0: c.x0,
     x1: c.x1,
     platform: c.platform,
-    link: (c.platform && linkCache[c.platform]) || "",
+    link: (c.platform && isLinkReusable(c.platform) && linkCache[c.platform]) || "",
     alt: c.platform ? `${c.platform} icon` : "",
+    ...(c.isIcon ? {} : { gap: true }),
   }));
 }

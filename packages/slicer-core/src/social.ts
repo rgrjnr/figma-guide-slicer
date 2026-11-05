@@ -1,11 +1,13 @@
 import type { RasterImage, Bounds, DetectedBand, DetectedCell } from "./types";
 import { median, clamp } from "./util";
-import { extractGlyph, classifyGlyph } from "./glyphs";
+import { extractGlyph, classifyGlyph, connectedComponents } from "./glyphs";
 
 interface Band { y0: number; y1: number; }
 interface MaskedBand extends Band { mask: Uint8Array; }
 interface Profile { ink: Int32Array; minY: Int32Array; maxY: Int32Array; h: number; }
-interface Blob { x0: number; x1: number; w: number; h: number; cx: number; }
+// y0/y1 are absolute image rows, set only by the 2D search; a band's blobs all
+// share the band's rows.
+interface Blob { x0: number; x1: number; w: number; h: number; cx: number; y0?: number; y1?: number; }
 interface Chain { chain: Blob[]; pitch: number; score: number; }
 interface RawCell { x0: number; x1: number; isIcon: boolean; blob: Blob | null; platform?: string | null; }
 interface BestBand { score: number; hit: Chain; band: MaskedBand; prev?: MaskedBand; next?: MaskedBand; }
@@ -37,6 +39,7 @@ const PITCH_TOLERANCE = 0.25;   // consecutive gaps must match within +/-25%
 const MAX_SPAN_RATIO = 0.7;     // icon group must not dominate the row
 const MAX_ICON_WIDTH_RATIO = 0.25;
 const SIZE_UNIFORMITY = 1.35;   // icons in a bar are all the same size
+const MIN_ICON_SIDE = 20;       // design px; capital letters in button copy are smaller
 const MIN_BAND_H = 8;
 const MAX_BAND_H = 240;
 const MIN_CELL_FRAME_PX = 10;   // hairline <td>s break in Outlook
@@ -199,7 +202,7 @@ function longestEvenlySpacedChain(blobs: Blob[]): Blob[] | null {
   return best;
 }
 
-function scoreChain(chain: Blob[] | null, width: number): Chain | null {
+function scoreChain(chain: Blob[] | null, width: number, scale: number): Chain | null {
   if (!chain || chain.length < MIN_ICONS || chain.length > MAX_ICONS) return null;
 
   const widths = chain.map(b => b.w);
@@ -207,6 +210,7 @@ function scoreChain(chain: Blob[] | null, width: number): Chain | null {
   const minW = Math.min.apply(null, widths), maxW = Math.max.apply(null, widths);
   const minH = Math.min.apply(null, heights), maxH = Math.max.apply(null, heights);
 
+  if (Math.max(maxW, maxH) < MIN_ICON_SIDE * scale) return null;
   if (maxW / minW > SIZE_UNIFORMITY) return null;
   if (maxH / minH > SIZE_UNIFORMITY) return null;
   if (maxW > width * MAX_ICON_WIDTH_RATIO) return null;
@@ -228,7 +232,7 @@ function scoreChain(chain: Blob[] | null, width: number): Chain | null {
 // merged before it reads as one icon. Too much closing fuses adjacent icons
 // into one wide blob. So try a range of kernels and keep the best-scoring
 // result instead of guessing a single constant.
-function detectInBand(mask: Uint8Array, width: number, y0: number, y1: number): Chain | null {
+function detectInBand(mask: Uint8Array, width: number, y0: number, y1: number, scale: number): Chain | null {
   const profile = bandColumnProfile(mask, width, y0, y1);
   const h = profile.h;
 
@@ -252,7 +256,7 @@ function detectInBand(mask: Uint8Array, width: number, y0: number, y1: number): 
     });
     if (blobs.length < MIN_ICONS) continue;
 
-    const scored = scoreChain(longestEvenlySpacedChain(blobs), width);
+    const scored = scoreChain(longestEvenlySpacedChain(blobs), width, scale);
     if (scored && (!best || scored.score > best.score)) best = scored;
   }
   return best;
@@ -371,7 +375,7 @@ export function detectSocialBand(
     if (h < MIN_BAND_H || h > MAX_BAND_H) continue;
     if (!bandIsIsolated(bands, i, scale)) continue;
 
-    const hit = detectInBand(b.mask, width, b.y0, b.y1);
+    const hit = detectInBand(b.mask, width, b.y0, b.y1, scale);
     if (!hit) continue;
 
     // Footers are where social bars live; use that only to break ties.
@@ -415,6 +419,121 @@ export function detectSocialBand(
   };
 }
 
+// Square dilation of a 2D mask, as a horizontal pass then a vertical one.
+function dilate2D(mask: Uint8Array, w: number, h: number, k: number): Uint8Array {
+  if (k <= 0) return mask;
+  const horizontal = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!mask[y * w + x]) continue;
+      for (let nx = Math.max(0, x - k); nx <= Math.min(w - 1, x + k); nx++) horizontal[y * w + nx] = 1;
+    }
+  }
+  const out = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!horizontal[y * w + x]) continue;
+      for (let ny = Math.max(0, y - k); ny <= Math.min(h - 1, y + k); ny++) out[ny * w + x] = 1;
+    }
+  }
+  return out;
+}
+
+// Icon-shaped things in a window, as outer boxes: the glyph inside a ring is
+// the same icon as the ring. Anything too wide or tall to be an icon (a panel
+// behind the row, say) is dropped first so it cannot swallow the real ones.
+function iconBlobs(mask: Uint8Array, w: number, h: number, y0: number, k: number, minSide: number): Blob[] {
+  const boxes: Blob[] = [];
+  for (const comp of connectedComponents(dilate2D(mask, w, h, k), w, h, 1)) {
+    let bx0 = w, bx1 = 0, by0 = h, by1 = 0;
+    for (const p of comp) {
+      const px = p % w, py = (p / w) | 0;
+      if (px < bx0) bx0 = px;
+      if (px >= bx1) bx1 = px + 1;
+      if (py < by0) by0 = py;
+      if (py >= by1) by1 = py + 1;
+    }
+    // Undo what the dilation added to the outline.
+    bx0 = Math.min(bx0 + k, w); bx1 = Math.max(bx1 - k, bx0);
+    by0 = Math.min(by0 + k, h); by1 = Math.max(by1 - k, by0);
+    const bw = bx1 - bx0, bh = by1 - by0;
+    if (bw <= 0 || bh <= 0 || Math.max(bw, bh) < minSide) continue;
+    if (bw / bh < ASPECT_MIN || bw / bh > ASPECT_MAX) continue;
+    boxes.push({ x0: bx0, x1: bx1, w: bw, h: bh, cx: (bx0 + bx1) / 2, y0: y0 + by0, y1: y0 + by1 });
+  }
+  return boxes
+    .filter(a => !boxes.some(b => b !== a &&
+      b.x0 <= a.x0 && b.x1 >= a.x1 && (b.y0 as number) <= (a.y0 as number) && (b.y1 as number) >= (a.y1 as number)))
+    .sort((a, b) => a.cx - b.cx);
+}
+
+/**
+ * Find the icons in a row someone has already said is the social row.
+ *
+ * detectSocialBand has to work out where the row is, so it trusts whole
+ * scanlines, and that fails when decorative art shares them: the band spills
+ * past the row and stops being isolated. Here the row is given, so nothing has
+ * to be isolated. Shapes are measured in 2D instead, and art beside the icons
+ * stays a separate shape that fails the size, alignment or spacing checks.
+ */
+export function detectSocialIconsInRow(
+  imageData: RasterImage,
+  scale: number,
+  frameWidth: number,
+  frameHeight: number,
+  row: Bounds
+): DetectedBand | null {
+  const { width, height } = imageData;
+  const y0 = clamp(Math.round(row.y0 * scale), 0, height);
+  const y1 = clamp(Math.round(row.y1 * scale), y0, height);
+  const h = y1 - y0;
+  if (h <= 0) return null;
+
+  const minSide = MIN_ICON_SIDE * scale;
+
+  // Same idea as detectInBand: how much closing a glyph needs depends on the
+  // glyph, so try a few and keep what scores best. The strict mask is there for
+  // backgrounds that change across the row, which the margin-based estimate
+  // reads as ink on the loose one, joining the icons to the background.
+  let best: Chain | null = null;
+  for (const threshold of [INK_THRESHOLD, INK_STRONG_THRESHOLD]) {
+    const window = buildInkMask(imageData, threshold).subarray(y0 * width, y1 * width);
+    for (const k of [0, 1, 2, 3, 4].map(n => Math.round(n * scale))) {
+      const blobs = iconBlobs(window, width, h, y0, k, minSide);
+      for (const seed of blobs) {
+        const cy = ((seed.y0 as number) + (seed.y1 as number)) / 2;
+        const peers = blobs.filter(b =>
+          Math.abs(((b.y0 as number) + (b.y1 as number)) / 2 - cy) <= seed.h * 0.25
+        );
+        const scored = scoreChain(longestEvenlySpacedChain(peers), width, scale);
+        if (scored && (!best || scored.score > best.score)) best = scored;
+      }
+    }
+  }
+  if (!best) return null;
+
+  const cells = chainToCells(best, width, scale, frameWidth);
+  for (const cell of cells) {
+    if (!cell.isIcon || !cell.blob) continue;
+    cell.platform = classifyGlyph(extractGlyph(
+      imageData,
+      Math.round(cell.blob.x0), cell.blob.y0 as number,
+      Math.round(cell.blob.x1), cell.blob.y1 as number
+    ));
+  }
+
+  const top = Math.min(...best.chain.map(b => b.y0 as number));
+  const bottom = Math.max(...best.chain.map(b => b.y1 as number));
+  return {
+    found: true,
+    top: Math.round(top / scale),
+    bottom: Math.round(bottom / scale),
+    padTop: Math.max(0, Math.round(row.y0)),
+    padBottom: Math.min(frameHeight, Math.round(row.y1)),
+    cells: cells.map(c => ({ x0: c.x0, x1: c.x1, isIcon: c.isIcon, platform: c.platform ?? null })),
+  };
+}
+
 export const SOCIAL_TUNING = {
   INK_THRESHOLD,
   INK_STRONG_THRESHOLD,
@@ -422,6 +541,7 @@ export const SOCIAL_TUNING = {
   ASPECT_MAX,
   MIN_ICONS,
   MAX_ICONS,
+  MIN_ICON_SIDE,
   PITCH_TOLERANCE,
   MAX_SPAN_RATIO,
   MAX_ICON_WIDTH_RATIO,

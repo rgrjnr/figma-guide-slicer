@@ -66,7 +66,7 @@ export function LinksPanel({ api, regions, focusedY0, onFocus }: Props) {
               </button>
             </header>
 
-            {row.cells.map((cell, i) => (
+            {row.cells.map((cell, i) => !cell.gap && (
               <div className="link-field" key={i}>
                 {row.cells.length > 1 && (
                   <input

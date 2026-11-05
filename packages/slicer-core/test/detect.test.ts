@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { loadFixture } from "./fixtures";
-import { detectSectionOffsets, detectSocialBand } from "../src/index";
+import { detectSectionOffsets, detectSocialBand, detectSocialIconsInRow } from "../src/index";
 
 // These are the numbers the Figma plugin produces today, captured off the same
 // two renders the original Node harness was tuned against. They are not
@@ -52,11 +52,8 @@ describe("wbd-fandoms (1080x2857)", () => {
     const band = detectSocialBand(img, 1, img.width, img.height)!;
     expect(band.found).toBe(true);
     expect([band.top, band.bottom]).toEqual([2727, 2771]);
-    // The fourth icon has no template (only linkedin/facebook/instagram exist),
-    // so it mis-matches linkedin. Locked in deliberately: the web app lets you
-    // retype a cell's platform, and this is the case that needs it.
     expect(band.cells.map(c => (c.isIcon ? c.platform : "gap"))).toEqual([
-      "gap", "linkedin", "facebook", "instagram", "linkedin", "gap",
+      "gap", "website", "facebook", "instagram", "linkedin", "gap",
     ]);
   });
 });
@@ -73,9 +70,67 @@ describe("wbd-emmy26 (600x1908)", () => {
     expect(band.found).toBe(true);
     expect([band.top, band.bottom]).toEqual([1690, 1728]);
     expect([band.padTop, band.padBottom]).toEqual([1664, 1763]);
-    // First icon is a globe, which has no template yet, so it mis-matches.
     expect(band.cells.map(c => (c.isIcon ? c.platform : "gap"))).toEqual([
-      "gap", "linkedin", "facebook", "linkedin", "instagram", "gap",
+      "gap", "website", "facebook", "linkedin", "instagram", "gap",
+    ]);
+  });
+});
+
+describe("wbd-tnt-sports (600x1889)", () => {
+  const img = loadFixture("wbd-email-tnt-sports.png");
+  const platforms = (y0: number, y1: number) =>
+    detectSocialIconsInRow(img, 1, img.width, img.height, { y0, y1 })!
+      .cells.map(c => (c.isIcon ? c.platform : "gap"));
+  const ICONS = ["gap", "website", "facebook", "linkedin", "instagram", "gap"];
+
+  // Arrows and circles share the icons' scanlines, so the scan for a row can't
+  // isolate it. The letters in the CTA are evenly spaced and must not pass for it.
+  it("finds no row in the whole frame rather than taking the CTA's letters", () => {
+    expect(detectSocialBand(img, 1, img.width, img.height)).toBeNull();
+  });
+
+  it("finds all four buttons in a row marked by hand, however loosely it is drawn", () => {
+    expect(platforms(1745, 1790)).toEqual(ICONS);
+    expect(platforms(1700, 1830)).toEqual(ICONS);
+    expect(platforms(1690, 1889)).toEqual(ICONS);
+    // Reaches up past the CTA.
+    expect(platforms(1600, 1889)).toEqual(ICONS);
+  });
+
+  it("produces cells that tile the full row width", () => {
+    const { cells } = detectSocialIconsInRow(img, 1, img.width, img.height, { y0: 1700, y1: 1830 })!;
+    expect(cells[0].x0).toBe(0);
+    expect(cells[cells.length - 1].x1).toBe(img.width);
+    for (let i = 1; i < cells.length; i++) expect(cells[i].x0).toBe(cells[i - 1].x1);
+  });
+
+  it("finds nothing in a marked row that has no icons", () => {
+    expect(detectSocialIconsInRow(img, 1, img.width, img.height, { y0: 0, y1: 120 })).toBeNull();
+  });
+});
+
+describe("social row marked by hand, on the other renders", () => {
+  it("names the icons despite a background that changes across the row", () => {
+    const img = loadFixture("wbd-email-fandoms.jpg");
+    const band = detectSocialIconsInRow(img, 1, img.width, img.height, { y0: 2651, y1: 2857 })!;
+    expect(band.cells.map(c => (c.isIcon ? c.platform : "gap"))).toEqual([
+      "gap", "website", "facebook", "instagram", "linkedin", "gap",
+    ]);
+  });
+
+  it("agrees with the whole-frame scan on hbomax", () => {
+    const img = loadFixture("hbomax-moments-emkt.jpg");
+    const band = detectSocialIconsInRow(img, 1, img.width, img.height, { y0: 789, y1: 924 })!;
+    expect(band.cells.map(c => (c.isIcon ? c.platform : "gap"))).toEqual([
+      "gap", "facebook", "linkedin", "instagram", "gap",
+    ]);
+  });
+
+  it("handles a light streak touching the row on emmy26", () => {
+    const img = loadFixture("wbd-email-emmy26.png");
+    const band = detectSocialIconsInRow(img, 1, img.width, img.height, { y0: 1664, y1: 1763 })!;
+    expect(band.cells.map(c => (c.isIcon ? c.platform : "gap"))).toEqual([
+      "gap", "website", "facebook", "linkedin", "instagram", "gap",
     ]);
   });
 });

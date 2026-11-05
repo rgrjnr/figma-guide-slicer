@@ -5,6 +5,7 @@ import {
   computeSliceRegions,
   detectSectionOffsets,
   detectSocialBand,
+  detectSocialIconsInRow,
   normalizeGuides,
   reconcileRowBounds,
   snapToGuide,
@@ -340,13 +341,13 @@ export function useProject(): ProjectApi {
       if (!region) return p;
 
       const band = raster
-        ? detectSocialBand(raster, scaleOf(p), p.designWidth, height, { y0: region.y0, y1: region.y1 })
+        ? detectSocialIconsInRow(raster, scaleOf(p), p.designWidth, height, { y0: region.y0, y1: region.y1 })
         : null;
       const cells = band?.found ? cellsFromBand(band, loadLinkCache()) : [fullWidthCell(p.designWidth)];
 
       setStatus(
         band?.found
-          ? `Redes sociais: ${cells.filter(c => c.platform).length} de ${cells.length} ícones reconhecidos.`
+          ? `Redes sociais: ${cells.filter(c => c.platform).length} de ${cells.filter(c => !c.gap).length} ícones reconhecidos.`
           : "Marcada como barra de redes sociais — informe os links."
       );
       return { ...p, rows: { ...p.rows, [y0]: { kind: "social", cells } } };

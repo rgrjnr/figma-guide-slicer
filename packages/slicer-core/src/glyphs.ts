@@ -24,13 +24,23 @@ const PLATFORM_TEMPLATES: Record<string, string> = {
   linkedin: "000700000700fffff0fffff8fffffefffffefffffefffffeff81feff81feff81feff81feff81feff81feff81feff81feff81feff81feff81feff81feff80fe1f807e1f807e",
   facebook: "001fc0003fc0007fc0007fc0007c00007c00007c00007c00007c00ffffc0ffffc0ffffc0ffffc0ffffc0007c00007c00007c00007c00007c00007c00007c00007c00007c00",
   instagram: "7ffff8fffffcf0003ee0001ec0000ec0780fc1fe0fc3ff0ec3ff8ec781cec701cec601cec601cec303cec387cec3ff8ec3ff0ec1fe0ec0000ec0000efffffe7ffffe3ffffc1fffe0",
+  // A globe with a cursor, voted from three real renders. Unlike the logos it is
+  // no brand's mark, so another designer's globe may simply go unnamed.
+  website: "01ff0003ff800fffe01ffff03cef3839e71871ef3cfffffefffffeffffffe3c78fe3c70fe3c207fff007fff800fff1807fe1f039e1f839e0fc1de0f80ff07003f86001fc00007c00",
 };
 
 export const PLATFORM_URLS: Record<string, string> = {
   linkedin: "https://www.linkedin.com/company/…",
   facebook: "https://www.facebook.com/…",
   instagram: "https://www.instagram.com/…",
+  website: "https://…",
 };
+
+// A brand's social profiles recur from email to email; its website link depends
+// on the email, so the last one used must not fill itself in.
+export function isLinkReusable(platform: string): boolean {
+  return platform !== "website";
+}
 
 function unpackTemplate(hex: string): Uint8Array {
   const out = new Uint8Array(GLYPH_N * GLYPH_N);
@@ -47,7 +57,7 @@ const TEMPLATES = Object.keys(PLATFORM_TEMPLATES).map(name => ({
 }));
 
 // 8-connected components of `want` cells.
-function connectedComponents(mask: Uint8Array, w: number, h: number, want: number): number[][] {
+export function connectedComponents(mask: Uint8Array, w: number, h: number, want: number): number[][] {
   const label = new Int32Array(w * h).fill(-1);
   const comps: number[][] = [];
   for (let s = 0; s < w * h; s++) {

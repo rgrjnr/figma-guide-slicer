@@ -6,6 +6,7 @@ import {
   computeSliceRegions as coreComputeSliceRegions,
   reconcileRowBounds as coreReconcileRowBounds,
   parseLinkFromName,
+  isLinkReusable,
   sanitizeFileName,
   dedupeFileNames,
   type SliceRegion,
@@ -271,7 +272,7 @@ async function handleGenerateSlices(): Promise<void> {
           : `${region.name}-${col + 1}`;
         // A recognised platform with a remembered URL is linked immediately, so
         // the common case needs no typing at all.
-        const remembered = cell.platform ? linkCache[cell.platform] || "" : "";
+        const remembered = cell.platform && isLinkReusable(cell.platform) ? linkCache[cell.platform] || "" : "";
         slice.name = remembered ? `${baseName} (${remembered})` : baseName;
         if (cell.platform) slice.setPluginData("platform", cell.platform);
         slice.x = frameAbsX + cell.x0;
