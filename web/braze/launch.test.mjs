@@ -34,6 +34,12 @@ test("a complete, scheduled, matching campaign has nothing blocking it", () => {
   assert.deepEqual(blockers(good()), []);
 });
 
+test("a campaign with no segment is blocked even when the count matches", () => {
+  const found = blockers(good({ noAudience: true }));
+  assert.equal(found.length, 1);
+  assert.match(found[0], /whole workspace/);
+});
+
 test("the audience count must match the one that was confirmed", () => {
   // The load-bearing check. A segment swapped between the dialog and the click
   // is invisible in every other signal.

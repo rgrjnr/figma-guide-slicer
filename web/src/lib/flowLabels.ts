@@ -9,7 +9,7 @@ export const FLOW_TOTALS: Record<string, number> = {
   audience: 7,
   draft: 8,
   replace: 11,
-  schedule: 11,
+  schedule: 12,
   test: 5,
   refresh: 6,
   /**
@@ -76,6 +76,7 @@ const STEP_LABELS: [RegExp, string][] = [
   [/^read back the audience/, "conferindo o público"],
   [/^save the targeting/, "salvando o público"],
   [/^verify the schedule/, "verificando o agendamento"],
+  [/^verify the segment/, "verificando o público"],
   [/^read the reachable-user count/, "contando os alcançáveis"],
   [/^open Preview and test/, "abrindo o teste"],
   [/^add \d+ recipient/, "adicionando destinatários"],

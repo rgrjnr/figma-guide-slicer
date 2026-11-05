@@ -316,6 +316,8 @@ export default function Page() {
       await runFlow(recordRef.current?.braze.campaign ? "replace" : "draft", {}, "prepare");
       // Targeting and delivery time live on the campaign, so this is what
       // "connected to the audience" means; it saves a draft, nothing sends.
+      // The segment only exists once the import lands, so wait for that lane.
+      await lanesRef.current.audience;
       await runFlow("schedule");
     });
   }, [image, subject, preheader, project, campaignName, segmentName, settings, enqueue, runFlow]);

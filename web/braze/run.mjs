@@ -5,7 +5,7 @@
  *   node braze/run.mjs draft --name "TEST-2026-08-23" --zip ../build.zip --subject "Hello"
  *   node braze/run.mjs replace  --id <campaignId> --zip ../new-build.zip --subject "..."
  *   node braze/run.mjs test     --id <campaignId> --to "a@x.com,b@x.com" [--confirm true]
- *   node braze/run.mjs audience --csv ./20260901.csv
+ *   node braze/run.mjs audience --csv ./20260901.csv [--rehearse true]
  *   node braze/run.mjs campaigns [--limit 500] [--status stopped]
  *   node braze/run.mjs schedule --id <campaignId> --at "2026-09-01 09:30" \
  *                               --zone America/Sao_Paulo --segment 20260901.csv
@@ -94,7 +94,11 @@ const flows = {
   campaigns: ctx =>
     listCampaigns(ctx, { status: args.status, limit: Number(args.limit) || 0 }),
   audience: ctx =>
-    importAudience(ctx, { csvPath: args.csv, createSegment: args["no-segment"] !== "true" }),
+    importAudience(ctx, {
+      csvPath: args.csv,
+      createSegment: args["no-segment"] !== "true",
+      rehearse: args.rehearse === "true",
+    }),
   schedule: ctx =>
     scheduleCampaign(ctx, {
       campaignId: args.id,

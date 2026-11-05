@@ -9,8 +9,11 @@ import { login, appGroup } from "./login.mjs";
  * Braze names the resulting segment after the file, which is why the existing
  * campaigns target segments called `20260810.csv`: the file name is the segment
  * name. Copy the CSV to the name you want the segment to have before calling.
+ *
+ * `rehearse` walks the wizard and stops with "Start Import" on screen, so a fix
+ * can be proven against the live page without importing anything.
  */
-export async function importAudience(ctx, { csvPath, createSegment = true, timeoutMs = 600_000 }) {
+export async function importAudience(ctx, { csvPath, createSegment = true, timeoutMs = 600_000, rehearse = false }) {
   if (!csvPath) throw new Error("importAudience needs the path to a CSV");
   const fileName = csvPath.split("/").pop();
 
@@ -52,6 +55,11 @@ export async function importAudience(ctx, { csvPath, createSegment = true, timeo
     await braze.userImport.next(p).click();   // import settings -> summary
     await braze.userImport.start(p).waitFor({ state: "visible", timeout: 30_000 });
   });
+
+  if (rehearse) {
+    ctx.log("rehearsal: stopped before Start Import — nothing was imported");
+    return { rehearsed: true, fileName };
+  }
 
   await ctx.step("start the import", async p => {
     await braze.userImport.start(p).click();

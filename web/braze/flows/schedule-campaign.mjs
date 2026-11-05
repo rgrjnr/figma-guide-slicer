@@ -83,6 +83,7 @@ export async function scheduleCampaign(ctx, opts) {
       await p.waitForTimeout(3_000);
       await p.keyboard.press("Enter");
       await p.waitForTimeout(4_000);
+      await assertTargets(p, segment);
     });
   }
 
@@ -139,14 +140,32 @@ export async function scheduleCampaign(ctx, opts) {
   }
   ctx.log(`Braze has it as ${saved.date} ${saved.time} ${workspaceZone}`);
 
+  // Same reasoning as the schedule: selecting is not the same as Braze keeping it.
+  if (segment) {
+    await ctx.step("verify the segment persisted", async p => {
+      await p.goto(ctx.base + paths.campaign(campaignId, group, WIZARD.target), { waitUntil: "domcontentloaded" });
+      await braze.target.segment(p).waitFor({ state: "visible", timeout: 45_000 });
+      await assertTargets(p, segment);
+    });
+  }
+
   // The Review step states how many people would actually receive this. It is
   // the one figure worth carrying back: a mis-targeted segment is invisible in
   // every other signal.
   const reachableUsers = await ctx.step("read the reachable-user count", async p => {
     await p.goto(ctx.base + paths.campaign(campaignId, group, WIZARD.review), { waitUntil: "domcontentloaded" });
-    const banner = await braze.review.reachable(p).innerText({ timeout: 45_000 }).catch(() => "");
-    const found = banner.replace(/,/g, "").match(/(\d+)/);
-    return found ? Number(found[1]) : null;
+    await braze.review.reachable(p).waitFor({ state: "visible", timeout: 45_000 }).catch(() => {});
+    // Braze computes the count after painting the banner, so it reads 0 for a
+    // moment. Poll until it settles rather than trusting the first value.
+    let value = null;
+    for (let i = 0; i < 10; i++) {
+      const banner = await braze.review.reachable(p).innerText().catch(() => "");
+      const found = banner.replace(/,/g, "").match(/(\d+)/);
+      value = found ? Number(found[1]) : null;
+      if (value) break;
+      await p.waitForTimeout(3_000);
+    }
+    return value;
   });
   if (reachableUsers !== null) ctx.log(`Reachable users: ${reachableUsers.toLocaleString()}`);
 
@@ -170,4 +189,19 @@ function to12Hour(hhmm) {
   const suffix = h < 12 ? "am" : "pm";
   const hour = h % 12 === 0 ? 12 : h % 12;
   return `${hour}:${String(m).padStart(2, "0")} ${suffix}`;
+}
+
+/**
+ * Throws unless the Audience Summary names the segment. Without this, a segment
+ * that does not exist saves a campaign aimed at the whole workspace.
+ */
+async function assertTargets(p, segment) {
+  const named = braze.target.summaryNaming(p, segment);
+  const found = await named.waitFor({ state: "visible", timeout: 15_000 }).then(() => true, () => false);
+  if (!found) {
+    throw new Error(
+      `The campaign is not targeting "${segment}" — Braze has no such segment, or did not keep it. ` +
+        `Check that the audience import finished.`
+    );
+  }
 }

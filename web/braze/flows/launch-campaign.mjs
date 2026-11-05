@@ -60,6 +60,8 @@ export function launchBlockers(state, expect = {}, { now, zone } = {}) {
     );
   }
   if (!state.reachableUsers) blockers.push("Braze reports nobody reachable — there is no one to send to");
+  // A confirmed count cannot catch this: with no targeting, Braze counts everyone.
+  if (state.noAudience) blockers.push("no segment or filter is selected, so this would go to the whole workspace");
 
   // 1 — a designated time, in the future.
   if (!state.schedule?.date) {
@@ -144,6 +146,7 @@ export async function readLaunchState(ctx, { campaignId, group }) {
     const visible = await launch.isVisible({ timeout: 20_000 }).catch(() => false);
     return {
       reachableUsers,
+      noAudience: await braze.review.noAudience(p).isVisible().catch(() => false),
       launchVisible: visible,
       launchEnabled: visible ? !(await launch.isDisabled().catch(() => true)) : false,
     };
@@ -155,6 +158,7 @@ export async function readLaunchState(ctx, { campaignId, group }) {
     subject: compose.subject,
     schedule,
     reachableUsers: review.reachableUsers,
+    noAudience: review.noAudience,
     launchVisible: review.launchVisible,
     launchEnabled: review.launchEnabled,
     url: ctx.base + paths.campaign(campaignId, group, WIZARD.review),

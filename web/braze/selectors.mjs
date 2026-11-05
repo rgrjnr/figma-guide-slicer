@@ -430,10 +430,17 @@ export const braze = {
      */
     segment: p => p.getByLabel(/Target Users By Segment/i).first(),
     audienceSummary: p => p.getByText(/Email Reachable Users/i).first(),
+    /**
+     * The summary quotes each targeted segment by name. Typing a name that does
+     * not exist leaves "No options" open and nothing selected, without any error.
+     */
+    summaryNaming: (p, segment) => p.getByText(`"${segment}"`).first(),
   },
 
   review: {
     reachable: p => p.getByText(/Reachable users is/i).first(),
+    /** With no targeting, Braze counts the whole workspace as reachable. */
+    noAudience: p => p.getByText(/No segments or filters selected/i).first(),
     /**
      * THE SEND. Nothing in this project ever clicks it — see braze/SENDING.md
      * for what it does and how to do it by hand.
@@ -451,7 +458,12 @@ export const braze = {
      * table — so the page looked ready while there was nothing to upload into.
      */
     menu: p => p.locator('[data-cy="import-users-menu-button"]'),
-    chooseAttributes: p => p.getByRole("menuitem", { name: /^Attributes$/ }),
+    /**
+     * Since 2026-11 "Attributes" is only the group heading. The item reads "User
+     * attributes" and its accessible name is the long description, so the id is
+     * the one stable handle.
+     */
+    chooseAttributes: p => p.locator("#csv-import-attributes"),
     csvInput: p => p.getByRole("dialog").locator('input[type="file"]').first(),
     next: p => p.getByRole("button", { name: /^Next$/i }).first(),
     /**
