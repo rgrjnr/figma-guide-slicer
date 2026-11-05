@@ -1,3 +1,15 @@
+## 2026-11-05 — main — manual social row finds its buttons; globe = website
+
+Marking a row as social now uses `detectSocialIconsInRow` (2D shapes, no isolation test), so art on
+the same scanlines no longer reduces it to one link. Globe template added (`website`), and website
+links do not autofill from the cache (web + plugin). Whole-frame scan no longer takes CTA letters
+for icons (`MIN_ICON_SIDE` 20). Links panel hides gap cells. Fixture `wbd-email-tnt-sports.png`.
+Verified: core tests 35/35, typecheck clean, real flow in Chrome on the TNT email → 4 de 4 ícones.
+Not run: `npm run e2e` (Playwright browser not installed here).
+**Pushed to main (auto-deploys on Coolify); live deploy not checked.** Known and untouched: section auto-detect cuts through the CTA at y1677;
+whole-frame auto-detect still finds no social row on this email (needs marking by hand).
+**Next step:** confirm the deploy on spicy.rogerjunior.com, then decide on the CTA cut.
+
 ## 2026-10-20 — claude/audience-import-menu — import de audiência partido pelo Braze
 
 **Causa:** o Braze trocou a página Import Users: os cartões de tipo + drop zone saíram,
