@@ -1,3 +1,13 @@
+## 2026-11-05 — main — audience import fixed; auto-fix flow live
+
+**Import:** Braze renamed the menu item to "User attributes"; now selected by `#csv-import-attributes`. Schedule fails unless the
+Audience Summary names the segment; launch blocks on no targeting; campaign lane waits for the import. Rehearsed live, not imported.
+**Auto-fix:** `ops/autofix/worker.mjs` (systemd user unit `spicy-autofix`) + job files in `.runs/.autofix` + `AutofixToast`. Dry run on the real
+11:44 failure produced the right fix and passed the live rehearsal. A real failure through to a deploy has not happened yet.
+**Open:** campaign `6aec476f94e77f0085448a58` (send 06/11 12:30Z) still has NO segment and will now need the 11-05 list re-sent from the app, then Schedule.
+Leftover to delete by hand: `/app/web/.runs/.rehearse-manual` in the container.
+**Next step:** re-send the 11-05 audience in the app, re-run Schedule, check reachable matches the list.
+
 ## 2026-11-05 — main — manual social row finds its buttons; globe = website
 
 Marking a row as social now uses `detectSocialIconsInRow` (2D shapes, no isolation test), so art on
