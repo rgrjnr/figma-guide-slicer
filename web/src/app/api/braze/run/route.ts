@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { enqueueFix } from "@/lib/server/autofix.mjs";
 import { getProject, updateProject } from "@/lib/server/store";
 import { applyDetails, campaignsNeedingDetail, upsertFromSync } from "@/lib/server/campaigns";
 import type { ProjectRecord, StepRecord } from "@/lib/types";
@@ -220,6 +221,14 @@ export async function POST(request: Request) {
             recordRun(body, ok, output);
           } catch (err) {
             send("log", { level: "error", message: `could not save to the project: ${String(err)}` });
+          }
+        }
+        if (!ok) {
+          try {
+            enqueueFix(join(WEB_ROOT, ".runs"), { flow: body.flow, output, campaignId: body.campaignId });
+          } catch (err) {
+            // The run has already failed; do not hide that behind a queueing error.
+            console.error("autofix: could not queue", err);
           }
         }
         send("done", { ok, code });

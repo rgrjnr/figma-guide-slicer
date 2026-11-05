@@ -613,3 +613,25 @@ table.ledger tr.billable td:first-child { box-shadow: inset 3px 0 0 var(--accent
 .launch-actions { display: flex; gap: 8px; }
 .launch-actions button { margin: 0; }
 .launch-actions .primary { flex: 1; }
+
+/* --- Auto-fix status --- */
+
+.autofix-toasts {
+  /* Clear of the studio's bottom action bar. */
+  position: fixed; right: 16px; bottom: 76px; z-index: 50;
+  display: flex; flex-direction: column; gap: 8px;
+  width: min(380px, calc(100vw - 32px));
+}
+.autofix-toast {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: var(--shadow); padding: 12px 14px; font-size: 13px;
+}
+.autofix-toast p { margin: 6px 0 0; color: var(--dim); line-height: 1.4; }
+.autofix-toast a { display: inline-block; margin-top: 6px; color: var(--accent); }
+.autofix-head { display: flex; align-items: center; gap: 8px; }
+.autofix-head strong { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.autofix-close {
+  flex: none; width: auto; min-width: 0;
+  background: none; border: 0; padding: 0 2px; cursor: pointer;
+  color: var(--dim); font-size: 16px; line-height: 1;
+}
